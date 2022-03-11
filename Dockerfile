@@ -16,7 +16,7 @@ RUN pip install gunicorn pymysql
 
 COPY app app
 COPY media media
-COPY migrations migrations
+# COPY migrations migrations
 COPY run.py config.py boot.sh thorns.csv wear_discounts.csv TirePricesBase.csv RimPricesBase.csv RimsCatalogue.csv TireGide.csv Areas.csv ./
 RUN chmod +x boot.sh
 

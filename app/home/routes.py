@@ -523,7 +523,7 @@ def change_avtorupromo_state():
 @blueprint.route('/index')
 @login_required
 def index():
-    print('basedir=', app.config['basedir'])
+    print('basedir=', app.config['TIREREGIONPRICES'])
     dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
     regionsList=dfTire['region'].unique().tolist()
     seasonsList=dfTire['season'].unique().tolist()

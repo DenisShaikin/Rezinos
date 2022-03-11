@@ -1,0 +1,140 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Склад {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row justify-content-md-center">
+        <div class="col-12 col-sm-6 col-xl-4 mb-4">
+            <div class="card border-light shadow-sm">
+                <div class="card-body">
+                    <div class="row d-block d-xl-flex align-items-center">
+                        <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+                            <div class="icon icon-shape icon-md icon-shape-primary rounded me-4 me-sm-0"><span class="fas fa-chart-line"></span></div>
+                            <div class="d-sm-none">
+                                <h2 class="h5">Склад шин</h2>
+                                <h3 class="mb-1">{{ stocks_dict['ActiveStock'] }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-7 px-xl-0">
+                            <div class="d-none d-sm-block">
+                                <h2 class="h5">Склад шин</h2>
+                                <h3 class="mb-1">{{ stocks_dict['ActiveStock'] }}</h3>
+                            </div>
+                            <small>Продажи за месяц <span class="icon icon-small"></span> {{ stocks_dict['SoldStock'] }} руб.</small>
+                            <div class="small mt-2">                               
+                                <span class="fas fa-angle-up text-success"></span>                                   
+                                <span class="text-success fw-bold">xx%</span> к прошлому месяцу
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-4 mb-4">
+            <div class="card border-light shadow-sm">
+                <div class="card-body">
+                    <div class="row d-block d-xl-flex align-items-center">
+                        <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+                            <div class="icon icon-shape icon-md icon-shape-secondary rounded me-4"><span class="fas fa-cash-register"></span></div>
+                            <div class="d-sm-none">
+                                <h2 class="h5">Склад дисков</h2>
+                                <h3 class="mb-1">{{ stocks_dict['ActiveRimStock'] }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-7 px-xl-0">
+                            <div class="d-none d-sm-block">
+                                <h2 class="h5">Склад дисков</h2>
+                                <h3 class="mb-1">{{ stocks_dict['ActiveRimStock'] }}</h3>
+                            </div>
+                            <small>Продажи за месяц <span class="icon icon-small"></span> {{ stocks_dict['SoldRimStock'] }} руб.</small>
+                            <div class="small mt-2">                               
+                                <span class="fas fa-angle-up text-success"></span>                                   
+                                <span class="text-success fw-bold">yy%</span> к прошлому месяцу
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-4 mb-4">
+            <div class="card border-light shadow-sm">
+                <div class="card-body">
+                    <div class="row d-block d-xl-flex align-items-center">
+                        <div class="col-12 col-xl-5 text-xl-center mb-3 mb-xl-0 d-flex align-items-center justify-content-xl-center">
+                            <div class="icon icon-shape icon-md icon-shape-secondary rounded me-4"><span class="fas fa-cash-register"></span></div>
+                            <div class="d-sm-none">
+                                <h2 class="h5">Склад колес</h2>
+                                <h3 class="mb-1"></h3>
+                            </div>
+                        </div>
+                        <div class="col-12 col-xl-7 px-xl-0">
+                            <div class="d-none d-sm-block">
+                                <h2 class="h5">Склад колес</h2>
+                                <h3 class="mb-1"></h3>
+                            </div>
+                            <small>Продажи за месяц <span class="icon icon-small"></span>  руб.</small>
+                            <div class="small mt-2">
+                                <span class="fas fa-angle-up text-success"></span>
+                                <span class="text-success fw-bold">yy%</span> к прошлому месяцу
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12 col-xl-8 mb-4">
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card border-light shadow-sm">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                <h2 class="h5">Склад</h2>
+                                </div>
+                                <div class="col text-right">
+                                    <a href="{{ url_for('home_blueprint.stock_tables', page='all') }}" class="btn btn-sm btn-secondary">See all</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-items-center table-striped table-hover table-flush">
+                                <thead class="thead-light">
+                                <tr>
+                                    <th scope="col">Дней в продаже</th>
+                                    <th scope="col">Кол-во шт.</th>
+                                    <th scope="col">%</th>
+                                    <th scope="col">Стоимость, Руб.</th>
+                                    <th scope="col">%</th>
+                                    <th scope="col">Средняя цена, Руб.</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in row_data %}
+                                <tr>
+                                {% for cell_ in row %}
+                                    <td>
+                                    {{ cell_|safe }}
+                                    </td>
+                                {% endfor %}
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

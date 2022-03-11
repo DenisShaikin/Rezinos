@@ -1,0 +1,199 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Settings {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12 col-xl-8">
+            <div class="card card-body shadow-sm mb-4">
+                <h2 class="h5 mb-4">Общая информация</h2>
+                <form action="" method="post" class="form" role="form" novalidate enctype="multipart/form-data">
+
+                    {{ form.hidden_tag() }}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div>
+                                <label>Имя менеджера</label>
+                                {{ form.def_manager_name(placeholder="Введите фамилию и имя", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="Это имя будет показано в объявлении") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group">
+                                <label>Email</label>
+                                {{ form.def_contact_mail(placeholder="name@company.com", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="Этот email будет показан в объявлении") }}
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group">
+                                <label>Телефон</label>
+                                {{ form.def_contact_phone(placeholder="+7 900 000 00 00", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="Этот телефон будет показан в объявлении") }}
+                            </div>
+                        </div>
+                    </div>
+                    <h2 class="h5 my-4">Расположение</h2>
+                    <div class="row">
+                        <div class="col-sm-5 mb-3">
+                            <div class="form-group">
+                                <label>Адрес объекта</label>
+                                {{ form.def_adress(placeholder="Введите ваш адрес", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="Адрес, где можно забрать ваш товар") }}
+                            </div>
+                        </div>
+                        <div class="col-sm-5 mb-3">
+                            <div class="form-group">
+                                <label>Зона показа объявления на Авито</label>
+                                {{ form.def_display_area1(placeholder="Зона показа на Авито", class="form-select") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-body shadow-sm mb-4 mb-lg-0">
+                        <h2 class="h5 mb-3">Данные личного кабинета AUTO.RU
+                            <a class="btn btn-secondary text-dark me-4" target="_blanc"
+                               data_bs_toggle="tooltip", data_bs_placement="top", title="Перенесите ID из личного кабинета" href="https://parts.auto.ru/profile/?utype=legal">Личный кабинет</a>
+                        </h2>
+                        <div class="row">
+                            <div class="col-sm-2 mb-3">
+                                    <label>ID магазина</label>
+                                    {{ form.store(placeholder="ID магазина", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="На магазин с этим ID будут показываться объявления на Auto.ru") }}
+                            </div>
+                            <div class="col-sm-10 mb-3">
+                                <ul>
+                                    <li>ID магазина перенесите из Auto.ru на эту страницу</li>
+                                    <li>Перейдите в Настройки → Выгрузки товаров (только для магазинов ЗЧ)</li>
+                                    <li>Нажмите кнопку Ссылка</li>
+                                    <li>Вставьте ссылку на прайс-лист</li>
+                                    <li>Выберите тип запчастей в прайс-листе — Тип указан в файле</li>
+                                    <li>Нажмите кнопку Сохранить</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12 mb-3">
+                                <label>Ссылка на прайс лист для Auto.ru</label>
+                                {{ form.autoru_path(placeholder="Путь к фидам", class="form-control",
+                                    data_bs_toggle="tooltip", data_bs_placement="top", title="Этот путь перенесите в настройку Auto.ru") }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-body shadow-sm mb-4 mb-lg-0">
+                        <h2 class="h5 mb-4">Данные личного кабинета Авито
+                            <a class="btn btn-secondary text-dark me-4" target="_blanc" href="https://www.avito.ru/autoload"
+                            data_bs_toggle="tooltip" data_bs_placement="top" title="Показывает только если выбран тариф и есть деньги на счету, иначе Request failed with status code 403">Автозагрузка</a></h2>
+                        </h2>
+                        <div class="row">
+                            <div class="col-sm-9 mb-3">
+                                <label>Путь к файлу фидов для Avito</label>
+                                {{ form.avito_path(placeholder="Путь к фидам", class="form-control",
+                                    data_bs_toggle="tooltip", data_bs_placement="top", title="Укажите этот путь в разделе Автозагрузка") }}
+                            </div>
+
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center justify-content-between px-0 border-bottom">
+                                <div class="row">
+                                        <div class="form-group">
+                                            <label>Данные Client_ID и Секретный код можно забрать со страницы Авито по кнопке</label>
+                                            <a class="col-sm-5 mb-3 btn btn-secondary text-dark me-4" target="_blanc" href="https://www.avito.ru/professionals/api">avito.ru/professionals/api</a>
+                                        </div>
+                                    <div class="col-sm-4 mb-3">
+                                        <div class="form-group">
+                                            <label>Ваш Client_ID Авито</label>
+                                            {{ form.avito_client_id(placeholder="Введите ваш Client_ID", class="form-control",
+                                                data_bs_toggle="tooltip", data_bs_placement="top", title="Перенесите значение с Авито") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-7 mb-3">
+                                        <div class="form-group">
+                                            <label>Секретный код Авито</label>
+                                            {{ form.avito_client_secret(placeholder="Введите client_secret", class="form-control",
+                                                data_bs_toggle="tooltip", data_bs_placement="top", title="Перенесите значение с Авито") }}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <button type="submit" name="Get_Avito" class="btn btn-secondary">Загрузить с Авито</button>
+                                    </div>
+                                </div>
+                            </li>
+                                <div class="row">
+                                    <div class="col-sm-10 mb-3">
+                                            <label>Ссылка на Ваш профиль</label>
+                                            {{ form.avito_profile_url(class="form-control", readonly="readonly", disabled="disabled") }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-2 mb-3">
+                                            <label>Баланс</label>
+                                            {{ form.avito_balance_real(class="form-control", readonly="readonly", disabled="disabled") }}
+                                    </div>
+                                    <div class="col-sm-2 mb-3">
+                                            <label>Бонус</label>
+                                            {{ form.avito_balance_bonus(class="form-control", readonly="readonly", disabled="disabled") }}
+                                    </div>
+                                </div>
+                        </ul>
+                      </div>
+                      <div class="mt-3">
+                          <button type="submit" name="Save" class="btn btn-dark">Сохранить</button>
+                      </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+          <div class="row">
+              <div class="col-12 mb-4">
+                  <div class="card shadow-sm text-center p-0">
+                      <div class="profile-cover rounded-top" data-background="/static/assets/img/profile-cover.jpg"></div>
+                      <div class="card-body pb-5">
+                          <img src="{{ url_for('static', filename=current_user.avatar_photo) }}" class="user-avatar large-avatar rounded-circle mx-auto mt-n7 mb-4" alt="Neil Portrait" id="avatar">
+                          <h4 class="h3">
+                            {{ current_user.username }}
+                          </h4>
+                          <h5 class="fw-normal">
+                            {{ current_user.email }}
+                          </h5>
+                          <a class="btn btn-sm btn-secondary" href="mailto://chaikide@mail.ru?subject=Поддержка Rezinos">Отправить вопрос</a>
+                      </div>
+                    </div>
+              </div>
+              <div class="col-12">
+                  <div class="card card-body shadow-sm mb-4">
+                      <h2 class="h5 mb-4">Выбрать фото</h2>
+                      <div class="d-flex align-items-center">
+                          <div class="me-3">
+                              <!-- Avatar -->
+                              <div class="user-avatar xl-avatar">
+                                  <img class="rounded" src="{{ url_for('static', filename=current_user.avatar_photo) }}" alt="change avatar" id="personalPhoto">
+                              </div>
+                          </div>
+                          <div class="file-field">
+                              <div class="d-flex justify-content-xl-center ms-xl-3">
+                                  <div class="d-flex">
+                                    <span class="icon icon-md"><span class="fas fa-paperclip me-3"></span></span> <input type="file" id="personalPhotoFile" accept="image/*">
+                                    <div class="d-md-block text-left">
+                                        <div class="fw-normal text-dark mb-1">Выбрать фото</div>
+                                        <div class="text-gray small">JPG, GIF or PNG. Max размер 800K</div>
+                                    </div>
+                                  </div>
+                              </div>
+                            </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </div>
+        </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

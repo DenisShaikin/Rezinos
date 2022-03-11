@@ -1,0 +1,57 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+      <div class="py-4">
+          <nav aria-label="breadcrumb">
+              <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+                  <li class="breadcrumb-item"><a href="#"><span class="fas fa-home"></span></a></li>
+                  <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.stock_tables', page='all') }}">Склад</a></li>
+                  <li class="breadcrumb-item" aria-current="page">Срок {{ curr_page }} дней</li>
+
+              </ol>
+          </nav>
+          <div class="d-flex justify-content-between w-100 flex-wrap">
+              <div class="mb-3 mb-lg-0">
+                  <h1 class="h4">Склад</h1>
+              </div>
+              <div>
+                  <a href="/tire.html" class="btn btn-outline-gray"> Добавить объявление </a>
+              </div>
+          </div>
+      </div>
+
+       <div class="card border-light shadow-sm">
+<!--          <div class="card-body">-->
+<!--           <div class="container">-->
+               {% for row in row_data %}
+                    <div class="row">
+                        {% for cell_ in row %}
+                            {% if loop.index == 1 %}
+                                <div class="col-md-auto mx-3 my-3">
+                                    <figure class="figure">
+                                        <img  src="{{ cell_ or default_photo }}"  width="150px" height="150px" class="img-fluid rounded-0 alt="">
+                                    </figure>
+                                </div>
+                            {% else %}
+                                <div class="col mx-3 my-3 lh-1">
+                                    <small class="lh-1">
+                                    {{ cell_|safe }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+               {% endfor %}
+      </div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+{% endblock javascripts %}

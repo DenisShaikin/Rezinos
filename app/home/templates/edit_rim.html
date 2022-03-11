@@ -1,0 +1,160 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tire {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+    <form action="" method="post" class="form" role="form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+    <div class="row">
+        <div class="col-12 col-xl-8">
+            <div class="card card-body shadow-sm mb-4">
+                <h2 class="h5 mb-4">Здесь можно исправить данные вашего предложения</h2>
+
+                    <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                        <h2 class="h5 mb-4">Характеристики объявления</h2>
+                        <div class = "row">
+                            <div class = "col-md-7 mb-3">
+                                <label>Заголовок</label>
+                                {{ form.title(class='form-control', placeholder='Введите заголовок объявления') }}
+                            </div>
+                        </div>
+                        <div class = "row">
+                            <div class = "col-md-12  mb-3">
+                                <label>Описание</label>
+                                {{ form.description(class='form-control', placeholder='Введите описание объявления') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-5 mb-3">
+                                <label>Вид объявления</label>
+                                {{ form.ad_type(class='form-select', placeholder='Вид объявления') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Кол-во</label>
+                                {{ form.qte(class='form-control', placeholder='Шт.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Цена</label>
+                                {{ form.price(class='form-control', placeholder='Руб.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Реком. цена</label>
+                                {{ form.recommended_price(class='form-control', placeholder='Руб.', data_bs_toggle="tooltip", data_bs_placement="top", title="Формируется из цены новой шины бренда, модели, размера с учетом износа") }}
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-4 mb-3 ">
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Авито</label>
+                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Auto.ru</label>
+                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Drom</label>
+                                    {{ form.drom_show(class='form-check-input', disabled=True, data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                </div>
+                            </div>
+                            <div class ="col-md-4 mb-3 ">
+                                <label >Продвижение Авито</label>
+                                <div class ='form-check form-switch'>
+                                    {% for subfield in form.ad_status %}
+                                        {{ subfield }}
+                                        {% if loop.index<=3 %}
+                                            {{ subfield.label }}
+                                        {% else %}
+                                            {{ subfield.label(data_bs_toggle="tooltip", data_bs_placement="top", title="В 2, 5, 10 раз больше показов на 1 или 7 дней") }}
+                                        {% endif %}
+                                        {% if loop.index % 3 == 0 %}
+                                            <br>
+                                        {% endif %}
+
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Продвижение Auto.ru</label>
+                                <div class =" form-check form-switch">
+                                    {{ form.is_for_priority(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Поднимает объявление выше обычных на 7 дней") }}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                    <h2 class="h5 mb-4">Фотографии</h2>
+                    <div class="row">
+                        {% for key,value in df_photos.iterrows() %}
+                        <div class="col-md-3 mb-3">
+                            <div class="mx-auto mb-2" style="width: 200px;" >
+                                <img src="{{ value['photos']|safe }}"  class=" mx-auto d-block alt="">
+                            </div>
+                            <div class="col text-center pb-5">
+                                {{ value['photo_buttons']|safe }}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="row">
+                            <div class ="col-md-6 mb-3">
+                                <label>Фотографии</label>
+                                {{ form.photo1(class='form-control') }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                </div>
+            </div>
+
+        <div class="col-12 col-xl-4">
+
+            <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                <h2 class="h5 mb-4">Адрес магазина и контактное лицо</h2>
+                        <div class="row">
+                            <div class ="col-md-6 mb-3">
+                                    <label>Имя</label>
+                                    {{ form.manager_name(class='form-control', placeholder='Имя контактного лица') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-6 mb-3">
+                                    <label>Телефон</label>
+                                    {{ form.contact_phone(class='form-control', placeholder='формат +7XXXXXXXXXX') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-10 mb-3">
+                                    <label>Адрес</label>
+                                    {{ form.address(class='form-control', placeholder='Полный адрес объекта') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-10 mb-3">
+                                <label>Зона показа объявления</label>
+                                {{ form.display_area1(class='form-select', placeholder='Зона показа') }}
+                            </div>
+                        </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class ="col-md-1 mb-3">
+            <button type="submit" name="Save" class="btn btn-primary">Отправить</button>
+        </div>
+        <div class ="col-md-3 mb-3">
+            <button type="submit" name="Delete" class="btn btn-primary">Удалить объявление</button>
+        </div>
+    </div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+

@@ -1,0 +1,273 @@
+<!--
+
+=========================================================
+* Rezinos application
+=========================================================
+
+* Product Page: https://themesberg.com/product/admin-dashboard/volt-premium-bootstrap-5-dashboard
+* Copyright 2020 Themesberg (https://www.themesberg.com)
+
+* Designed and coded by https://themesberg.com
+
+=========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. Please contact us to request a removal. Contact us if you want to remove it.
+
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- Primary Meta Tags -->
+<title>
+    Rezinos - Удобная публикация колес и шин на агрегаторах
+</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="title" content="Rezinos - удобная публикация шин ">
+<meta name="author" content="Rezinos">
+<meta name="description" content="Rezinos - это приложение для быстрого и удобного управления публикациями объявлений шин, колес и дисков на агрегаторах">
+<meta name="keywords" content="Rezinos, шины, диски, колеса, продажа колес, продажа шин, продажа дисков" />
+<link rel="canonical" href="http://rezinos.ru">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="http://rezinos.ru">
+<meta property="og:title" content="Rezinos - публикация шин, колес и дисков">
+<meta property="og:description" content="Rezinos - это приложение для быстрого и удобного управления публикациями объявлений шин, колес и дисков на агрегаторах">
+<meta property="og:image" content="">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="http://rezinos.ru">
+<meta property="twitter:title" content="Rezinos - публикация шин, колес и дисков">
+<meta property="twitter:description" content="Rezinos - это приложение для быстрого и удобного управления публикациями объявлений шин, колес и дисков на агрегаторах">
+<meta property="twitter:image" content="">
+
+<!-- Favicon -->
+<link rel="apple-touch-icon" sizes="120x120" href="/static/assets/img/favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/assets/img/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/static/assets/img/favicon/favicon-16x16.png">
+<link rel="manifest" href="/static/assets/img/favicon/site.webmanifest">
+<link rel="mask-icon" href="/static/assets/img/favicon/safari-pinned-tab.svg" color="#ffffff">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="theme-color" content="#ffffff">
+
+<!-- Fontawesome -->
+<link type="text/css" href="/static/assets/vendor/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+
+<!-- Sweet Alert -->
+<link type="text/css" href="/static/assets/vendor/sweetalert2/dist/sweetalert2.min.css" rel="stylesheet">
+
+<!-- Notyf -->
+<link type="text/css" href="/static/assets/vendor/notyf/notyf.min.css" rel="stylesheet">
+
+<!-- Volt CSS -->
+<link type="text/css" href="/static/assets/css/volt.css" rel="stylesheet">
+
+<!-- NOTICE: You can use the _analytics.html partial to include production code specific code & trackers -->
+</head>
+<body>
+    <header class="header-global">
+        <nav id="navbar-main" aria-label="Primary navigation" class="navbar navbar-main navbar-expand-lg navbar-theme-primary pt-4 navbar-dark">
+            <div class="container position-relative">
+                <div class="navbar-collapse collapse me-auto" id="navbar_global">
+                    <div class="navbar-collapse-header">
+                        <div class="row">
+                            <div class="col-6 collapse-brand">
+                                <a href="/">
+                                    <img src="/static/assets/img/brand/light.svg" alt="Rezinos logo">
+                                </a>
+                            </div>
+                            <div class="col-6 collapse-close">
+                                <a href="#navbar_global" class="fas fa-times" data-toggle="collapse" data-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" title="close" aria-label="Toggle navigation"></a>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="navbar-nav navbar-nav-hover align-items-lg-center">
+                        <li class="nav-item me-2">
+                            <a href="/settings.html" class="nav-link">Настройки</a>
+                        </li>
+                        <li class="nav-item me-2">
+                            <a href="/stocks.html" class="nav-link">Склад</a>
+                        </li>
+                        <li class="nav-item me-2">
+                            <a href="{{ url_for('base_blueprint.logout') }}" class="nav-link">Выйти</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- Hero -->
+        <section class="section-header overflow-hidden pt-7 pt-lg-7 pb-9 pb-lg-12 bg-primary text-white">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <h1 class="fw-bolder">Rezinos v.1</h1>
+                        <h2 class="lead fw-normal text-muted mb-5">
+                            Для легкой продажи резины, дисков и колес
+                        </h2>
+                        <h3 class="lead fw-normal text-muted mb-5">
+                            Начните работу с заполнения профиля в Настройках!
+                        </h3>
+                        <!-- Button Modal -->
+                        <div class="d-flex align-items-center justify-content-center mb-5 pb-5">
+                            <a href="/settings.html" class="btn btn-secondary text-dark me-4">
+                                <span class="fas fa-cog me-2 d-none d-sm-inline"></span> Настройки </a>
+                            <a href="/stocks.html" class="btn btn-secondary text-dark me-4">
+                                <span class="fas fa-chart-line me-2 d-none d-sm-inline"></span> Склад </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <figure class="position-absolute bottom-0 left-0 w-100 d-none d-md-block mb-n2"><svg class="fill-gray-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 185.4"><path d="M3000,0v185.4H0V0c496.4,115.6,996.4,173.4,1500,173.4S2503.6,115.6,3000,0z"></path></svg></figure>       
+        </section>
+        <div class="section pt-0">
+            <div class="container mt-n10 mt-lg-n12 z-2">
+                <div class="row justify-content-md-center">
+                    <div class="col-12 col-sm-6 col-xl-6 mb-4">
+                        <div class="card border-light shadow-sm">
+                            <div class="card-body">
+                                <div class="row d-block d-xl-flex align-items-center">
+                                    <div class="col-12 col-xl-12 px-xl-0">
+                                        <h5 class="fw-normal text-gray"><span class="icon w-20 icon-xxl icon-secondary me-1"><span class="fas fa-chart-line"></span></span> Преимущества</h5>
+                                        <h6>Рекомендация назначения цены с учетом износа и бренда</h6>
+                                        <h6>Рекомендации по оформлению объявления</h6>
+                                        <h6>Управление всеми приложениями в один клик</h6>
+                                        <h6>Легко меняйте цены, продвижение, снимайте с публикации</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-xl-6 mb-4">
+                        <div class="card border-light shadow-sm">
+                            <div class="card-body">
+                                <div class="row d-block d-xl-flex align-items-center">
+                                    <div class="col-12 col-xl-12 px-xl-0">
+                                        <h5 class="fw-normal text-gray"><span class="icon w-20 icon-xxl icon-secondary me-1"><span class="fas fa-cog"></span></span> Настройки</h5>
+                                        <h6>Укажите название компании и контактные данные менеджера</h6>
+                                        <h6>Свяжите приложение с личным кабинетом Avito </h6>
+                                        <h6>Укажите код магазина в Avto.ru</h6>
+                                        <h5><a href="/settings.html">Перейти в настройки</a></h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section class="section section-lg bg-soft pt-0">
+            <div class="container">
+                <div class="row justify-content-center mb-5 mb-lg-6">
+                    <div class="col-6 col-md-3 text-center mb-4">
+                        <div class="icon icon-shape icon-lg bg-white shadow-lg border-light rounded-circle icon-secondary mb-4">
+                            <span class="fas fa-puzzle-piece"></span>
+                        </div>
+                        <h3 class="fw-bolder">Одно приложение</h3>
+                        <p class="text-gray">Для Авито, Auto.ru и Drom</p>
+                    </div>
+                    <div class="col-6 col-md-3 text-center mb-4">
+                        <div class="icon icon-shape icon-lg bg-white shadow-lg border-light rounded-circle icon-secondary mb-4">
+                            <span class="fas fa-pager"></span>
+                        </div>
+                        <h3 class="fw-bolder">Калькулятор</h3>
+                        <p class="text-gray">рекомендуемой стоимости на основе рыночных цен</p>
+                    </div>
+                    <div class="col-6 col-md-3 text-center">
+                        <div class="icon icon-shape icon-lg bg-white shadow-lg border-light rounded-circle icon-secondary mb-4">
+                            <span class="fab fa-sass"></span>
+                        </div>
+                        <h3 class="fw-bolder">Склад</h3>
+                        <p class="text-gray">Управление продвижением в один клик</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center mb-5 mb-lg-6">
+                <div class="col-2 col-md-2 text-center mb-4">
+                    <select id="regionName" name="regionName">
+                        {% for region in regions %}
+                            <option value="{{ region|safe }}"> {{region|safe}} </option>>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-8 col-md-4 text-center mb-4">
+                    <div id="chart" class="chart">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer py-6 bg-dark text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <img class="navbar-brand-dark mb-4" height="35" src="/static/assets/img/brand/light.svg" alt="Logo light">
+                    <p>Rezinos - удобный инструмент управления продажами колес, резины и дисков</p>
+                    <ul class="social-buttons mb-5 mb-lg-0">
+                        <li>
+                            <a href="https://www.facebook.com/rezinos/" class="icon-white me-2" aria-label="facebook social link">
+                                <span class="fab fa-facebook"></span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://telegram.com/rezinos" class="icon-white" aria-label="telegram social link" >
+                                <span class="fab fa-telegram"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-2 mb-5 mb-lg-0">
+                    <span class="h5">Rezinos</span>
+                    <ul class="links-vertical mt-2">
+                        <li><a target="_blank" href="https://rezinos.ru/about">О нас</a></li>
+                        <li><a target="_blank" href="https://rezinos.ru/contact">Свяжитесь с нами</a></li>
+                    </ul>
+                </div>
+                <div class="col-12 col-md-4 mb-5 mb-lg-0">
+                    <span class="h5 mb-3 d-block">Подписаться</span>
+                    <form action="#">
+                        <div class="form-row mb-2">
+                            <div class="col-12">
+                                <input type="email" class="form-control mb-2" placeholder="example@company.ru" name="email" aria-label="Subscribe form" required>
+                            </div>
+                            <div class="col-12 d-grid">
+                                <button type="submit" class="btn btn-secondary" data-loading-text="Sending">
+                                    <span>Подписаться</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <p class="text-muted font-small m-0">Ваши контактные данные под защитой. Смотрите <a class="text-white" href="#">Privacy Policy</a></p>
+                </div>
+            </div>
+            <hr class="bg-gray-700 my-5">
+            <div class="row">
+                <div class="col mb-md-0">
+                    <a href="https://themesberg.com" target="_blank" class="d-flex justify-content-center">
+                        <img src="/static/assets/img/themesberg-logo-alt.svg" height="35" class="mb-4" alt="Themesberg Logo">
+                    </a>
+                <div class="d-flex text-center justify-content-center align-items-center" role="contentinfo">
+                    <p class="font-weight-normal font-small mb-0">
+                        Шаблон &copy; Themesberg 2019-<span class="current-year">2020</span> - создан <a target="_blank" href="https://appseed.us">AppSeed</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    {% include 'includes/scripts.html' %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript">
+    </script>
+
+</body>
+</html>

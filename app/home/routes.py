@@ -541,23 +541,26 @@ def createGraph(dfTire, region):
     fig.update_layout(title='Распределение цен', template='plotly_white')
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-@blueprint.route('/changeRegion', methods=['POST'])
+@blueprint.route('/changeregion', methods=['POST'])
 @login_required
-def changeRegion():
+def changeregion():
     s = request.get_json(force=True)
+    # print(request)
     region = s['region']
-    print(region)
-    # dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
-    # dfToShow = dfTire.loc[(dfTire['region'] == region) & (dfTire['diametr'] == 15)]
-    # distData = dfToShow['unitPrice']
-    # # Обрезаем выбросы, слева и справа по 1%
-    # distData = pd.Series(mstats.winsorize(distData, limits=[0.01, 0.01]))
+    # print(region)
+    dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
+    dfToShow = dfTire.loc[(dfTire['region'] == region) & (dfTire['diametr'] == 15)]
+    distData = dfToShow['unitPrice']
+    # print(distData)
+    # Обрезаем выбросы, слева и справа по 1%
+    distData = pd.Series(mstats.winsorize(distData, limits=[0.01, 0.01]))
     # dfToShow = dfToShow.loc[dfToShow['unitPrice'] < distData.max()]
-    # hist_data = [distData]
-    # fig = ff.create_distplot(hist_data, [region], bin_size=500, rug_text=region)
-    # fig.update_layout(title='Распределение цен', template='plotly_white')
+    hist_data = [distData]
+    fig = ff.create_distplot(hist_data, [region], bin_size=500, rug_text=region)
+    fig.update_layout(title='Распределение цен', template='plotly_white')
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     # return jsonify({'graphJSON': json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)})
-    return jsonify({'region': region})
+    # return jsonify({'region': ''})
 
 @blueprint.route('/settings.html', methods=['GET', 'POST'])
 @login_required

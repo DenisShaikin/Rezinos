@@ -25,6 +25,7 @@
     Rezinos - Удобная публикация колес и шин на агрегаторах
 </title>
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="title" content="Rezinos - удобная публикация шин ">
 <meta name="author" content="Rezinos">
@@ -199,7 +200,8 @@
                     </select>
                 </div>
                 <div class="col-8 col-md-4 text-center mb-4">
-                    <div id="chart" class="chart">
+                    <div id="chart" class="chart"></div>
+
                 </div>
             </div>
         </section>
@@ -267,6 +269,9 @@
     {% include 'includes/scripts.html' %}
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script type="text/javascript">
+      var graphs = {{graphJSON | safe}};
+      console.log(graphs);
+      Plotly.plot('chart',graphs,{});
     </script>
 
 </body>

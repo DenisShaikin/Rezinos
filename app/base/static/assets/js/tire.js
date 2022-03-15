@@ -621,22 +621,24 @@ if (document.getElementById('regionName')) {
 //    При смене региона надо перерисовать график
     var element = document.getElementById('regionName');
     var xhr = new XMLHttpRequest();
-    xhr.open('post', 'changeRegion');
+    xhr.open('post', 'changeregion');
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 200) {
-            var graphs = JSON.parse(xhr.responseText)['graphJSON'];
-            Plotly.plot('chart',graphs,{});
+            console.log("We're here")
+            console.log(xhr.response)
+            var graphs = JSON.parse(xhr.response);
+            console.log(graphs)
+            Plotly.newPlot('chart',graphs,{});
         }
         else if (xhr.status !== 200) {
         }
     };
-//    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
-//    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    console.log(element.options[element.selectedIndex].label)
-    xhr.send(JSON.stringify({
-        'region': element.options[element.selectedIndex].label }));
-
+//    var regionName=element.options[element.selectedIndex].label
+//    console.log(regionName)
+    xhr.send(JSON.stringify({'region': element.options[element.selectedIndex].label}));
     });
 }
 

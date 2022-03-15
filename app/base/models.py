@@ -227,7 +227,7 @@ class TireGuide(db.Model):
                 self.purpose, self.season, self.thorns]
 
     def load_tireguide_base(self):
-        chunksize=5000
+        chunksize=1000
         with pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize) as reader:
             for chunk in reader:
                 chunk.index.name = 'id'
@@ -258,7 +258,7 @@ class CarsGuide(db.Model):
                 self.rimDia, self.tireDiametr, self.tireWidth, self.tireHeight]
 
     def load_carsguide_base(self):
-        chunksize=5000
+        chunksize=1000
         with pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize) as reader:
             for chunk in reader:
                 chunk.index.name = 'id'

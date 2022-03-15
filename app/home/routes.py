@@ -524,11 +524,11 @@ def change_avtorupromo_state():
 @login_required
 def index():
     # print('basedir=', app.config['TIREREGIONPRICES'])
-    dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
-    regionsList=dfTire['region'].unique().tolist()
-    seasonsList=dfTire['season'].unique().tolist()
-    diametrList=dfTire['diametr'].unique().tolist()
-    return render_template('index.html', segment='index', graphJSON=createGraph(dfTire, regionsList[0]), regions=regionsList)
+    # dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
+    # regionsList=dfTire['region'].unique().tolist()
+    # seasonsList=dfTire['season'].unique().tolist()
+    # diametrList=dfTire['diametr'].unique().tolist()
+    return render_template('index.html', segment='index') #, graphJSON=createGraph(dfTire, regionsList[0]), regions=regionsList
 
 def createGraph(dfTire, region):
     dfToShow = dfTire.loc[(dfTire['region'] == region) & (dfTire['diametr'] == 15)]

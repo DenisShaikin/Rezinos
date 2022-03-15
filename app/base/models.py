@@ -255,7 +255,7 @@ class CarsGuide(db.Model):
     def load_carsguide_base(self):
         cars_data = pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';')
         cars_data.index.name='id'
-        cars_data.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer}, chunksize=10000)
+        cars_data.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer}, chunksize=7000)
 
 class ThornPrices(db.Model):
     __tablename__ = 'thorn_prices'

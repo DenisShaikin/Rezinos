@@ -227,9 +227,14 @@ class TireGuide(db.Model):
                 self.purpose, self.season, self.thorns]
 
     def load_tireguide_base(self):
-        price_data = pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';')
-        price_data.index.name='id'
-        price_data.to_sql('tire_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
+        chunksize=5000
+        with pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize) as reader:
+            for chunk in reader:
+                chunk.index.name = 'id'
+                chunk.to_sql('tire_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
+        # price_data = pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';')
+        # price_data.index.name='id'
+        # price_data.to_sql('tire_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
 
 
 class CarsGuide(db.Model):
@@ -253,9 +258,14 @@ class CarsGuide(db.Model):
                 self.rimDia, self.tireDiametr, self.tireWidth, self.tireHeight]
 
     def load_carsguide_base(self):
-        cars_data = pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';')
-        cars_data.index.name='id'
-        cars_data.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer}, chunksize=5000)
+        chunksize=5000
+        with pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize) as reader:
+            for chunk in reader:
+                chunk.index.name = 'id'
+                chunk.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
+        # cars_data = pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';')
+        # cars_data.index.name='id'
+        # cars_data.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer}, chunksize=5000)
 
 class ThornPrices(db.Model):
     __tablename__ = 'thorn_prices'

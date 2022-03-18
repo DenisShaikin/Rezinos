@@ -615,28 +615,97 @@ function handlePersonalPhoto() {
     xhr.send(fd);
 }
 
-//Событие смены региона на странице index
-//if (document.getElementById('regionName')) {
-//    document.getElementById('regionName').addEventListener('change', function () {
-////    При смене региона надо перерисовать график
-//    var element = document.getElementById('regionName');
-//    var xhr = new XMLHttpRequest();
-//    xhr.open('post', 'changeregion');
-//    xhr.onload = function() {
-//        if (this.readyState === 4 && this.status === 200) {
-//            console.log("We're here")
-//            console.log(xhr.response)
+
+//При изменении глубины протектора надо менять износ
+if (document.getElementById('protector_height')) {
+    document.getElementById('protector_height').addEventListener('change', function () {
+    var element = document.getElementById('protector_height');
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'updateWear');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
 //            var graphs = JSON.parse(xhr.response);
 //            console.log(graphs)
 //            Plotly.newPlot('chart',graphs,{});
-//        }
-//        else if (xhr.status !== 200) {
-//        }
-//    };
-//    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
-//    xhr.setRequestHeader("X-CSRFToken", csrf_token);
-//    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-//    xhr.send(JSON.stringify({'region': element.options[element.selectedIndex].label}));
-//    });
-//}
+            document.getElementById('protector_wear').value=xhr.response
+        }
+        else if (xhr.status !== 200) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'protector_height':document.getElementById('protector_height').value,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
+        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':10}));
+    });
+}
 
+//Функция обновления графика, вызываемая по расписанию
+function updateChart(graphData){
+//    console.log("We're here")
+    Plotly.newPlot('chart',graphData,{});
+
+}
+
+//Событие нажатия кнопки Обновить
+if (document.getElementById('GetAvitoTirePrices')) {
+    document.getElementById('GetAvitoTirePrices').addEventListener('click', function () {
+//    При смене региона надо перерисовать график
+    var element = document.getElementById('GetAvitoTirePrices');
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'updateTirePrices');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            var graphs = JSON.parse(xhr.response);
+            Plotly.newPlot('chart',graphs,{});
+        }
+        else if (xhr.status !== 200) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'protector_wear':document.getElementById('protector_wear').value,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
+        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':10}));
+    });
+}
+
+//Событие нажатия кнопки Обновить
+if (document.getElementById('Refresh')) {
+    document.getElementById('Refresh').addEventListener('click', function () {
+//    При смене региона надо перерисовать график
+    var element = document.getElementById('Refresh');
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'updateChartNow');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+//            console.log(graphs)
+            var graphs = JSON.parse(JSON.parse(xhr.response)['chartData']);
+            Plotly.newPlot('chart',graphs,{});
+            document.getElementById('recommended_price').value = JSON.parse(JSON.parse(xhr.response)['predictResult']) * document.getElementById('qte').value
+        }
+        else if (xhr.status !== 200) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'protector_wear':document.getElementById('protector_wear').value,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
+        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':10}));
+    });
+}

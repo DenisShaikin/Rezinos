@@ -12,6 +12,7 @@ import logging
 from config import config_dict
 from app import create_app, db
 from app.base.models import  User, Tire, Rim
+from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 
 # WARNING: Don't run with debug turned on in production!
@@ -29,9 +30,8 @@ try:
 except KeyError:
     exit('Error: Invalid <config_mode>. Expected values [Debug, Production] ')
 
-app = create_app( app_config ) 
+app = create_app( app_config )
 Migrate(app, db, render_as_batch=True)
-# mail = Mail(app)
 
 @app.shell_context_processor
 def make_shell_context():

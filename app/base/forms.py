@@ -122,7 +122,8 @@ class TirePrepareForm(FlaskForm):
                                                        '16.5', '17', '17.5', '18', '19', '19.5', '20', '21', '22', '22.5',
                                                        '23','24','25','26', '26.5', '27', '28', '29', '30', '32', '34', '35', '36', '38',
                                                        '40', '42', '45', '50', '55'])
-    protector_height=IntegerField('Глубина протектора', default=8)
+    protector_height=IntegerField('Глубина протектора', validators=[DataRequired()])
+    protector_wear = IntegerField('Износ протектора, %', validators=[DataRequired()])
     photo1=MultipleFileField('Выберите файлы с фото', validators=[FileRequired(), FileAllowed(['png', 'jpg', 'bmp'], "Некорректный формат!")
     ]) #'image', validators=[FileAllowed(images, 'Images only!')]
     videourl=StringField(u'Ссылка на видео Youtube')

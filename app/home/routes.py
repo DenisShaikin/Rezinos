@@ -27,6 +27,11 @@ import plotly
 # import plotly.express as px
 from scipy.stats import mstats
 import json
+from app.api.apiroutes import abort_if_param_doesnt_exist
+from app.api.apimodels import ApiTire
+import plotly.express as px
+import threading
+from app.api.avitoutils import updateTires
 
 # def allowed_file(filename):
 #     return '.' in filename and \
@@ -63,6 +68,8 @@ def calc_recommended_tireprice(brand, model, diametr, size, thorns, is_winter, p
     if diametr is None:
         diametr=''
     diametrCondition = 'CASE diametr WHEN "' + diametr + '" THEN 1 ELSE 0 END'
+    if protector_height == '':
+        protector_height=8
 
 #Собираем цены по всем условиям, если нет цены - без Модели, далее без высоты, без ширины, без бренда
     # print('brand={} model={}'.format(brand, model))
@@ -541,9 +548,134 @@ def createGraph(dfTire, region):
     fig.update_layout(title='Распределение цен', template='plotly_white')
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-@blueprint.route('/changeregion', methods=['POST'])
+@blueprint.route('/updateWear', methods=['POST'])
 @login_required
-def changeregion():
+def updateWear():
+
+    query = db.session.query(WearDiscounts.protector_height, WearDiscounts.summer_discount, WearDiscounts.winter_discount)
+    dfDiscount = pd.read_sql(query.statement, query.session.bind).set_index('protector_height')
+    args = request.get_json(force=True)
+    if 'season' in args:
+        discount=[dfDiscount.loc[int(args['protector_height']), 'summer_discount'] if 'етние' in args['season']
+                  else dfDiscount.loc[int(args['protector_height']), 'winter_discount']]
+    else:
+        discount=0.
+    return str(round(discount[0]*100))
+
+def checkChartArgs(args):
+    seasonDict = { 'Зимние шипованные':'zimnie_shipovannye',
+                  'Зимние нешипованные':'zimnie_neshipovannye',
+                  'Летние':'letnie',
+                  'Всесезонные': 'vsesezonnye'}
+    #Забираем зоны Авито
+    query=db.session.query(AvitoZones.zone, AvitoZones.engzone)
+    dfZones=pd.read_sql(query.statement, query.session.bind).set_index('zone')
+
+    if 'region' in args:
+        region = dfZones.loc[args['region'], 'engzone']
+        args['region']=region #Меняем на латиницу
+    else:
+        region = 'rossiya'
+
+    if 'count' in args:
+        recCount = args['count']
+        del args['count']
+    else:
+        recCount = 300  # По умолчанию передаем 300 значений
+
+    if 'pages' in args:
+        pages = int(args['pages'])
+        del args['pages']
+    else:
+        pages = 10  # По умолчанию смотрим 10 страниц
+
+    if 'protector_wear' in args:
+        del args['protector_wear']
+
+    if 'season' in args:
+        season = seasonDict.get(args['season']) #А в авито - латиница
+    else:
+        season = 'zimnie_neshipovannye'
+
+    for key in ['width', 'height']:
+        args[key]=int(args[key])
+    return args, region, season, pages, recCount
+
+@blueprint.route('/updateChartNow', methods=['POST'])
+@login_required
+def updateChartNow():
+    args = request.get_json(force=True)  # flat=False
+    # print(args)
+    if 'protector_wear' =='':
+        protector_wear=10.
+    else:
+        protector_wear = int(args.get('protector_wear'))
+    protector_wear=protector_wear/100.
+
+    # Выполняем все проверки
+    args, region, season, pages, recCount = checkChartArgs(args)
+
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
+        **args).limit(recCount)
+    # print(query.statement)
+    df = pd.read_sql(query.statement, query.session.bind)
+    df=df.loc[df.wear_num>0]
+    df.drop_duplicates(inplace=True)
+    # print(df.head())
+    fig = px.scatter(
+        df, x='wear_num', y='unitPrice',  trendline='ols', trendline_color_override='orange', hover_data=['brand'],
+        labels={
+            "wear_num": "Износ, %",
+            "unitPrice": "Цена за 1 штуку, руб."
+        }, title='Распределение цен на шины', template='plotly_white'
+    )
+    model = px.get_trendline_results(fig)
+    results = model.iloc[0]["px_fit_results"]
+    # print(results)
+    alpha = results.params[0]
+    beta = results.params[1]
+    predictPrice=round(alpha+beta*protector_wear)
+    #Если рекомендуемая цена <0 то 25 руб
+    predictPrice = predictPrice if predictPrice>0 else 25.
+    fig.add_scatter(x=[protector_wear], y=[predictPrice], mode="markers", marker_symbol='circle-x',
+                marker=dict(size=15, color="orange", ),
+                name="рекомендованная цена")
+
+    fig.update_layout(xaxis=dict(tickformat=',.0%', hoverformat=",.0%"), legend=dict(orientation="h",
+        yanchor="bottom", y=1.02,  xanchor="left", x=-0.1, title_text=''))
+
+    return jsonify({'chartData':json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), 'predictResult':predictPrice})
+
+@blueprint.route('/updateTirePrices', methods=['POST'])
+@login_required
+def updateTirePrices():
+
+    args = request.get_json(force=True)  # flat=False
+    # Выполняем все проверки
+    args, region, season, pages, recCount = checkChartArgs(args)
+
+    threading.Thread(target=updateTires,
+                     kwargs={'app': app._get_current_object(), 'region': region, 'season': season,
+                             'width': args.get('width'), 'height': args.get('height'), 'diametr': args.get('diametr'),
+                             'pages': pages}).start()
+
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
+        **args).limit(recCount)
+    # print(query.statement)
+    df = pd.read_sql(query.statement, query.session.bind)
+    df=df.loc[df.wear_num>0]
+    df.drop_duplicates(inplace=True)
+    # print(df.head())
+    fig = px.scatter(
+        df, x='wear_num', y='unitPrice',  trendline='ols', trendline_color_override='orange', hover_data=['brand'],
+        labels={
+            "wear_num": "Износ, %",
+            "unitPrice": "Цена за 1 штуку, руб."
+        }, title='Распределение цен на шины', template='plotly_white'
+    )
+    fig.update_layout(xaxis=dict(tickformat=',.0%', hoverformat=",.0%"))
+
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     # s = request.get_json(force=True)
     # region = s['region']
     # dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
@@ -555,7 +687,7 @@ def changeregion():
     # fig = ff.create_distplot(hist_data, [region], bin_size=500, rug_text=region)
     # fig.update_layout(title='Распределение цен', template='plotly_white')
     # return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return
+    # return
 
 @blueprint.route('/settings.html', methods=['GET', 'POST'])
 @login_required
@@ -683,7 +815,8 @@ def tire():
             price=form.price.data, recommended_price=form.recommended_price.data, condition=form.condition.data, shirina_profilya=form.shirina_profilya.data,
             vysota_profilya=form.vysota_profilya.data,
             diametr=form.diametr.data, owner=current_user, sezonnost=form.sezonnost.data,
-            protector_height=form.protector_height.data, store=curr_store,
+            protector_height=form.protector_height.data,  protector_wear=form.protector_wear.data,
+            store=curr_store,
             avito_show = form.avito_show.data, avtoru_show = form.avtoru_show.data, drom_show=form.drom_show.data,
             videourl=form.videourl.data)
         newtire.baseid='t' + str(newtire.id)
@@ -719,7 +852,7 @@ def tire():
         form.contact_phone.data = current_user.def_contact_phone
         form.address.data = current_user.def_adress
         return render_template('tire.html', title='Предложение по шинам', user=current_user, form=form,
-                               segment='tire', tirephotos=tirephotos)
+                               segment='tire', tirephotos=tirephotos, graphJSON=[])
 
 
 @blueprint.route('/rim.html', methods=['GET', 'POST'])
@@ -879,7 +1012,8 @@ def edit_tire(tire_id):
         form.price.data = current_tire.price
         # form.recommended_price.data = current_tire.recommended_price
 
-        return render_template('edit_tire.html', title='Предложение по шинам', tire_id=tire_id, form=form, segment='edit_tire', df_photos=df_photos)
+        return render_template('edit_tire.html', title='Предложение по шинам', tire_id=tire_id, form=form, segment='edit_tire',
+            df_photos=df_photos)
 
 #Корректировка объявления по дискам
 @blueprint.route('/edit_rim.html/<rim_id>', methods=['GET', 'POST'])

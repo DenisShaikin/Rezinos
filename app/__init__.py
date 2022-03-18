@@ -10,6 +10,7 @@ from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 from flask_wtf.csrf import CSRFProtect
+from flask_restful import Api
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -17,9 +18,11 @@ login_manager = LoginManager()
 
 def register_extensions(app):
     db.init_app(app)
-    login_manager.init_app(app)
     csrf = CSRFProtect()
     csrf.init_app(app)
+    login_manager.init_app(app)
+    return csrf
+
 
 def register_blueprints(app):
     for module_name in ('base', 'home'):
@@ -41,7 +44,19 @@ def create_app(config):
 
     app = Flask(__name__, static_folder='base/static')
     app.config.from_object(config)
-    register_extensions(app)
+    csrf=register_extensions(app)
     register_blueprints(app)
     configure_database(app)
+
+    from app.api import bp as api_bp
+    # csrf.exempt(api_bp)
+    app.register_blueprint(api_bp, url_prefix='/api')
+    api = Api(app, decorators=[csrf.exempt])
+
+    from app.api.apiroutes import TirePrices, NewUser, GetUser
+    api.add_resource(NewUser, '/api/users')
+    api.add_resource(GetUser, '/api/users/<int:id>')
+    api.add_resource(TirePrices, '/api/tires/<string:region>')
+    csrf.exempt("NewUser")
+
     return app

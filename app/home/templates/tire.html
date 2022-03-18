@@ -128,8 +128,12 @@
                                 {{ form.condition(class='form-select', placeholder='Укажите состояние') }}
                             </div>
                             <div class ="col-md-3 mb-3">
-                                <label>Глубина протектора</label>
-                                {{ form.protector_height(class='form-control', placeholder='Укажите глубину протектора') }}
+                                <label>Глубина протектора, мм</label>
+                                {{ form.protector_height(class='form-control', placeholder='Глубина протектора', data_bs_toggle="tooltip", data_bs_placement="top", title="Замерьте и укажите глубину протектора") }}
+                            </div>
+                            <div class ="col-md-3 mb-3">
+                                <label>Износ протектора, %</label>
+                                {{ form.protector_wear(class='form-control', placeholder='Износ протектора, %') }}
                             </div>
                         </div>
                         <div class="row">
@@ -270,6 +274,20 @@
                                 <textarea class="form-control" placeholder="Описание" id="tire_description" rows="4"></textarea>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <button type="button" name="GetAvitoTirePrices" id="GetAvitoTirePrices" class="btn btn-primary">Получить цены</button>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <button type="button" name="Refresh" id="Refresh" class="btn btn-primary">Обновить</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div id="chart" class="chart"></div>
+
+                            </div>
+                        </div>
             </div>
         </div>
         </div>
@@ -280,6 +298,12 @@
     </div>
     </form>
 
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript">
+      var graphs = {{graphJSON | safe}};
+      console.log("We're here");
+      Plotly.plot('chart',graphs,{});
+</script>
 
 {% endblock content %}
 

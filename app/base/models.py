@@ -158,8 +158,9 @@ class AvitoZones(db.Model):
     __tablename__ = 'avito_zones'
     id = db.Column(db.Integer, primary_key=True)
     zone=db.Column(db.String(250))
+    engzone=db.Column(db.String(250))
     def __repr__(self):
-        return [self.id, self.zone]
+        return '<{},{},{}>'.format(self.id, self.zone, self.engzone)
     def load_avitozones(self):
         price_data = pd.read_csv(app.config['AVITOZONES_FILE'], encoding='cp1251', sep=';')
         price_data.index.name='id'
@@ -348,7 +349,8 @@ class Tire(db.Model):
     diametr=db.Column(db.String(10))   #в файле xml RimDiameter
     sezonnost=db.Column(db.String(40)) #TireType Всесезонные / Летние /  Зимние нешипованные / Зимние шипованные
     videourl=db.Column(db.String(256))   #VideoURL Формат ссылки на видео должен соответствовать - https://www.youtube.com/watch?v=***
-    protector_height=db.Column(db.Integer)
+    protector_height=db.Column(db.Integer)  #Высота протектора
+    protector_wear = db.Column(db.Integer) #Износ протектора
     comment=db.Column(db.String(120))  #комментарий
     photos = db.relationship('TirePhoto', backref='tire', lazy='dynamic', passive_deletes=True)
     withDelivery=db.Column(db.Boolean)  #с доставкой

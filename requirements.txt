@@ -8,7 +8,6 @@ cffi==1.14.6
 chardet==4.0.0
 click==8.0.1
 colorama==0.4.4
-cryptography==36.0.2
 dnspython==2.1.0
 email-validator==1.1.2
 Flask==1.1.2
@@ -57,3 +56,5 @@ urllib3==1.26.6
 Werkzeug==2.0.1
 wsproto==1.1.0
 WTForms==2.3.3
+cryptography
+

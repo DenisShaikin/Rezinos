@@ -71,9 +71,9 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
     options.add_argument('Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
     options.add_argument('Accept-Language=ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4')
     options.add_argument('headless')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--allow-running-insecure-content')
+    options.add_argument('disable-dev-shm-usage')
+    options.add_argument('no-sandbox')  #--no-sandbox
+    options.add_argument('allow-running-insecure-content')
     options.add_argument('--ignore-certificate-errors-spki-list')
     options.add_argument("--ignore-certificate-error")
     options.add_argument("--ignore-ssl-errors")

@@ -3,10 +3,10 @@ FROM python:3.9-slim-bullseye
 # Environment variables, setting app home path and copy of the python app in the container
 ENV PYTHONUNBUFFERED True
 
-ENV APP_HOME /app
+ENV APP_HOME /home/rezinos  
 WORKDIR $APP_HOME
 RUN useradd rezinos
-RUN chown -R rezinos:rezinos .
+RUN chown -R rezinos:rezinos ./
 # ./
 
 COPY . ./

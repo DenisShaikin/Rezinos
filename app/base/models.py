@@ -163,9 +163,9 @@ class AvitoZones(db.Model):
     def __repr__(self):
         return '<{},{},{}>'.format(self.id, self.zone, self.engzone)
     def load_avitozones(self):
-        price_data = pd.read_csv(app.config['AVITOZONES_FILE'], encoding='cp1251', sep=';')
-        price_data.index.name='id'
-        price_data.to_sql('avito_zones', con=db.engine, if_exists='replace', dtype={'id': Integer}, index=False)
+        price_data = pd.read_csv(app.config['AVITOZONES_FILE'], encoding='cp1251', sep=';', index_col='id')
+        # price_data.index.name='id'
+        price_data.to_sql('avito_zones', con=db.engine, if_exists='append', dtype={'id': Integer}, index=False)
 
 
 class TirePrices(db.Model):
@@ -179,9 +179,9 @@ class TirePrices(db.Model):
     def __repr__(self):
         return '<Шины {} {} {} {} R{}>'.format(self.brand, self.diametr, self.size, self.price_min, self.price_avg)
     def load_prices_base(self):
-        price_data = pd.read_csv(app.config['PRICES_FILE'], encoding='cp1251', sep=';')
-        price_data.index.name='id'
-        price_data.to_sql('tire_prices', con=db.engine, if_exists='replace', dtype={'id': Integer})
+        price_data = pd.read_csv(app.config['PRICES_FILE'], encoding='cp1251', sep=';', index_col='id')
+        # price_data.index.name='id'
+        price_data.to_sql('tire_prices', con=db.engine, if_exists='append', dtype={'id': Integer})
         # print(price_data.head())
 
 class RimPrices(db.Model):
@@ -263,9 +263,9 @@ class CarsGuide(db.Model):
 
     def load_carsguide_base(self):
         chunksize=1000
-        with pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize) as reader:
+        with pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize, index_col='id') as reader:
             for chunk in reader:
-                chunk.index.name = 'id'
+                # chunk.index.name = 'id'
                 chunk.to_sql('cars_guide', con=db.engine, if_exists='append', dtype={'id': Integer})
         # cars_data = pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';')
         # cars_data.index.name='id'
@@ -282,7 +282,7 @@ class ThornPrices(db.Model):
     def load_thornprices(self):
         thorn_data=pd.read_csv(app.config['THORNPRICE_FILE'], encoding='cp1251', sep=';', index_col='id')
         # thorn_data.index.name='id'
-        print(thorn_data.head())
+        # print(thorn_data.head())
         thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='append', dtype={'id': Integer})
 
 class WearDiscounts(db.Model):
@@ -297,8 +297,8 @@ class WearDiscounts(db.Model):
                         self.protector_height, self.summer_discount, self.winter_discount)
 
     def load_weardiscounts(self):
-        wear_data=pd.read_csv(app.config['WEARDISCOUNTS_FILE'], encoding='cp1251', sep=';')
-        wear_data.index.name='id'
+        wear_data=pd.read_csv(app.config['WEARDISCOUNTS_FILE'], encoding='cp1251', sep=';', index_col='id')
+        # wear_data.index.name='id'
         wear_data.to_sql('wear_discounts', con=db.engine, if_exists='append', dtype={'id': Integer} )
 
 class Tire(db.Model):

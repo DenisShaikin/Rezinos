@@ -232,7 +232,7 @@ class TireGuide(db.Model):
 
     def load_tireguide_base(self):
         chunksize=1000
-        with pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize) as reader:
+        with pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize, index_col='id') as reader:
             for chunk in reader:
                 chunk.index.name = 'id'
                 chunk.to_sql('tire_guide', con=db.engine, if_exists='append', dtype={'id': Integer})
@@ -280,8 +280,8 @@ class ThornPrices(db.Model):
     def __repr__(self):
         return '<Диаметр R{} {}>'.format(self.diametr, self.thorn_price)
     def load_thornprices(self):
-        thorn_data=pd.read_csv(app.config['THORNPRICE_FILE'], encoding='cp1251', sep=';')
-        thorn_data.index.name='id'
+        thorn_data=pd.read_csv(app.config['THORNPRICE_FILE'], encoding='cp1251', sep=';', index_col='id')
+        # thorn_data.index.name='id'
         print(thorn_data.head())
         thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='append', dtype={'id': Integer})
 

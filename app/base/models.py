@@ -164,8 +164,8 @@ class AvitoZones(db.Model):
         return '<{},{},{}>'.format(self.id, self.zone, self.engzone)
     def load_avitozones(self):
         price_data = pd.read_csv(app.config['AVITOZONES_FILE'], encoding='cp1251', sep=';', index_col='id')
-        # price_data.index.name='id'
-        price_data.to_sql('avito_zones', con=db.engine, if_exists='replace', dtype={'id': Integer}, index=False)
+        price_data.index.name='id'
+        price_data.to_sql('avito_zones', con=db.engine, if_exists='append', dtype={'id': Integer}, index=False)
 
 
 class TirePrices(db.Model):
@@ -181,7 +181,7 @@ class TirePrices(db.Model):
     def load_prices_base(self):
         price_data = pd.read_csv(app.config['PRICES_FILE'], encoding='cp1251', sep=';', index_col='id')
         price_data.index.name='id'
-        price_data.to_sql('tire_prices', con=db.engine, if_exists='replace', dtype={'id': Integer})
+        price_data.to_sql('tire_prices', con=db.engine, if_exists='append', index=False)
         # print(price_data.head())
 
 class RimPrices(db.Model):
@@ -209,7 +209,7 @@ class RimPrices(db.Model):
         with pd.read_csv(app.config['RIMS_FILE'], encoding='cp1251', index_col='id', sep=';', dtype={'diametr':'Int64', 'bolts':'Int64', 'original':'bool'}, chunksize=chunksize) as reader:
             for chunk in reader:
                 chunk.index.name='id'
-                chunk.to_sql('rim_prices', con=db.engine, if_exists='replace', dtype={'id': Integer})
+                chunk.to_sql('rim_prices', con=db.engine, if_exists='append', index=False)
 
 class TireGuide(db.Model):
     __tablename__ = 'tire_guide'
@@ -235,7 +235,7 @@ class TireGuide(db.Model):
         with pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize, index_col='id') as reader:
             for chunk in reader:
                 chunk.index.name = 'id'
-                chunk.to_sql('tire_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
+                chunk.to_sql('tire_guide', con=db.engine, if_exists='append', index=False)
         # price_data = pd.read_csv(app.config['TIREGUIDE_FILE'], encoding='cp1251', sep=';')
         # price_data.index.name='id'
         # price_data.to_sql('tire_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
@@ -265,8 +265,8 @@ class CarsGuide(db.Model):
         chunksize=1000
         with pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';', chunksize=chunksize, index_col='id') as reader:
             for chunk in reader:
-                # chunk.index.name = 'id'
-                chunk.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer})
+                chunk.index.name = 'id'
+                chunk.to_sql('cars_guide', con=db.engine, if_exists='append', index=False)
         # cars_data = pd.read_csv(app.config['CARSGUIDE_FILE'], encoding='cp1251', sep=';')
         # cars_data.index.name='id'
         # cars_data.to_sql('cars_guide', con=db.engine, if_exists='replace', dtype={'id': Integer}, chunksize=5000)
@@ -281,9 +281,9 @@ class ThornPrices(db.Model):
         return '<Диаметр R{} {}>'.format(self.diametr, self.thorn_price)
     def load_thornprices(self):
         thorn_data=pd.read_csv(app.config['THORNPRICE_FILE'], encoding='cp1251', sep=';', index_col='id')
-        # thorn_data.index.name='id'
+        thorn_data.index.name='id'
         # print(thorn_data.head())
-        thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='replace', dtype={'id': Integer})
+        thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='append', index=False)
 
 class WearDiscounts(db.Model):
     __tablename__ = 'wear_discounts'
@@ -298,8 +298,8 @@ class WearDiscounts(db.Model):
 
     def load_weardiscounts(self):
         wear_data=pd.read_csv(app.config['WEARDISCOUNTS_FILE'], encoding='cp1251', sep=';', index_col='id')
-        # wear_data.index.name='id'
-        wear_data.to_sql('wear_discounts', con=db.engine, if_exists='replace', dtype={'id': Integer} )
+        wear_data.index.name='id'
+        wear_data.to_sql('wear_discounts', con=db.engine, if_exists='append', index=False )
 
 class Tire(db.Model):
     id = db.Column(db.Integer, primary_key=True)

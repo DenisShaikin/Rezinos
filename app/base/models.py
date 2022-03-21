@@ -281,7 +281,6 @@ class ThornPrices(db.Model):
         return '<Диаметр R{} {}>'.format(self.diametr, self.thorn_price)
     def load_thornprices(self):
         thorn_data=pd.read_csv(app.config['THORNPRICE_FILE'], encoding='cp1251', sep=';')
-        thorn_data.columns=['diametr', 'thorn_price']
         thorn_data.index.name='id'
         print(thorn_data.head())
         thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='append', dtype={'id': Integer})

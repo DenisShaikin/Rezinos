@@ -42,113 +42,35 @@ def is_not_blank(s):
     return bool(s and not s.isspace())
 
 #Процедура ывчисления рекомендованной цены
-def calc_recommended_tireprice(brand, model, diametr, size, thorns, is_winter, protector_height):
-    diametr=diametr
-    avg_price = 0.
-    coef_wear=0.
-    width, height=size.split('/')
-    bBrand=False
-    bModel = False
-    bWidth=False
-    bHeight=False
-    strSelectString='SELECT avg(price) AS avg_price FROM tire_guide'
-    strDiametr = 'SELECT avg(price) AS avg_price FROM tire_guide WHERE '
-    if brand is None:
-        brand=''
-    brandCondition = 'CASE brand WHEN "' + brand + '" THEN 1 ELSE 0 END'
-    if model is None:
-        model=''
-    modelCondition = 'CASE model WHEN "' + model + '" THEN 1 ELSE 0 END'
-    if width is None:
-        width=''
-    widthCondition = 'CASE width WHEN "' + width + '" THEN 1 ELSE 0 END'
-    if height is None:
-        height=''
-    heightCondition = 'CASE height WHEN "' + height + '" THEN 1 ELSE 0 END'
-    if diametr is None:
-        diametr=''
-    diametrCondition = 'CASE diametr WHEN "' + diametr + '" THEN 1 ELSE 0 END'
-    if protector_height == '':
-        protector_height=8
+def calc_recommended_tireprice(args): #brand, model, diametr, size, thorns, is_winter, protector_height
 
-#Собираем цены по всем условиям, если нет цены - без Модели, далее без высоты, без ширины, без бренда
-    # print('brand={} model={}'.format(brand, model))
-    if brand or model or size or diametr:
-        strSelectString = strSelectString + ' WHERE '
-
-    if len(brand)>0:
-        bBrand=True
-        strSelectString = strSelectString + brandCondition
-    strBrandAndDiametr = strSelectString
-    strBrandDiamSize = strSelectString #Без модели
-    strBrandDiamWidth = strSelectString #Без модели и высоты
-
-    if len(model)>0:
-        if bBrand:
-            strSelectString = strSelectString + ' AND '
-            strBrandDiamSize = strBrandDiamSize + ' AND '
-        strSelectString = strSelectString + modelCondition
-        strBrandDiamSize = strBrandDiamSize + modelCondition
-        bModel=True
-    if len(width)>0:
-        if bBrand or bModel:
-            strSelectString = strSelectString + ' AND '
-            strBrandDiamSize = strBrandDiamSize + ' AND '
-            strBrandDiamWidth = strBrandDiamWidth + ' AND '
-        strSelectString = strSelectString + widthCondition
-        strBrandDiamSize = strBrandDiamSize + widthCondition
-        strBrandDiamWidth = strBrandDiamWidth + widthCondition
-        bWidth=True
-    if len(height)>0:
-        if bBrand or bModel or bWidth:
-            strSelectString = strSelectString + ' AND '
-            strBrandDiamSize = strBrandDiamSize + ' AND '
-        strSelectString = strSelectString + heightCondition
-        strBrandDiamSize = strBrandDiamSize + heightCondition
-        bHeight = True
-    if len(diametr)>0:
-        if bBrand or bModel or bWidth or bHeight:
-            strSelectString = strSelectString + ' AND '
-            strBrandAndDiametr = strBrandAndDiametr + ' AND '
-            strBrandDiamSize = strBrandDiamSize + ' AND '
-            strBrandDiamWidth = strBrandDiamWidth + ' AND '
-        strSelectString = strSelectString + diametrCondition
-        strBrandAndDiametr = strBrandAndDiametr + diametrCondition
-        strBrandDiamSize = strBrandDiamSize + diametrCondition
-        strBrandDiamWidth = strBrandDiamWidth + diametrCondition
-        strDiametr = strDiametr + diametrCondition
-
-    strSelectString=strSelectString+';'
-    strBrandAndDiametr = strBrandAndDiametr + ';'
-    strBrandDiamSize = strBrandDiamSize + ';'
-    strBrandDiamWidth = strBrandDiamWidth + ';'
-    strDiametr = strDiametr + ';'
-
-    dfavg_price = pd.read_sql(strSelectString, db.session.bind)
-    if dfavg_price.iloc[0, 0] is None: #Ищем без модели
-        # print('Ищем без модели')
-        dfavg_price = pd.read_sql(strBrandDiamSize, db.session.bind)
-    if dfavg_price.iloc[0, 0] is None: #Ищем без высоты профиля и модели
-        # print('Ищем без высоты и модели')
-        dfavg_price = pd.read_sql(strBrandDiamWidth, db.session.bind)
-    if dfavg_price.iloc[0, 0] is None: #Ищем без размера профиля и модели
-        # print('Ищем без размера профиля и модели')
-        dfavg_price = pd.read_sql(strBrandAndDiametr, db.session.bind)
-    if dfavg_price.iloc[0, 0] is None: #Ищем только по диаметру
-        # print('Ищем только по диаметру')
-        dfavg_price = pd.read_sql(strDiametr, db.session.bind)
-
-    if not dfavg_price.iloc[0, 0] is None:
-        avg_price=dfavg_price.iloc[0, 0]
-
-    protector_height=round(float(protector_height), 0)
-    if is_winter:
+    protector_height=args['protector_height']
+    del args['protector_height']
+    if 'имние' in args['season']: #Зимние
         coef_wear = db.session.query(WearDiscounts.winter_discount).filter(WearDiscounts.protector_height.__eq__(protector_height)).scalar()
-    else:
+    else: #Летние и всесезонные
         coef_wear = db.session.query(WearDiscounts.summer_discount).filter(WearDiscounts.protector_height.__eq__(protector_height)).scalar()
+
+    # print(args)
+    query = db.session.query(func.avg(TireGuide.price).label('average')).filter_by(**args)
+    df = pd.read_sql(query.statement, query.session.bind)
+    if df.iloc[0][0] is None:
+        for key in args.keys() - ['brand']:
+            del args[key]
+            query = db.session.query(func.avg(TireGuide.price).label('average')).filter_by(**args)
+            df = pd.read_sql(query.statement, query.session.bind)
+            if not df.iloc[0][0] is None: break #Выходим из цикла как только нашли не нулевое значение
+    print(df.head())
+
+    if not df.iloc[0][0] is None:
+        avg_price=df.iloc[0][0]
+    else:
+        avg_price=0
+    protector_height=round(float(protector_height), 0)
     if not coef_wear: coef_wear=0.
     newTire_price = round(avg_price, 0)
     avg_price = round(float(avg_price) * (1.-coef_wear), 0)
+    # print('Износ={}, новая цена {}'.format(coef_wear, avg_price))
     return avg_price, newTire_price
 
 #Процедура вычисления рекомендованной стоимости диска
@@ -295,16 +217,21 @@ def init_tire_prix():
 def load_tire_prix():
     # tire_price=''
     s = request.get_json(force=True)
-    brand = '' if str(s['brand']).find('Выберите')>=0 else s['brand']
-    diametr = s['diametr']
-    size = s['size']
-    model = '' if str(s['model']).find('Выберите')>=0 else s['model']
-    qte= s['qte']
-    tire_price, newTire_price = calc_recommended_tireprice(brand = brand, model=model, diametr = diametr, size = size, thorns = s['thorns'],
-                                            is_winter = s['winter_coef'], protector_height = s['protector_height'])
-    # print(newTire_price)
-    tire_price = int(tire_price * int(qte))
-    return jsonify({'tire_price': tire_price, 'newtire_price':newTire_price, 'brand': brand, 'model':model, 'size': size, 'diametr':diametr})
+    if str(s['brand']).find('Выберите')>=0:
+        del s['brand'] #Если не выбран бренд - удаляем из списка
+    if str(s['model']).find('Выберите')>=0:
+        del s['model'] #Если не выбран бренд - удаляем из списка
+    s['season'] = "Зимние" if 'имние' in s['saisonality'] else "Летние" if 'етние' in s['saisonality'] else "Всесезонные"
+    s['thorns']  = 1 if ' шипован' in s['saisonality'] else 0
+    del s['saisonality']
+    # s['protector_height'] = 8 if s['protector_height']=='' else s['protector_height']
+    # argsDict = dict([(k, v) for k, v in s.items() if (v !='' and k != 'qte') ]) #Оставляем непустые ключи
+    tire_price, newTire_price = 0, 0
+    #не будем забирать цену новых
+    #tire_price, newTire_price =calc_recommended_tireprice(argsDict)
+    s['tire_price'] = round(tire_price)
+    s['newTireprice'] = round(newTire_price)
+    return jsonify(s)
 
 @blueprint.route('/load_rim_prix', methods=['POST'])
 @login_required
@@ -606,7 +533,7 @@ def checkChartArgs(args):
 def updateChartNow():
     args = request.get_json(force=True)  # flat=False
     # print(args)
-    if 'protector_wear' =='':
+    if args.get('protector_wear') =='':
         protector_wear=10.
     else:
         protector_wear = int(args.get('protector_wear'))
@@ -630,16 +557,19 @@ def updateChartNow():
         }, title='Распределение цен на шины', template='plotly_white'
     )
     model = px.get_trendline_results(fig)
-    results = model.iloc[0]["px_fit_results"]
-    # print(results)
-    alpha = results.params[0]
-    beta = results.params[1]
-    predictPrice=round(alpha+beta*protector_wear)
-    #Если рекомендуемая цена <0 то 25 руб
-    predictPrice = predictPrice if predictPrice>0 else 25.
-    fig.add_scatter(x=[protector_wear], y=[predictPrice], mode="markers", marker_symbol='circle-x',
-                marker=dict(size=15, color="orange", ),
-                name="рекомендованная цена")
+    # print(model)
+    predictPrice=None
+    if not model.empty:
+        results = model.iloc[0]["px_fit_results"]
+        # print(results)
+        alpha = results.params[0]
+        beta = results.params[1]
+        predictPrice=round(alpha+beta*protector_wear)
+        #Если рекомендуемая цена <0 то 25 руб
+        predictPrice = predictPrice if predictPrice>0 else 25.
+        fig.add_scatter(x=[protector_wear], y=[predictPrice], mode="markers", marker_symbol='circle-x',
+                    marker=dict(size=15, color="orange", ),
+                    name="рекомендованная цена")
 
     fig.update_layout(xaxis=dict(tickformat=',.0%', hoverformat=",.0%"), legend=dict(orientation="h",
         yanchor="bottom", y=1.02,  xanchor="left", x=-0.1, title_text=''))
@@ -860,6 +790,7 @@ def tire():
 def rim():
     curr_store=current_user.store
     carBrands=CarsGuide.query.with_entities(CarsGuide.id, CarsGuide.brand).group_by(CarsGuide.brand).all()
+
     carBrands.insert(0, (-1, 'Выберите бренд'))
     brands=RimPrices.query.with_entities(RimPrices.id, RimPrices.brand).group_by(RimPrices.brand).all()
     brands.insert(0, (-1, 'Выберите бренд'))
@@ -977,11 +908,12 @@ def edit_tire(tire_id):
         form.display_area1.choices = avito_zones
         form.display_area1.default=current_tire.display_area1
         form.process()
-        tire_price, newTire_price = calc_recommended_tireprice(brand=current_tire.brand, model=current_tire.model, diametr=current_tire.diametr,
-                                                               size=current_tire.shirina_profilya + "/" + current_tire.vysota_profilya,
-                                                               thorns=None,
-                                                               is_winter=None,
-                                                               protector_height=current_tire.protector_height)
+        tire_price, newTire_price = 0, 0
+        # tire_price, newTire_price = calc_recommended_tireprice({'brand':current_tire.brand, 'model':current_tire.model, 'diametr':current_tire.diametr,
+        #                                                        'width':current_tire.shirina_profilya, 'height':current_tire.vysota_profilya,
+        #                                                        'thorns':None,
+        #                                                        'is_winter':None,
+        #                                                        'protector_height':current_tire.protector_height})
         # print(newTire_price)
         tire_price = int(tire_price * int(current_tire.qte))
         form.recommended_price.data = int(round(tire_price, 0))

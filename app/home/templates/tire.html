@@ -168,7 +168,7 @@
                             </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Цена</label>
-                                {{ form.price(class='form-control', placeholder='Руб.', data_bs_toggle="tooltip", data_bs_placement="top", title="Можете поставить любую или округлить вниз рекомендуемую цену") }}
+                                {{ form.price(class='form-control', placeholder='Руб.', data_bs_toggle="tooltip", data_bs_placement="top", title="Можете поставить любую или округлить рекомендуемую цену") }}
                             </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Реком. цена</label>
@@ -262,12 +262,12 @@
                                     <input type="text" class="form-control" id="tire_purpose" placeholder="Применимость" aria-label="Применимость">
                             </div>
                         </div>
-                        <div class="row">
-                            <div class ="col-md-12 mb-3">
-                                    <label>Цена за 1 шт.</label>
-                                    <input type="text" class="form-control" id="tire_newprice" placeholder="Цена" aria-label="Цена">
-                            </div>
-                        </div>
+<!--                        <div class="row">-->
+<!--                            <div class ="col-md-12 mb-3">-->
+<!--                                    <label>Цена за 1 шт.</label>-->
+<!--                                    <input type="text" class="form-control" id="tire_newprice" placeholder="Цена" aria-label="Цена">-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="row">
                             <div class ="col-md-12 mb-3">
                                 <label for="tire_description">Описание</label>
@@ -280,6 +280,21 @@
                             </div>
                             <div class="col-md-3 mb-3">
                                 <button type="button" name="Refresh" id="Refresh" class="btn btn-primary">Обновить</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="progress-wrapper">
+                                <div class="progress-info">
+                                    <div class="progress-label">
+                                        <span class="text-primary">Загрузка...</span>
+                                    </div>
+                                    <div class="progress-percentage" >
+                                        <span id="chart_progress_text">0%</span>
+                                    </div>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-primary" id="chart_progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">

@@ -26,14 +26,15 @@ function change_tire(){
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 200) {
             myResponse = JSON.parse(xhr.responseText)
+            console.log(myResponse)
             document.getElementById('recommended_price').value = myResponse.tire_price;
-            document.getElementById('tire_newprice').value = myResponse.newtire_price;
+//            document.getElementById('tire_newprice').value = myResponse.newTireprice;  //Не будем выводить цену новых
 //            console.log(JSON.parse(xhr.responseText));
             document.getElementById('title').value= 'Шины ' + JSON.parse(xhr.responseText)['brand'] + ' ' + JSON.parse(xhr.responseText)['model'] + ' ' +
                 JSON.parse(xhr.responseText)['size'] + 'R' + JSON.parse(xhr.responseText)['diametr'];
             document.getElementById('description').value= document.getElementById('sezonnost').value + ' ' + document.getElementById('condition').value + ' шины ' + JSON.parse(xhr.responseText)['brand'] + ' ' + JSON.parse(xhr.responseText)['model'] + ' ' +
                 JSON.parse(xhr.responseText)['size'] + 'R' + JSON.parse(xhr.responseText)['diametr']  + ' ' + document.getElementById('tire_purpose').value +
-                ', высота протектора ' + document.getElementById('protector_height').value + ' мм';
+                ', высота протектора ' + document.getElementById('protector_height').value + ' мм' + ', износ примерно ' + document.getElementById('protector_wear').value + '%';
         }
         else if (xhr.status !== 200) {
             document.getElementById('recommended_price').value='0'
@@ -42,9 +43,7 @@ function change_tire(){
     beforeSend(xhr);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     var saisonality =  document.getElementById('sezonnost').value
-    winter_coef = saisonality.includes('имние'); /*проверяем что шины зимние*/
-    thorns_coef = saisonality.includes(' шипован');
-    try{
+    try {
         var brand= document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
         }
         catch(e){
@@ -61,9 +60,9 @@ function change_tire(){
         'brand': brand,
         'model': model,
         'diametr': document.getElementById('diametr').value,
-        'size': document.getElementById('shirina_profilya').value + "/" + document.getElementById('vysota_profilya').value,
-        'thorns' : thorns_coef,
-        'winter_coef': winter_coef,
+        'width': document.getElementById('shirina_profilya').value,
+        'height': document.getElementById('vysota_profilya').value,
+        'saisonality': saisonality,
         'protector_height': document.getElementById('protector_height').value,
         'qte' : document.getElementById('qte').value
         }));
@@ -628,6 +627,7 @@ if (document.getElementById('protector_height')) {
 //            console.log(graphs)
 //            Plotly.newPlot('chart',graphs,{});
             document.getElementById('protector_wear').value=xhr.response
+            updateChart(0, 10)
         }
         else if (xhr.status !== 200) {
         }
@@ -645,24 +645,21 @@ if (document.getElementById('protector_height')) {
     });
 }
 
-//Функция обновления графика, вызываемая по расписанию
-function updateChart(graphData){
-//    console.log("We're here")
-    Plotly.newPlot('chart',graphData,{});
-
-}
 
 //Событие нажатия кнопки Обновить
 if (document.getElementById('GetAvitoTirePrices')) {
     document.getElementById('GetAvitoTirePrices').addEventListener('click', function () {
 //    При смене региона надо перерисовать график
-    var element = document.getElementById('GetAvitoTirePrices');
+    var pages = 10;
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'updateTirePrices');
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 200) {
             var graphs = JSON.parse(xhr.response);
             Plotly.newPlot('chart',graphs,{});
+            for (var t=1; t<= pages; t++) {
+                window.setTimeout(updateChart, t * 15 * 1000, t, pages);
+            }
         }
         else if (xhr.status !== 200) {
         }
@@ -676,15 +673,13 @@ if (document.getElementById('GetAvitoTirePrices')) {
         'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
         'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
         'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
-        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':10}));
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':pages}));
     });
 }
 
-//Событие нажатия кнопки Обновить
-if (document.getElementById('Refresh')) {
-    document.getElementById('Refresh').addEventListener('click', function () {
-//    При смене региона надо перерисовать график
-    var element = document.getElementById('Refresh');
+//Функция забирает параметры расчета и по ним строит график
+function updateChart(nPage, nTotalPages){
+    var pages=nTotalPages;
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'updateChartNow');
     xhr.onload = function() {
@@ -692,6 +687,11 @@ if (document.getElementById('Refresh')) {
 //            console.log(graphs)
             var graphs = JSON.parse(JSON.parse(xhr.response)['chartData']);
             Plotly.newPlot('chart',graphs,{});
+//            console.log(Math.round(100/nTotalPages*nPage));
+            var progress = Math.round(100/nTotalPages*nPage);
+            document.getElementById('chart_progress_text').textContent = progress + "%"
+            document.getElementById('chart_progress').setAttribute('aria-valuenow', progress);
+            document.getElementById('chart_progress').style.width = progress + "%";
             document.getElementById('recommended_price').value = JSON.parse(JSON.parse(xhr.response)['predictResult']) * document.getElementById('qte').value
         }
         else if (xhr.status !== 200) {
@@ -706,6 +706,14 @@ if (document.getElementById('Refresh')) {
         'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
         'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
         'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
-        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':10}));
-    });
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':pages}));
 }
+
+
+//Событие нажатия кнопки Обновить
+if (document.getElementById('Refresh')) {
+    document.getElementById('Refresh').addEventListener('click', function(){updateChart(0, 10)}, false);}
+
+if (document.getElementById('protector_wear')) {
+    document.getElementById('protector_wear').addEventListener('change', function(){updateChart(0, 10)}, false);}
+

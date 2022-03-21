@@ -65,6 +65,7 @@ def treatAvitoTiresData(df):
     return df
 
 def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zimnie_neshipovannye', nPages=10):
+    app.app_context().push()
     options = se.webdriver.ChromeOptions()
     options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko')
     options.add_argument('Connection=keep-alive')
@@ -158,22 +159,21 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                     #Вычищаем данные
                     dfTempResult=treatAvitoTiresData(dfTempResult)
                     dfResult=pd.concat([dfResult, dfTempResult])
+                    #Добавляем новые записи в базу
+                    with app.app_context():
+                        # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
+                        lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
+                        lastRec = 0 if not lastRec else lastRec
+                        dfTempResult['index'] = range(lastRec + 1, lastRec + len(dfTempResult) + 1)
+                        dfTempResult.set_index('index', inplace=True)
+                        dfTempResult.index.name = 'id'
+                        dfTempResult['update_date'] = datetime.utcnow()
+                        dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=True)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
     driver.quit()
     # currTire=Tire()
     # myapp=app._get_current_object()
-    app.app_context().push()
-    with app.app_context():
-        #необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
-        lastRec=db.session.query(func.max(ApiTire.id)).one()[0]
-        lastRec=0 if not lastRec else lastRec
-
-        dfResult['index']=range(lastRec+1, lastRec+len(dfResult)+1)
-        dfResult.set_index('index', inplace=True)
-        dfResult.index.name = 'id'
-        dfResult['update_date']=datetime.utcnow()
-        dfResult.to_sql('tire_api', con=db.engine, if_exists='append', index=True) #dtype={'id': db.Integer}
     return dfResult
 
 def updateTires(app, region, season, diametr, width, height, pages=20):

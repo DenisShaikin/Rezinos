@@ -283,7 +283,8 @@ class ThornPrices(db.Model):
         thorn_data=pd.read_csv(app.config['THORNPRICE_FILE'], encoding='cp1251', sep=';')
         thorn_data.columns=['diametr', 'thorn_price']
         thorn_data.index.name='id'
-        thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='replace')
+        print(thorn_data.head())
+        thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='append', dtype={'id': Integer})
 
 class WearDiscounts(db.Model):
     __tablename__ = 'wear_discounts'

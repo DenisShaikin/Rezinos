@@ -90,6 +90,8 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
         strLink +='/' + 'shirina_' + str(width)
     if height:
         strLink +='/' + 'vysota_' + str(height)
+    print('diametr={}, season={}, width={}, height={}'.format(diametr, season, width, height))
+    pd.set_option('display.max_colwidth', 1000)
     print(strLink)
 #     options.add_argument('headless')
 #     driver = se.webdriver.Chrome(options=options)

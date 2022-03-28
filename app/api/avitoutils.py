@@ -80,7 +80,7 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
     options.add_argument("--ignore-certificate-error")
     options.add_argument("--ignore-ssl-errors")
     options.add_argument('log-level=3')
-    # print('регион=',region)
+    print('регион=',region)
     strLink='https://www.avito.ru/' + region + '/zapchasti_i_aksessuary/shiny_diski_i_kolesa/shiny/'
     if diametr:
         strLink +='diametr_' + str(diametr)

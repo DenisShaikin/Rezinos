@@ -500,7 +500,7 @@ def checkChartArgs(args):
                   'Летние':'letnie',
                   'Всесезонные': 'vsesezonnye'}
     #Забираем зоны Авито
-    query=db.session.query(AvitoZones.zone, AvitoZones.engzone)
+    query=db.session.query(AvitoZones.zone, AvitoZones.engzone).limit(1)
     dfZones=pd.read_sql(query.statement, query.session.bind).set_index('zone')
 
     if 'region' in args:

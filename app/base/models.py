@@ -165,7 +165,7 @@ class AvitoZones(db.Model):
     def load_avitozones(self):
         price_data = pd.read_csv(app.config['AVITOZONES_FILE'], encoding='cp1251', sep=';', index_col='id')
         price_data.index.name='id'
-        price_data.to_sql('avito_zones', con=db.engine, if_exists='replace', dtype={'id': Integer}, index=False)
+        price_data.to_sql('avito_zones', con=db.engine, if_exists='append', index=False)
 
 
 class TirePrices(db.Model):

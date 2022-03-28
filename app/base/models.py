@@ -177,7 +177,7 @@ class TirePrices(db.Model):
     price_min = db.Column(db.Integer)
     price_med = db.Column(db.Integer)
     def __repr__(self):
-        return '<Шины {} {} {} {} R{}>'.format(self.brand, self.diametr, self.size, self.price_min, self.price_avg)
+        return '<Шины {} {} {} {}>'.format(self.brand, self.diametr, self.size, self.price_min)
     def load_prices_base(self):
         price_data = pd.read_csv(app.config['PRICES_FILE'], encoding='cp1251', sep=';', index_col='id')
         price_data.index.name='id'

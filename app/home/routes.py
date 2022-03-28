@@ -60,7 +60,7 @@ def calc_recommended_tireprice(args): #brand, model, diametr, size, thorns, is_w
             query = db.session.query(func.avg(TireGuide.price).label('average')).filter_by(**args)
             df = pd.read_sql(query.statement, query.session.bind)
             if not df.iloc[0][0] is None: break #Выходим из цикла как только нашли не нулевое значение
-    print(df.head())
+    # print(df.head())
 
     if not df.iloc[0][0] is None:
         avg_price=df.iloc[0][0]
@@ -193,23 +193,30 @@ def get_avito_data(avito_client_id, avito_client_secret):
             avito_object['balance_bonus'] = res.json()['bonus']
     return avito_object
 
-@blueprint.route('/init_tire_prix', methods=['GET', 'POST'])
+@blueprint.route('/init_tire_prix', methods=['GET'])
 @login_required
 def init_tire_prix():
-    prices = TirePrices()
-    prices.load_prices_base()
-    rims_prices = RimPrices()
-    rims_prices.load_prices_base()
-    thorns = ThornPrices()
-    thorns.load_thornprices()
-    wear = WearDiscounts()
-    wear.load_weardiscounts()
-    tireguide=TireGuide()
-    tireguide.load_tireguide_base()
-    carsguide=CarsGuide()
-    carsguide.load_carsguide_base()
-    avitozones=AvitoZones()
-    avitozones.load_avitozones()
+    if TirePrices.query.get(1) is None: #Загружаем только если пустые таблицы
+        prices = TirePrices()
+        prices.load_prices_base()
+    if RimPrices.query.get(1) is None:
+        rims_prices = RimPrices()
+        rims_prices.load_prices_base()
+    if ThornPrices.query.get(1) is None:
+        thorns = ThornPrices()
+        thorns.load_thornprices()
+    if WearDiscounts.query.get(1) is None:
+        wear = WearDiscounts()
+        wear.load_weardiscounts()
+    if TireGuide.query.get(1) is None:
+        tireguide=TireGuide()
+        tireguide.load_tireguide_base()
+    if CarsGuide.query.get(1) is None:
+        carsguide=CarsGuide()
+        carsguide.load_carsguide_base()
+    if AvitoZones.query.get(1) is None:
+        avitozones=AvitoZones()
+        avitozones.load_avitozones()
     return render_template('index.html', segment='index')
 
 @blueprint.route('/load_tire_prix', methods=['POST'])
@@ -416,7 +423,7 @@ def changeCarModelRequest():
         .filter((CarsGuide.model==model) & (CarsGuide.brand==brand) & (CarsGuide.rimDiametr.isnot(None)))\
         .group_by(CarsGuide.year).order_by(CarsGuide.year).first()
     result=yearList._asdict()
-    print(result)
+    # print(result)
     return jsonify(result)
 
 #Выбрали неоригинал
@@ -457,11 +464,6 @@ def change_avtorupromo_state():
 @blueprint.route('/index')
 @login_required
 def index():
-    # print('basedir=', app.config['TIREREGIONPRICES'])
-    # dfTire=pd.read_csv(app.config['TIREREGIONPRICES'], encoding='utf8', sep=';')
-    # regionsList=dfTire['region'].unique().tolist()
-    # seasonsList=dfTire['season'].unique().tolist()
-    # diametrList=dfTire['diametr'].unique().tolist()
     return render_template('index.html', segment='index') #, graphJSON=createGraph(dfTire, regionsList[0]), regions=regionsList
 
 def createGraph(dfTire, region):
@@ -478,16 +480,19 @@ def createGraph(dfTire, region):
 @blueprint.route('/updateWear', methods=['POST'])
 @login_required
 def updateWear():
-
-    query = db.session.query(WearDiscounts.protector_height, WearDiscounts.summer_discount, WearDiscounts.winter_discount)
-    dfDiscount = pd.read_sql(query.statement, query.session.bind).set_index('protector_height')
     args = request.get_json(force=True)
+    # print(args)
+    argDict={'protector_height':args['protector_height']}
+    query = db.session.query(WearDiscounts.protector_height, WearDiscounts.summer_discount, WearDiscounts.winter_discount).filter_by(**argDict).limit(1)
+    dfDiscount = pd.read_sql(query.statement, query.session.bind).set_index('protector_height')
     if 'season' in args:
-        discount=[dfDiscount.loc[int(args['protector_height']), 'summer_discount'] if 'етние' in args['season']
-                  else dfDiscount.loc[int(args['protector_height']), 'winter_discount']]
+        discount = dfDiscount.loc[int(args['protector_height']), 'summer_discount'] if 'етние' in args['season'] else dfDiscount.loc[int(args['protector_height']), 'winter_discount']
     else:
-        discount=0.
-    return str(round(discount[0]*100))
+        discount = 0.
+
+    # print('discount', discount)
+
+    return str(round(discount*100))
 
 def checkChartArgs(args):
     seasonDict = { 'Зимние шипованные':'zimnie_shipovannye',
@@ -523,9 +528,11 @@ def checkChartArgs(args):
         season = seasonDict.get(args['season']) #А в авито - латиница
     else:
         season = 'zimnie_neshipovannye'
-
+    # print(args)
     for key in ['width', 'height']:
-        args[key]=int(args[key])
+        if key in args:
+            args[key]=int(args[key])
+
     return args, region, season, pages, recCount
 
 @blueprint.route('/updateChartNow', methods=['POST'])
@@ -540,10 +547,11 @@ def updateChartNow():
     protector_wear=protector_wear/100.
 
     # Выполняем все проверки
-    args, region, season, pages, recCount = checkChartArgs(args)
-
+    argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
+    argsDict, region, season, pages, recCount = checkChartArgs(argsDict)
+    # print('argsDict=', argsDict)
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
-        **args).limit(recCount)
+        **argsDict).limit(recCount)
     # print(query.statement)
     df = pd.read_sql(query.statement, query.session.bind)
     df=df.loc[df.wear_num>0]

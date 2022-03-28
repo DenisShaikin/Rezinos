@@ -650,7 +650,7 @@ if (document.getElementById('protector_height')) {
 if (document.getElementById('GetAvitoTirePrices')) {
     document.getElementById('GetAvitoTirePrices').addEventListener('click', function () {
 //    При смене региона надо перерисовать график
-    var pages = 10;
+    var pages = 15;
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'updateTirePrices');
     xhr.onload = function() {

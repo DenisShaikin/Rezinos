@@ -99,6 +99,7 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
     driver = se.webdriver.Chrome(desired_capabilities=caps, options=options)
 
     dfResult=pd.DataFrame()
+    print(strLink)
     try:
         driver.get(strLink + '?localPriority=1')
     except:

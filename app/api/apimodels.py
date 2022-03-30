@@ -21,6 +21,7 @@ class ApiTire(db.Model):
     qte= db.Column(db.Integer)
     unitPrice = db.Column(db.Float)
     wear_num = db.Column(db.Float)
+    avito_link = db.Column(db.String(200))
     update_date = db.Column(db.DateTime, default=datetime.utcnow()) #Дата и время обновления
 
     def __repr__(self):

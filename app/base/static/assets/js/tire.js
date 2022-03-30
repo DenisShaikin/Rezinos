@@ -17,55 +17,44 @@ function encode_params(object) {
 
 //При любом изменении параметров шины - пересчитываем рекомендованную цену
 function change_tire(){
-    var xhr = new XMLHttpRequest();
-    var beforeSend = function(xhr) {
-        var csrf_token = document.querySelector('meta[name=csrf-token]').content;
-        xhr.setRequestHeader("X-CSRFToken", csrf_token);
-    };
-    xhr.open('post', 'load_tire_prix');
-    xhr.onload = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            myResponse = JSON.parse(xhr.responseText)
-            console.log(myResponse)
-            document.getElementById('recommended_price').value = myResponse.tire_price;
-//            document.getElementById('tire_newprice').value = myResponse.newTireprice;  //Не будем выводить цену новых
-//            console.log(JSON.parse(xhr.responseText));
-            document.getElementById('title').value= 'Шины ' + JSON.parse(xhr.responseText)['brand'] + ' ' + JSON.parse(xhr.responseText)['model'] + ' ' +
-                JSON.parse(xhr.responseText)['size'] + 'R' + JSON.parse(xhr.responseText)['diametr'];
-            document.getElementById('description').value= document.getElementById('sezonnost').value + ' ' + document.getElementById('condition').value + ' шины ' + JSON.parse(xhr.responseText)['brand'] + ' ' + JSON.parse(xhr.responseText)['model'] + ' ' +
-                JSON.parse(xhr.responseText)['size'] + 'R' + JSON.parse(xhr.responseText)['diametr']  + ' ' + document.getElementById('tire_purpose').value +
-                ', высота протектора ' + document.getElementById('protector_height').value + ' мм' + ', износ примерно ' + document.getElementById('protector_wear').value + '%';
+//            console.log(myResponse)
+    var strTitle = 'Шины ';
+    var strDescription = document.getElementById('sezonnost').value + ' ' + document.getElementById('condition').value + ' шины';
+
+    if (!document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label.includes('Выберите')) {
+        strTitle = strTitle + ' ' + document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
+        strDescription = strDescription + ' ' + document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
+    }
+    if (document.getElementById('model').value){
+        if (!document.getElementById('model').options[document.getElementById('model').selectedIndex].label.includes('Выберите')) {
+            strTitle = strTitle + ' ' + document.getElementById('model').options[document.getElementById('model').selectedIndex].label;
+            strDescription = strDescription + ' ' + document.getElementById('model').options[document.getElementById('model').selectedIndex].label;
         }
-        else if (xhr.status !== 200) {
-            document.getElementById('recommended_price').value='0'
-        }
-    };
-    beforeSend(xhr);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    var saisonality =  document.getElementById('sezonnost').value
-    try {
-        var brand= document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
-        }
-        catch(e){
-            if (e instanceof TypeError) var brand='';
-        }
-    try{
-        var model= document.getElementById('model').options[document.getElementById('model').selectedIndex].label;
-        }
-        catch(e){
-            if (e instanceof TypeError) var model='';
-        }
-//    console.log('model='+model);
-    xhr.send(JSON.stringify({
-        'brand': brand,
-        'model': model,
-        'diametr': document.getElementById('diametr').value,
-        'width': document.getElementById('shirina_profilya').value,
-        'height': document.getElementById('vysota_profilya').value,
-        'saisonality': saisonality,
-        'protector_height': document.getElementById('protector_height').value,
-        'qte' : document.getElementById('qte').value
-        }));
+    }
+    if (document.getElementById('shirina_profilya').value) {
+        strTitle = strTitle + ' ' + document.getElementById('shirina_profilya').value;
+        strDescription = strDescription + ' ' + document.getElementById('shirina_profilya').value;
+    }
+    if (document.getElementById('vysota_profilya').value) {
+        strTitle = strTitle + '/' + document.getElementById('vysota_profilya').value;
+        strDescription = strDescription + '/' + document.getElementById('vysota_profilya').value;
+    }
+    if (document.getElementById('diametr').value) {
+        strTitle = strTitle + 'R' + document.getElementById('diametr').value;
+        strDescription = strDescription + 'R' + document.getElementById('diametr').value;
+    }
+    if (document.getElementById('tire_purpose').value) {
+        strDescription = strDescription + ' ' + document.getElementById('tire_purpose').value;
+    }
+    if (document.getElementById('protector_height').value) {
+        strDescription = strDescription + ', высота протектора ' + document.getElementById('protector_height').value + ' мм';
+    }
+    if (document.getElementById('protector_wear').value) {
+        strDescription = strDescription + ', износ примерно ' + document.getElementById('protector_wear').value + '%';
+    }
+    document.getElementById('title').value = strTitle;
+    document.getElementById('description').value = strDescription;
+
 }
 
 //При любом изменении параметров диска - пересчитываем рекомендованную цену
@@ -204,6 +193,23 @@ if (document.getElementById('carBrand')) {
     xhr.send(JSON.stringify({
         'carBrand': element.options[element.selectedIndex].label }));
 
+    });
+}
+
+//Кнопка ведущая на список предложений на Авито
+if (document.getElementById('AvitoTires')) {
+    document.getElementById('AvitoTires').addEventListener('click', function () {
+    var link='avito_tires/1?';
+    if (document.getElementById('diametr').value){
+        link= link + 'diametr=' + document.getElementById('diametr').value;
+    }
+    if (document.getElementById('shirina_profilya').value){
+        link= link + '&width=' + document.getElementById('shirina_profilya').value ;
+    }
+    if (document.getElementById('vysota_profilya').value){
+        link= link + '&height=' + document.getElementById('vysota_profilya').value ;
+    }
+    window.open(link, '_self');  //, '_blank'
     });
 }
 
@@ -505,6 +511,18 @@ if (document.getElementById('protector_height')) {
     change_tire();
     });
 }
+if (document.getElementById('protector_wear')) {
+    document.getElementById('protector_wear').addEventListener('change', function () {
+    change_tire();
+    });
+}
+
+if (document.getElementById('sezonnost')) {
+    document.getElementById('sezonnost').addEventListener('change', function () {
+    change_tire();
+    });
+}
+
 
 if (document.getElementById('rimboltsdiametr')) {
     document.getElementById('rimboltsdiametr').addEventListener('change', function () {
@@ -626,8 +644,9 @@ if (document.getElementById('protector_height')) {
 //            var graphs = JSON.parse(xhr.response);
 //            console.log(graphs)
 //            Plotly.newPlot('chart',graphs,{});
-            document.getElementById('protector_wear').value=xhr.response
-            updateChart(0, 10)
+            document.getElementById('protector_wear').value=xhr.response;
+            change_tire();
+            updateChart(0, 10);
         }
         else if (xhr.status !== 200) {
         }

@@ -49,18 +49,20 @@ def treatAvitoTiresData(df):
     df['price']=df['price'].str.replace(' ', '')
 #     print(dtypes(df['price']))
     df['price']=df['price'].apply(pd.to_numeric, errors='coerce')  #pd.to_numeric(df['price'], errors='coerce')
-    df=df.loc[~df['qte'].isnull()]
+    df=df.loc[~(df['qte'].isnull() & df['price'].isnull())]
     currMode=pd.options.mode.chained_assignment
     pd.options.mode.chained_assignment=None
+    df=df.loc[df['qte']>0] #Чтобы не получить бесконечность
     df['unitPrice']=df['price']/df['qte']
+    # df=df.loc[(~np.isfinite(df['unitPrice']))]  #убираем бесконечность - где qte=0
     # df.loc[df['unitPrice']<1000, 'unitPrice']=df.loc[df['unitPrice']<1000, 'price']
     df['wear_num'] = pd.to_numeric(df['wear'].str.rstrip('%'), errors='coerce') / 100
     pd.options.mode.chained_assignment=currMode
     #Убираем без износа и с 0 износом
     df.to_csv(r'c:\Users\au00449\Python Marketing\Data\df1.csv', sep=';', encoding='utf-8')
     # print(df.loc[~df.wear.isnull()].head())
-    df=df.loc[df['wear_num']>=0]
-
+    #убираем износ =0
+    # df=df.loc[df['wear_num']>=0]
     df.drop('0', axis='columns', inplace=True)
     return df
 
@@ -140,6 +142,10 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                 #Собираем цены без спец предложений!
                 prices=driver.find_elements(by=By.XPATH, value="//span[@class='price-root-RA1pj price-listRedesign-GXB2V']")
                 pricesList=[]
+
+                avitoLinks = driver.find_elements(by=By.XPATH, value="//a[contains(@class,'title-listRedesign-_rejR')]")
+                avitoLinksList = [link.get_attribute("href") for link in avitoLinks]  # Сохраним все ссылки на объявления в список
+
                 for element in prices:
                     realPrice=element.find_element(by=By.XPATH, value=".//span[contains(@class,'price-text-_YGDY')]")
                     pricesList.append(realPrice.text)
@@ -147,11 +153,13 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                 seasonList=[season.text for season in seasons]
 
                 #Все соединяем только если длины списков совпадают!
-                if len(metaList) == len(brandsList) and len(metaList)==len(pricesList) and len(metaList)==len(seasonList):
+                if len(metaList) == len(brandsList) and len(metaList)==len(pricesList) and \
+                        len(metaList)==len(seasonList) and len(metaList)==len(avitoLinksList):
                     dfTempResult=pd.DataFrame(data = metaList)
                     dfTempResult=dfTempResult.assign(brand = brandsList)
                     dfTempResult=dfTempResult.assign(price = pricesList)
                     dfTempResult=dfTempResult.assign(season = seasonList)
+                    dfTempResult=dfTempResult.assign(avito_link =avitoLinksList)
 #                     dfTempResult=dfTempResult.assign(geo = geoList)
                     dfTempResult['region']= region
                     dfTempResult['diametr']=diametr
@@ -171,7 +179,7 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                         dfTempResult.set_index('index', inplace=True)
                         dfTempResult.index.name = 'id'
                         dfTempResult['update_date'] = datetime.utcnow()
-                        dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=True)  # dtype={'id': db.Integer}
+                        dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
     driver.quit()

@@ -219,26 +219,6 @@ def init_tire_prix():
         avitozones.load_avitozones()
     return render_template('index.html', segment='index')
 
-@blueprint.route('/load_tire_prix', methods=['POST'])
-@login_required
-def load_tire_prix():
-    # tire_price=''
-    s = request.get_json(force=True)
-    if str(s['brand']).find('Выберите')>=0:
-        del s['brand'] #Если не выбран бренд - удаляем из списка
-    if str(s['model']).find('Выберите')>=0:
-        del s['model'] #Если не выбран бренд - удаляем из списка
-    s['season'] = "Зимние" if 'имние' in s['saisonality'] else "Летние" if 'етние' in s['saisonality'] else "Всесезонные"
-    s['thorns']  = 1 if ' шипован' in s['saisonality'] else 0
-    del s['saisonality']
-    # s['protector_height'] = 8 if s['protector_height']=='' else s['protector_height']
-    # argsDict = dict([(k, v) for k, v in s.items() if (v !='' and k != 'qte') ]) #Оставляем непустые ключи
-    tire_price, newTire_price = 0, 0
-    #не будем забирать цену новых
-    #tire_price, newTire_price =calc_recommended_tireprice(argsDict)
-    s['tire_price'] = round(tire_price)
-    s['newTireprice'] = round(newTire_price)
-    return jsonify(s)
 
 @blueprint.route('/load_rim_prix', methods=['POST'])
 @login_required
@@ -499,11 +479,11 @@ def checkChartArgs(args):
                   'Зимние нешипованные':'zimnie_neshipovannye',
                   'Летние':'letnie',
                   'Всесезонные': 'vsesezonnye'}
-    #Забираем зоны Авито
-    query=db.session.query(AvitoZones.zone, AvitoZones.engzone).limit(1)
-    dfZones=pd.read_sql(query.statement, query.session.bind).set_index('zone')
 
     if 'region' in args:
+        # Забираем зоны Авито
+        query = db.session.query(AvitoZones.zone, AvitoZones.engzone).filter(AvitoZones.zone == args['region']).limit(1)
+        dfZones = pd.read_sql(query.statement, query.session.bind).set_index('zone')
         region = dfZones.loc[args['region'], 'engzone']
         args['region']=region #Меняем на латиницу
     else:
@@ -539,7 +519,7 @@ def checkChartArgs(args):
 @login_required
 def updateChartNow():
     args = request.get_json(force=True)  # flat=False
-    # print(args)
+    # print('args=', args)
     if args.get('protector_wear') =='':
         protector_wear=10.
     else:
@@ -550,8 +530,8 @@ def updateChartNow():
     argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
     argsDict, region, season, pages, recCount = checkChartArgs(argsDict)
     # print('argsDict=', argsDict)
-    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
-        **argsDict).limit(recCount)
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link).filter_by(
+        **argsDict).filter(ApiTire.wear_num != None).limit(recCount)
     # print(query.statement)
     df = pd.read_sql(query.statement, query.session.bind)
     df=df.loc[df.wear_num>0]
@@ -1258,13 +1238,41 @@ def stock_tables(page):
     pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
 
     if request.method == 'GET':
-        #Заполним структуру данными
-        #User.query.with_entities(func.avg(Tire.price).label('Total'))
-        # db.session.query(func.sum(Tire.price)).filter(Tire.sold.__eq__(False)).filter(Tire.owner.__eq__(u)).scalar()
-        #db.session.query(func.sum(Tire.price)).filter(Tire.sold.__eq__(False)).scalar()
-
         return render_template('stock-tables.html', title='Управление складом', user=current_user, row_data=list(db_table_toshow.values.tolist()),
                                 segment='stock-tables', default_photo=default_photo, curr_page=pages_list[page]) #form=form,
+
+#Показываем склад
+@blueprint.route('/avito_tires/<page>', methods=['GET'])
+@login_required
+def avito_tires(page):
+    def createLink(link, text):
+        return '<a class ="text-dark me-4" href="' + link + '" target="_blank"> ' + text + '</a><br>'
+
+    args = request.args  #в аргументах должны быть характеристики шин
+    # Выполняем все проверки
+    [abort_if_param_doesnt_exist(param) for param in list(args.keys())]  # Проверяем что параметры валидные
+
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.region, ApiTire.diametr, ApiTire.width,
+                                 ApiTire.height,
+                                 ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link,
+                                 ApiTire.update_date).filter_by(**args).order_by(ApiTire.unitPrice.asc())
+    df = pd.read_sql(query.statement, query.session.bind)
+    columnWidths=[1, 1, 4, 2, 1, 1, 1]
+    db_table_toshow = pd.DataFrame(
+        columns=['Date', 'Title', 'Region', 'Season', 'Size', 'Wear', 'Price', ])
+    db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
+    db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
+    db_table_toshow['Region']=df['avito_link'].apply(lambda x: x.split('/')[3])
+    db_table_toshow['Season']=df['season']
+    db_table_toshow['Size']=df['width'].astype(str) + '/' + df['height'].astype(str) + 'R' + df['diametr'].astype(str)
+    db_table_toshow['Wear']=df['wear_num']*100
+    db_table_toshow['Wear']=db_table_toshow['Wear'].round(0).astype(str) + '%'
+    db_table_toshow['Price']=df['unitPrice'].astype(str) + ' Руб.'
+    pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
+
+    if request.method == 'GET':
+        return render_template('avito_tires.html', title='Предложения на Avito', user=current_user, row_data=list(db_table_toshow.values.tolist()),
+                                segment='avito_tires', curr_page=pages_list[page], columnWidths=columnWidths)
 
 def forms_prepare(segment, method):
     print('Страница {} метод {}'.format(segment, method))

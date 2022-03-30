@@ -1,0 +1,58 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+      <div class="py-4">
+          <nav aria-label="breadcrumb">
+              <ol class="breadcrumb breadcrumb-dark breadcrumb-transparent">
+                  <li class="breadcrumb-item"><a href="#"><span class="fas fa-home"></span></a></li>
+                  <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.stock_tables', page='all') }}">Склад</a></li>
+                  <li class="breadcrumb-item" aria-current="page">Срок  дней</li> <!-- {{ curr_page }}-->
+
+              </ol>
+          </nav>
+          <div class="d-flex justify-content-between w-100 flex-wrap">
+              <div class="mb-3 mb-lg-0">
+                  <h1 class="h4">Предложения на Avito</h1>
+              </div>
+          </div>
+      </div>
+
+       <div class="card border-light shadow-sm ">
+            <div class="table-responsive">
+                <table class="table align-items-center table-striped table-hover table-flush">
+                    <thead class="thead-light">
+                    <tr>
+                        <th scope="col">Дата проверки</th>
+                        <th scope="col">Ссылка на объявление</th>
+                        <th scope="col">Регион</th>
+                        <th scope="col">Сезонность</th>
+                        <th scope="col">Размерность</th>
+                        <th scope="col">Износ, %</th>
+                        <th scope="col">Цена, Руб.</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in row_data %}
+                    <tr>
+                    {% for cell_ in row %}
+                        <td>
+                        {{ cell_|safe }}
+                        </td>
+                    {% endfor %}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+      </div>
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+{% endblock javascripts %}

@@ -1054,6 +1054,7 @@ def stocks():
     table_data=pd.DataFrame(columns=['Days', 'Qte', 'Percent', 'Cost', 'Cost_perc', 'Avg'])
     db_base_data = pd.read_sql('SELECT id, TIMESTAMP, price FROM tire WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ') UNION ' \
                                 'SELECT id, TIMESTAMP, price FROM rim WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
+    print(db_base_data.head())
     table_data = pd.DataFrame(columns=['Days', 'Qte', 'Percent', 'Cost', 'Cost_perc', 'Avg'])
     table_data.Days = ['До 10', '11..20', '21..30', '31..40', '41..50', '>50']
     table_data['Days']=table_data.apply(lambda row: '<a href="' + url_for('home_blueprint.stock_tables',  page=str(row.name)) + '">' + str(row['Days']) + '</a><br>', axis=1)

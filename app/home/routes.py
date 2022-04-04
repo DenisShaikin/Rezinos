@@ -580,7 +580,7 @@ def updateTirePrices():
                              'width': args.get('width'), 'height': args.get('height'), 'diametr': args.get('diametr'),
                              'pages': pages}).start()
     #Проверяем и обновляем координаты объявлений только когда загрузим и обновим актуальные записи! Запуск через 5 минуты
-    threading.Timer(interval=5*60, function=getAvitoCoordinates, kwargs={'app': app._get_current_object()}).start()
+    # threading.Timer(interval=5*60, function=getAvitoCoordinates, kwargs={'app': app._get_current_object()}).start()
 
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
         **args).limit(recCount)

@@ -50,6 +50,9 @@ class EditProfileForm(FlaskForm):
     def_contact_phone = TextField('Телефон менеджера', id='contact_phone', validators=[DataRequired(), Length(min=1, max=20)])
     def_contact_mail = TextField('Email менеджера', id='contact_email', validators=[DataRequired(), Length(min=1, max=100)])
     def_adress = TextField('Полный адрес объекта', id='adress', validators=[Required(), Length(min=1, max=256)])
+    def_latitude = TextField('Широта', id='lat')
+    def_longitude = TextField('Долгота', id='lon')
+
     store = StringField('ID магазина Auto.ru')
     avito_path = StringField('Путь к фидам Avito')
     autoru_path = StringField('Путь к фидам Auto.ru')

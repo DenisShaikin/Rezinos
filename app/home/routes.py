@@ -31,7 +31,8 @@ from app.api.apiroutes import abort_if_param_doesnt_exist
 from app.api.apimodels import ApiTire
 import plotly.express as px
 import threading
-from app.api.avitoutils import updateTires
+from threading import Timer
+from app.api.avitoutils import updateTires, getAvitoCoordinates, calculateTheDistance
 
 # def allowed_file(filename):
 #     return '.' in filename and \
@@ -528,6 +529,7 @@ def updateChartNow():
 
     # Выполняем все проверки
     argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
+    # print('argsDict=', argsDict)
     argsDict, region, season, pages, recCount = checkChartArgs(argsDict)
     # print('argsDict=', argsDict)
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link).filter_by(
@@ -570,12 +572,15 @@ def updateTirePrices():
 
     args = request.get_json(force=True)  # flat=False
     # Выполняем все проверки
-    args, region, season, pages, recCount = checkChartArgs(args)
+    argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
+    args, region, season, pages, recCount = checkChartArgs(argsDict)
 
     threading.Thread(target=updateTires,
                      kwargs={'app': app._get_current_object(), 'region': region, 'season': season,
                              'width': args.get('width'), 'height': args.get('height'), 'diametr': args.get('diametr'),
                              'pages': pages}).start()
+    #Проверяем и обновляем координаты объявлений только когда загрузим и обновим актуальные записи! Запуск через 5 минуты
+    threading.Timer(interval=5*60, function=getAvitoCoordinates, kwargs={'app': app._get_current_object()}).start()
 
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
         **args).limit(recCount)
@@ -654,6 +659,8 @@ def settings():
             form.def_contact_phone.data = current_user.def_contact_phone
             form.def_contact_mail.data = current_user.def_contact_mail
             form.def_adress.data = current_user.def_adress
+            form.def_latitude = current_user.def_latitude
+            form.def_longitude = current_user.def_longitude
 
 
     if 'Save' in request.form:
@@ -667,10 +674,9 @@ def settings():
         # current_user.def_longitude = form.def_longitude.data
         current_user.def_display_area1 = form.def_display_area1.data
         current_user.store = form.store.data
-    # current_user.def_display_area2 = form.def_display_area2.data
-        # current_user.def_display_area3 = form.def_display_area3.data
-        # current_user.def_display_area4 = form.def_display_area4.data
-        # current_user.def_display_area5 = form.def_display_area5.data
+        current_user.def_latitude = form.def_latitude.data
+        current_user.def_longitude = form.def_longitude.data
+
         db.session.commit()
         # flash('Your changes have been saved.')
         return redirect(url_for('home_blueprint.settings'))
@@ -693,13 +699,8 @@ def settings():
         form.def_contact_phone.data = current_user.def_contact_phone
         form.def_contact_mail.data = current_user.def_contact_mail
         form.def_adress.data = current_user.def_adress
-        # form.def_latitude.data = current_user.def_latitude
-        # form.def_longitude.data = current_user.def_longitude
-        # form.def_display_area1.data = current_user.def_display_area1
-        # form.def_display_area2.data = current_user.def_display_area2
-        # form.def_display_area3.data = current_user.def_display_area3
-        # form.def_display_area4.data = current_user.def_display_area4
-        # form.def_display_area5.data = current_user.def_display_area5
+        form.def_latitude.data = current_user.def_latitude
+        form.def_longitude.data = current_user.def_longitude
 
     return render_template('settings.html', title='Заполнение профиля', user=current_user, form=form, segment='settings')  #title='Заполнение профиля', user=current_user, form=form
 
@@ -1248,31 +1249,52 @@ def avito_tires(page):
     def createLink(link, text):
         return '<a class ="text-dark me-4" href="' + link + '" target="_blank"> ' + text + '</a><br>'
 
-    args = request.args  #в аргументах должны быть характеристики шин
+    args = request.args.to_dict()  #в аргументах должны быть характеристики шин
     # Выполняем все проверки
     [abort_if_param_doesnt_exist(param) for param in list(args.keys())]  # Проверяем что параметры валидные
 
+    #Регион преобразуем в латиницу
+    if 'region' in args:
+        # Забираем зоны Авито
+        query = db.session.query(AvitoZones.zone, AvitoZones.engzone).filter(AvitoZones.zone == args['region']).limit(1)
+        dfZones = pd.read_sql(query.statement, query.session.bind).set_index('zone')
+        region = dfZones.loc[args['region'], 'engzone']
+        args['region']=region #Меняем на латиницу
+    else:
+        args['region'] = 'rossiya'
+
+    # print(args)
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.region, ApiTire.diametr, ApiTire.width,
                                  ApiTire.height,
-                                 ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link,
+                                 ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link, ApiTire.avito_lat, ApiTire.avito_lon,
                                  ApiTire.update_date).filter_by(**args).order_by(ApiTire.unitPrice.asc())
     df = pd.read_sql(query.statement, query.session.bind)
-    columnWidths=[1, 1, 4, 2, 1, 1, 1]
+    columnWidths = [1, 3, 2, 2, 1, 1, 1, 1]
     db_table_toshow = pd.DataFrame(
-        columns=['Date', 'Title', 'Region', 'Season', 'Size', 'Wear', 'Price', ])
-    db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
-    db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
-    db_table_toshow['Region']=df['avito_link'].apply(lambda x: x.split('/')[3])
-    db_table_toshow['Season']=df['season']
-    db_table_toshow['Size']=df['width'].astype(str) + '/' + df['height'].astype(str) + 'R' + df['diametr'].astype(str)
-    db_table_toshow['Wear']=df['wear_num']*100
-    db_table_toshow['Wear']=db_table_toshow['Wear'].round(0).astype(str) + '%'
-    db_table_toshow['Price']=df['unitPrice'].astype(str) + ' Руб.'
-    pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
+        columns=['Date', 'Title', 'Region', 'Season', 'Size', 'Wear', 'Price', 'Distance'])
+    if not df.empty:
+        db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
+        db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
+        db_table_toshow['Region']=df['avito_link'].apply(lambda x: x.split('/')[3])
+        db_table_toshow['Season']=df['season']
+        db_table_toshow['Size']=df['width'].astype(str) + '/' + \
+                df['height'].astype(str) + ' R' + df['diametr'].astype(str)
+        db_table_toshow['Size']=db_table_toshow['Size'].apply(lambda x: x.replace('.0', ''))
+        df['wear_num'].fillna(-1, inplace=True)
+        db_table_toshow['Wear']=(df['wear_num']*100).round(0).astype(int).astype(str) + '%'
+        db_table_toshow['Wear'].replace('-100%', '', inplace=True)
+        # db_table_toshow['Wear']=db_table_toshow['Wear'].astype(str) + '%'
+        db_table_toshow['Price']=df['unitPrice'].astype(str)
+        if current_user.def_latitude and current_user.def_longitude:
+            db_table_toshow['Distance'] = df.apply(lambda x: calculateTheDistance(current_user.def_latitude, x['avito_lat'], current_user.def_longitude, x['avito_lon']), axis=1)
+            db_table_toshow['Distance'].fillna(-1, inplace=True)
+            db_table_toshow['Distance'] = db_table_toshow['Distance'].round(0).astype(int)
+            db_table_toshow['Distance'].replace(-1, '', inplace=True)
 
+    pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
     if request.method == 'GET':
         return render_template('avito_tires.html', title='Предложения на Avito', user=current_user, row_data=list(db_table_toshow.values.tolist()),
-                                segment='avito_tires', curr_page=pages_list[page], columnWidths=columnWidths)
+                            segment='avito_tires', curr_page=pages_list[page], columnWidths=columnWidths)
 
 def forms_prepare(segment, method):
     print('Страница {} метод {}'.format(segment, method))

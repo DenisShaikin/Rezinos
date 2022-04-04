@@ -50,7 +50,7 @@ class GetUser(Resource):
 
 
 def abort_if_param_doesnt_exist(t_id):
-    if t_id not in ['diametr', 'width', 'height', 'count', 'season', 'pages']:
+    if t_id not in ['diametr', 'width', 'height', 'count', 'season', 'pages', 'region']:
         abort(404, message="Parameter {} do not exist.".format(t_id))
 
 class TirePrices(Resource):

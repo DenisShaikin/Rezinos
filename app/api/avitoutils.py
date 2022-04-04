@@ -1,5 +1,6 @@
 
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import selenium as se
 import numpy as np
@@ -8,7 +9,7 @@ import time
 from sqlalchemy import func
 from app import db
 from app.api.apimodels import ApiTire
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_restful import abort
 
 def treatAvitoTiresData(df):
@@ -54,6 +55,7 @@ def treatAvitoTiresData(df):
     pd.options.mode.chained_assignment=None
     df=df.loc[df['qte']>0] #Чтобы не получить бесконечность
     df['unitPrice']=df['price']/df['qte']
+    df['unitPrice']=df['unitPrice'].round(2)
     # df=df.loc[(~np.isfinite(df['unitPrice']))]  #убираем бесконечность - где qte=0
     # df.loc[df['unitPrice']<1000, 'unitPrice']=df.loc[df['unitPrice']<1000, 'price']
     df['wear_num'] = pd.to_numeric(df['wear'].str.rstrip('%'), errors='coerce') / 100
@@ -65,6 +67,88 @@ def treatAvitoTiresData(df):
     # df=df.loc[df['wear_num']>=0]
     df.drop('0', axis='columns', inplace=True)
     return df
+
+#расчет расстояния между точками - поскольку малые расстояния то считаем на плоскости попрямой
+def calculateTheDistance (shir_A, dolg_A, shir_B, dolg_B):
+    if shir_B and shir_A and dolg_B and dolg_A:
+        distance= ((shir_B - shir_A) * (shir_B - shir_A) + (dolg_B - dolg_A) * (dolg_B - dolg_A)) ** (0.5)
+        return distance
+    else :
+        return None
+
+def getAvitoCoordinates(app):
+    app.app_context().push()
+    options = se.webdriver.ChromeOptions()
+    options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko')
+    options.add_argument('Connection=keep-alive')
+    options.add_argument('Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
+    options.add_argument('Accept-Language=ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4')
+    options.add_argument('headless')
+    options.add_argument('disable-dev-shm-usage')
+    options.add_argument('no-sandbox')  #--no-sandbox
+    options.add_argument('--disable-gpu')
+    options.add_argument('allow-running-insecure-content')
+    options.add_argument('--ignore-certificate-errors-spki-list')
+    options.add_argument("--ignore-certificate-error")
+    options.add_argument("--ignore-ssl-errors")
+    options.add_argument('log-level=3')
+    # print('регион=',region)
+    caps = se.webdriver.DesiredCapabilities.CHROME.copy()
+    caps['acceptInsecureCerts'] = True
+    caps['acceptSslCerts'] = True
+    driver = se.webdriver.Chrome(desired_capabilities=caps, options=options)
+    driver.get('https://www.avito.ru/')
+    time.sleep(2)
+    with app.app_context():
+        avitoTires = db.session.query(ApiTire.id, ApiTire.avito_link, ApiTire.avito_lon, ApiTire.avito_lat).filter(ApiTire.avito_lon == None).all()
+        # print(avitoTires)
+        for tire in avitoTires:
+            print(tire.avito_link)
+            strLink=tire.avito_link
+            driver.get(strLink)
+            WebDriverWait(driver, 15) \
+                .until(EC.any_of(
+                EC.visibility_of_any_elements_located((By.XPATH, "//div[contains(@class,'gallery-img-frame js-gallery-img-frame')]")),
+                EC.visibility_of_any_elements_located((By.XPATH, "//h3[contains(@class,'title-listRedesign-_rejR')]")),
+                EC.visibility_of_any_elements_located((By.XPATH, "//span[contains(@class,'item-closed-warning__content')]"))
+            ))
+            # WebDriverWait(driver, 10).until(EC.visibility_of_any_elements_located((By.XPATH, ['gallery-img-frame js-gallery-img-frame'])))
+            # time.sleep(2)
+            if driver.current_url==strLink:  #Значит не было редиректа, работаем
+                lon=None
+                lat=None
+                itemImg = None
+                try:
+                    itemImg = WebDriverWait(driver, 3).until(
+                        EC.presence_of_element_located((By.XPATH, "//div[contains(@class,'gallery-img-frame js-gallery-img-frame')]")))  #Здесь картинка
+                except:
+                    item=EC.presence_of_element_located(
+                        (By.XPATH, "//span[contains(@class,'item-closed-warning__content')]"))  # Здесь надпись объявление снято
+                    # print(item.text)
+                    itemImg = None
+            #         pass
+
+                if itemImg:
+                    db.session.query(ApiTire).filter(ApiTire.id == tire.id). \
+                        update({ApiTire.avito_imgLink: itemImg.get_attribute('data-url')}, synchronize_session="evaluate") #ссылка на картинку
+                    try:
+                        itemPage = driver.find_element(by=By.XPATH, value="//div[contains(@class,'b-search-map item-map-wrapper')]")
+                        lat = itemPage.get_attribute('data-map-lat')  # Сохраним все заголовки
+                        lon = itemPage.get_attribute('data-map-lon')  # Сохраним все заголовки
+                    except:
+                        pass
+                if lon:
+                    db.session.query(ApiTire).filter(ApiTire.id == tire.id). \
+                        update({ApiTire.avito_lon: float(lon)}, synchronize_session="evaluate")
+                if lat:
+                    db.session.query(ApiTire).filter(ApiTire.id == tire.id). \
+                        update({ApiTire.avito_lat: float(lat)}, synchronize_session="evaluate")
+                print(lon, lat)
+
+                db.session.commit()
+                time.sleep(2)
+    driver.close()
+    return 'Success'
 
 def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zimnie_neshipovannye', nPages=10):
     app.app_context().push()
@@ -82,7 +166,7 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
     options.add_argument("--ignore-certificate-error")
     options.add_argument("--ignore-ssl-errors")
     options.add_argument('log-level=3')
-    print('регион=',region)
+    # print('регион=',region)
     strLink='https://www.avito.ru/' + region + '/zapchasti_i_aksessuary/shiny_diski_i_kolesa/shiny/'
     if diametr:
         strLink +='diametr_' + str(diametr)
@@ -92,7 +176,7 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
         strLink +='/' + 'shirina_' + str(width)
     if height:
         strLink +='/' + 'vysota_' + str(height)
-    print('diametr={}, season={}, width={}, height={}'.format(diametr, season, width, height))
+    # print('diametr={}, season={}, width={}, height={}'.format(diametr, season, width, height))
     pd.set_option('display.max_colwidth', 1000)
     print(strLink)
 #     options.add_argument('headless')
@@ -138,17 +222,21 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
             metaList=[meta.text for meta in metaDescription] #Сохраним все ссылки в список    # print(metaList)
             if len(metaList)>0:
                 brands=driver.find_elements(by=By.XPATH, value="//h3[contains(@class,'title-listRedesign-_rejR')]")
-                brandsList=[brand.text for brand in brands] #Сохраним все ссылки в список
-                #Собираем цены без спец предложений!
-                prices=driver.find_elements(by=By.XPATH, value="//span[@class='price-root-RA1pj price-listRedesign-GXB2V']")
-                pricesList=[]
+                brandsList=[brand.text for brand in brands] #Сохраним все заголовки
+                codes = driver.find_elements(by=By.XPATH, value="//a[contains(@class,'title-listRedesign-_rejR')]")
+                # print(codes)
+                codesList = [code.get_attribute("href").split('_')[-1] for code in codes] #ID объявлений
 
+                #Собираем цены без спец предложений!
                 avitoLinks = driver.find_elements(by=By.XPATH, value="//a[contains(@class,'title-listRedesign-_rejR')]")
                 avitoLinksList = [link.get_attribute("href") for link in avitoLinks]  # Сохраним все ссылки на объявления в список
-
+                #Собираем цены
+                prices=driver.find_elements(by=By.XPATH, value="//span[@class='price-root-RA1pj price-listRedesign-GXB2V']")
+                pricesList=[]
                 for element in prices:
                     realPrice=element.find_element(by=By.XPATH, value=".//span[contains(@class,'price-text-_YGDY')]")
                     pricesList.append(realPrice.text)
+                #Сезонность
                 seasons=driver.find_elements(by=By.XPATH, value="//span[contains(@class,'iva-item-text-Ge6dR text-text-LurtD')]")
                 seasonList=[season.text for season in seasons]
 
@@ -159,19 +247,49 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                     dfTempResult=dfTempResult.assign(brand = brandsList)
                     dfTempResult=dfTempResult.assign(price = pricesList)
                     dfTempResult=dfTempResult.assign(season = seasonList)
+                    dfTempResult=dfTempResult.assign(avito_id = codesList)
                     dfTempResult=dfTempResult.assign(avito_link =avitoLinksList)
+                    dfTempResult['regionReal'] = dfTempResult['avito_link'].apply(lambda x: x.split('/')[3]) #Регион из ссылки - реальный регион
+
 #                     dfTempResult=dfTempResult.assign(geo = geoList)
                     dfTempResult['region']= region
-                    dfTempResult['diametr']=diametr
-                    dfTempResult['width']=width
-                    dfTempResult['height']=height
+                    #В параметрах может не приходить размер, тогда его можно взять из заголовка
+                    dfTempResult['size'] = dfTempResult['brand'].str.extract('(\d{3}\/\d{2,3}\sR\d{1,2})', expand=False)
+                    dfTempResult['sizeDiametr'] = dfTempResult['size'].str.extract('(R\d{1,2})', expand=False) #Выбираем только диаметр, бывает NaN
+                    dfTempResult['size'] = dfTempResult['brand'].str.extract('(\d{3}\/\d{2,3})', expand=False) #Оставляем только ширину и высоту профиля
+                    if diametr:
+                        dfTempResult['diametr']=diametr
+                    else:
+                        dfTempResult['diametr']=dfTempResult['size'].str.extract('(R\d{1,2})', expand=False)
+                    if width:
+                        dfTempResult['width']=width
+                    else:
+                        dfTempResult['width'] = pd.to_numeric(dfTempResult['size'].str.extract('(\d{3})', expand=False), errors='coerce').astype('Int32', errors='ignore')
+                    if height:
+                        dfTempResult['height'] = height
+                    else:
+                        dfTempResult['height'] = dfTempResult['size'].str.extract('(\/\d{2,3})', expand=False) #Высота бывает 2 или 3 знака
+                        dfTempResult['height'] = pd.to_numeric(dfTempResult['height'].str.replace('/', ''), errors='coerce').astype('int32', errors='ignore')
+                    dfTempResult.drop(columns=['size','sizeDiametr'], axis=1, inplace=True)
                     dfTempResult['wear'] = dfTempResult[0].str.extract('(\Sзнос\s.{,3})', expand=False)
                     dfTempResult['wear2'] = dfTempResult[0].str.extract('(\d{2}%)', expand=False)
                     #Вычищаем данные
                     dfTempResult=treatAvitoTiresData(dfTempResult)
                     dfResult=pd.concat([dfResult, dfTempResult])
+
                     #Добавляем новые записи в базу
                     with app.app_context():
+                        # Проверяем эти записи в базе и уже существующие удаляем из базы
+                        # print(codesList)
+                        # query = db.session.query(ApiTire).filter(ApiTire.avito_id.in_(codesList))
+                        # print(query.statement)
+                        db.session.query(ApiTire).filter(ApiTire.avito_id.in_(codesList)).delete(synchronize_session='fetch')
+                        db.session.commit()
+                        #Так же надо удалить записи старше месяца
+                        oldDate = datetime.today() - timedelta(days=15)
+                        db.session.query(ApiTire).filter(ApiTire.update_date < oldDate).delete(synchronize_session='fetch')
+                        db.session.commit()
+
                         # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
                         lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
                         lastRec = 0 if not lastRec else lastRec

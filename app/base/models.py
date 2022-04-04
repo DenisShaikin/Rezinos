@@ -43,8 +43,8 @@ class User(db.Model, UserMixin):
     def_contact_phone = db.Column(db.String(20))       # Российский Телефон по умолчанию
     def_contact_mail = db.Column(db.String(100))     #email контакта с Авито
     def_adress = db.Column(db.String(256))         # полный адрес объекта — строка до 256 символов, обязательное поле
-    def_latitude = db.Column(db.Float, default=0)             # альтернатива Адрес
-    def_longitude = db.Column(db.Float, default=0)            # альтернатива Адрес
+    def_latitude = db.Column(db.Float)             # альтернатива Адрес
+    def_longitude = db.Column(db.Float)            # альтернатива Адрес
     def_display_area1 = db.Column(db.String(256))
     def_display_area2 = db.Column(db.String(256))
     def_display_area3 = db.Column(db.String(256))

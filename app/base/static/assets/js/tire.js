@@ -209,6 +209,10 @@ if (document.getElementById('AvitoTires')) {
     if (document.getElementById('vysota_profilya').value){
         link= link + '&height=' + document.getElementById('vysota_profilya').value ;
     }
+    console.log(document.getElementById('display_area1').value)
+    if (document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label){
+        link= link + '&region=' + document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label ;
+    }
     window.open(link, '_self');  //, '_blank'
     });
 }

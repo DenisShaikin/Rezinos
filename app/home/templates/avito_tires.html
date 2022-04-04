@@ -25,23 +25,24 @@
 
        <div class="card border-light shadow-sm ">
             <div class="table-responsive">
-                <table class="table align-items-center table-striped table-hover table-flush">
+                <table class="table table-flush table-striped  table-sm table-hover"> <!--align-items-center -->
                     <thead class="thead-light">
-                    <tr>
-                        <th scope="col">Дата проверки</th>
-                        <th scope="col">Ссылка на объявление</th>
-                        <th scope="col">Регион</th>
-                        <th scope="col">Сезонность</th>
-                        <th scope="col">Размерность</th>
-                        <th scope="col">Износ, %</th>
-                        <th scope="col">Цена, Руб.</th>
+                    <tr class="d-flex">
+                        <th class="col-1">Дата проверки</th> <!--scope="col"-->
+                        <th class="col-3">Ссылка на объявление</th>
+                        <th class="col-2">Регион</th>
+                        <th class="col-2">Сезонность</th>
+                        <th class="col-1">Размерность</th>
+                        <th class="col-1">Износ, %</th>
+                        <th class="col-1">Цена, Руб.</th>
+                        <th class="col-1">Расстояние, Км</th>
                     </tr>
                     </thead>
                     <tbody>
                     {% for row in row_data %}
-                    <tr>
+                    <tr class="d-flex">
                     {% for cell_ in row %}
-                        <td>
+                        <td class="col-sm-{{ columnWidths[loop.index-1] }}">
                         {{ cell_|safe }}
                         </td>
                     {% endfor %}
@@ -49,6 +50,7 @@
                     {% endfor %}
                     </tbody>
                 </table>
+            </div>
       </div>
 {% endblock content %}
 

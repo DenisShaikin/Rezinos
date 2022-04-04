@@ -14,6 +14,7 @@ class ApiTire(db.Model):
     price = db.Column(db.Float)
     season = db.Column(db.String(20))
     region = db.Column(db.String(20))
+    regionReal = db.Column(db.String(20))
     diametr = db.Column(db.Integer)
     width = db.Column(db.Integer)
     height = db.Column(db.Integer)
@@ -21,7 +22,12 @@ class ApiTire(db.Model):
     qte= db.Column(db.Integer)
     unitPrice = db.Column(db.Float)
     wear_num = db.Column(db.Float)
-    avito_link = db.Column(db.String(200))
+    avito_link = db.Column(db.String(200)) #Ссылка на объявление
+    avito_id = db.Column(db.String(15)) #id объявления на Авито
+    avito_lon = db.Column(db.Float) #Координаты владельца объявления
+    avito_lat=db.Column(db.Float)
+    avito_imgLink = db.Column(db.String(200)) #Ссылка на картинку объявления
+
     update_date = db.Column(db.DateTime, default=datetime.utcnow()) #Дата и время обновления
 
     def __repr__(self):

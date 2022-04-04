@@ -55,6 +55,23 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-2 mb-3">
+                            <div class="form-group">
+                                <label>Широта</label>
+                                {{ form.def_latitude(placeholder="Введите широту", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="Широта ваших координат") }}
+                            </div>
+                        </div>
+                        <div class="col-sm-2 mb-3">
+                            <div class="form-group">
+                                <label>Долгота</label>
+                                {{ form.def_longitude(placeholder="Введите долготу", class="form-control",
+                                data_bs_toggle="tooltip", data_bs_placement="top", title="Долгота ваших координат") }}
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="card card-body shadow-sm mb-4 mb-lg-0">
                         <h2 class="h5 mb-3">Данные личного кабинета AUTO.RU
                             <a class="btn btn-secondary text-dark me-4" target="_blanc"

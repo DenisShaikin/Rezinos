@@ -1054,7 +1054,7 @@ def stocks():
     table_data=pd.DataFrame(columns=['Days', 'Qte', 'Percent', 'Cost', 'Cost_perc', 'Avg'])
     db_base_data = pd.read_sql('SELECT id, timestamp, price FROM tire WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ') UNION ' \
                                 'SELECT id, timestamp, price FROM rim WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
-    print(db_base_data.head())
+    # print(db_base_data.head())
     table_data = pd.DataFrame(columns=['Days', 'Qte', 'Percent', 'Cost', 'Cost_perc', 'Avg'])
     table_data.Days = ['До 10', '11..20', '21..30', '31..40', '41..50', '>50']
     table_data['Days']=table_data.apply(lambda row: '<a href="' + url_for('home_blueprint.stock_tables',  page=str(row.name)) + '">' + str(row['Days']) + '</a><br>', axis=1)
@@ -1247,6 +1247,7 @@ def stock_tables(page):
 @blueprint.route('/avito_tires/<page>', methods=['GET'])
 @login_required
 def avito_tires(page):
+
     def createLink(link, text):
         return '<a class ="text-dark me-4" href="' + link + '" target="_blank"> ' + text + '</a><br>'
 
@@ -1254,9 +1255,19 @@ def avito_tires(page):
     # Выполняем все проверки
     [abort_if_param_doesnt_exist(param) for param in list(args.keys())]  # Проверяем что параметры валидные
 
+    argsDict = dict([(k, v) for k, v in args.items() if v])
+    args=argsDict
+
+    if not page:
+        page = 1
+    else:
+        page = int(page)
+    pureRegion=None
+
     #Регион преобразуем в латиницу
     if 'region' in args:
         # Забираем зоны Авито
+        pureRegion=args['region']
         query = db.session.query(AvitoZones.zone, AvitoZones.engzone).filter(AvitoZones.zone == args['region']).limit(1)
         dfZones = pd.read_sql(query.statement, query.session.bind).set_index('zone')
         region = dfZones.loc[args['region'], 'engzone']
@@ -1265,14 +1276,27 @@ def avito_tires(page):
         args['region'] = 'rossiya'
 
     # print(args)
+    #Для пажинации выясним количество страниц
+    pageSize = int(100)
+
+    pagesNum = int(db.session.query(func.count(ApiTire.id)).filter_by(**args).scalar()/pageSize)+1
+    pages_list = range(1, pagesNum)  #{1:1, 2:2, ...}
+    linksList = [url_for('home_blueprint.avito_tires', page=i+1, region=pureRegion if pureRegion else None,
+                         diametr=args['diametr'] if 'diametr' in args else None, width=args['width'] if 'width' in args else None,
+                         height=args['height'] if 'height' in args else None) for i in range(0, pagesNum-1)]
+    linksDict=dict(zip(pages_list, linksList))
+    offset = pageSize * (page - 1)
+    # print()
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.region, ApiTire.diametr, ApiTire.width,
                                  ApiTire.height,
                                  ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link, ApiTire.avito_lat, ApiTire.avito_lon,
                                  ApiTire.update_date).filter_by(**args).order_by(ApiTire.unitPrice.asc())
     df = pd.read_sql(query.statement, query.session.bind)
-    columnWidths = [1, 3, 2, 2, 1, 1, 1, 1]
+    df=df[offset:offset + pageSize]
+    # print(df.head())
+    columnWidths = [1, 1, 1, 3, 2, 2, 1, 1]
     db_table_toshow = pd.DataFrame(
-        columns=['Date', 'Title', 'Region', 'Season', 'Size', 'Wear', 'Price', 'Distance'])
+        columns=['Date', 'Size', 'Price', 'Title', 'Region', 'Season', 'Wear', 'Distance'])
     if not df.empty:
         db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
         db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
@@ -1283,19 +1307,18 @@ def avito_tires(page):
         db_table_toshow['Size']=db_table_toshow['Size'].apply(lambda x: x.replace('.0', ''))
         df['wear_num'].fillna(-1, inplace=True)
         db_table_toshow['Wear']=(df['wear_num']*100).round(0).astype(int).astype(str) + '%'
-        db_table_toshow['Wear'].replace('-100%', '', inplace=True)
+        db_table_toshow['Wear'].replace('-100%', '---', inplace=True)
         # db_table_toshow['Wear']=db_table_toshow['Wear'].astype(str) + '%'
         db_table_toshow['Price']=df['unitPrice'].astype(str)
         if current_user.def_latitude and current_user.def_longitude:
             db_table_toshow['Distance'] = df.apply(lambda x: calculateTheDistance(current_user.def_latitude, x['avito_lat'], current_user.def_longitude, x['avito_lon']), axis=1)
             db_table_toshow['Distance'].fillna(-1, inplace=True)
             db_table_toshow['Distance'] = db_table_toshow['Distance'].round(0).astype(int)
-            db_table_toshow['Distance'].replace(-1, '', inplace=True)
+            db_table_toshow['Distance'].replace(-1, '--', inplace=True)
 
-    pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
     if request.method == 'GET':
         return render_template('avito_tires.html', title='Предложения на Avito', user=current_user, row_data=list(db_table_toshow.values.tolist()),
-                            segment='avito_tires', curr_page=pages_list[page], columnWidths=columnWidths)
+                            segment='avito_tires', linksDict=linksDict, curr_page=page, columnWidths=columnWidths)
 
 def forms_prepare(segment, method):
     print('Страница {} метод {}'.format(segment, method))

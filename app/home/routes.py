@@ -737,7 +737,8 @@ def tire():
             protector_height=form.protector_height.data,  protector_wear=form.protector_wear.data,
             store=curr_store,
             avito_show = form.avito_show.data, avtoru_show = form.avtoru_show.data, drom_show=form.drom_show.data,
-            videourl=form.videourl.data)
+            videourl=form.videourl.data,
+            product_year=form.product_year.data)
         newtire.baseid='t' + str(newtire.id)
     #Займемся фотками
         for file in form.photo1.data:
@@ -1196,12 +1197,12 @@ def stock_tables(page):
     #Таблица данных для отображения
     # db_base_data = pd.read_sql('SELECT * FROM tire WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
     db_base_data = pd.read_sql('''SELECT  t.id, t.brand, t.baseid, t.price, t.timestamp, t.sold, t.avito_show, t.avtoru_show, t.drom_show, t.ad_status, t.is_for_priority,
-        t.title, t.sezonnost, t.shirina_profilya AS width, t.diametr, t.vysota_profilya AS height, t.protector_height, t.protector_wear,
+        t.title, t.sezonnost, t.shirina_profilya AS width, t.diametr, t.vysota_profilya AS height, t.protector_height, t.protector_wear, t.product_year AS year,
         (SELECT tf.Photo FROM tire_photo tf WHERE tf.tire_id = t.id ORDER BY Photo ASC LIMIT 1) AS Photo
         FROM tire t WHERE t.user_id = ''' + str(current_user.id) + ' ' \
        'UNION ' \
        '''SELECT r.id, r.rimbrand, r.baseid, r.price, r.timestamp, r.sold, r.avito_show, r.avtoru_show, r.drom_show, r.ad_status, r.is_for_priority,
-       r.title, r.rimtype, r.rimwidth AS width, r.rimdiametr AS diametr, r.rimbolts, r.rimboltsdiametr, r.rimoffset, 
+       r.title, r.rimtype, r.rimwidth AS width, r.rimdiametr AS diametr, r.rimbolts, r.rimboltsdiametr, r.rimoffset, r.rimyear AS year,
        (SELECT rf.Photo FROM rim_photo rf WHERE rf.rim_id = r.id ORDER BY Photo ASC LIMIT 1) AS Photo
        FROM rim r WHERE r.user_id = ''' + str(current_user.id) + ' ;', db.session.bind)
     #Отфильтруем теперь по параметрам запроса
@@ -1237,7 +1238,7 @@ def stock_tables(page):
     db_table_toshow['Description'] =  db_table_toshow['HREF'].apply(lambda x: '<a href="' +
                                                                               (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else url_for('home_blueprint.edit_rim', rim_id=x[1:])) +
                                                                               '"> # в системе: ' + x + '</a><br>')
-    db_table_toshow['Description']= db_table_toshow['Description'] +  ' <br> ' + db_base_data['title'] + '<br> '
+    db_table_toshow['Description']= db_table_toshow['Description'] +  ' <br> ' + db_base_data['title'] + '<br> ' + db_base_data['year'].astype(str) + '<br> '
     db_table_toshow['HREF']=db_table_toshow['HREF'].apply(lambda x: '<a class ="btn btn-secondary text-dark me-4" href="' +
                                                                     (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else url_for('home_blueprint.edit_rim', rim_id=x[1:])) +
                                                                     '"> Изменить #' + x + '</a><br>')

@@ -16,19 +16,51 @@
 
               </ol>
           </nav>
-          <div class="d-flex justify-content-between w-100 flex-wrap">
-              <div class="mb-3 mb-lg-0">
-                  <h1 class="h4">Склад</h1>
+          <div class="row">
+<!--              d-flex justify-content-between w-100 flex-wrap-->
+              <div class="col-2">
+                  <label class="my-1 me-2" for="stockTableBrand">Бренд</label>
+                  <select class="form-select" id="stockTableBrand" aria-label="Brand select">
+                      {% for id, brandName in brandsList %}
+                        <option value="{{ brandName }}" {% if request.args.get('brand') == brandName  %} selected {% endif %}> {{ brandName }}</option>
+                      {% endfor %}
+                </select>
               </div>
-              <div>
-                  <a href="/tire.html" class="btn btn-outline-gray"> Добавить объявление </a>
+              <div class="col-2">
+                  <label class="my-1 me-2" for="stockTablediametr">Диаметр</label>
+                  <select class="form-select" id="stockTablediametr" aria-label="Diametr select">
+                      {% for id, diam in diametrList %}
+                        <option value="{{ diam }}" {% if request.args.get('diametr') == diam  %} selected {% endif %}> {{ diam }} </option>
+                      {% endfor %}
+                </select>
+              </div>
+              <div class="col-2">
+                  <label class="my-1 me-2" for="stockTablewidth">Ширина</label>
+                  <select class="form-select" id="stockTablewidth" aria-label="Width select">
+                      {% for id, width in widthList %}
+                        <option value="{{ width }}" {% if request.args.get('width') == width  %} selected {% endif %}> {{ width }} </option>
+                      {% endfor %}
+                </select>
+              </div>
+              <div class="col-2">
+                  <label class="my-1 me-2" for="stockTableheight">Высота</label>
+                  <select class="form-select" id="stockTableheight" aria-label="Height select">
+                      {% for id, height in heightList %}
+                        <option value="{{ height }}" {% if request.args.get('height') == height  %} selected {% endif %}> {{ height }} </option>
+                      {% endfor %}
+                </select>
+              </div>
+<!--              <label class="my-1 me-2" for="NewTirebutton"></label>-->
+              <div class="col-2">
+<!--                  Пустой столбец-->
+              </div>
+              <div class="col-2 ml-2">
+                  <a href="/tire.html" id="NewTirebutton" class="btn btn-secondary text-dark mt-4"> Добавить объявление </a>
               </div>
           </div>
       </div>
 
        <div class="card border-light shadow-sm">
-<!--          <div class="card-body">-->
-<!--           <div class="container">-->
                {% for row in row_data %}
                     <div class="row">
                         {% for cell_ in row %}

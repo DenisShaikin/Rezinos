@@ -354,6 +354,7 @@ class Tire(db.Model):
     videourl=db.Column(db.String(256))   #VideoURL Формат ссылки на видео должен соответствовать - https://www.youtube.com/watch?v=***
     protector_height=db.Column(db.Integer)  #Высота протектора
     protector_wear = db.Column(db.Integer) #Износ протектора
+    product_year = db.Column(db.Integer)  #год производства
     comment=db.Column(db.String(120))  #комментарий
     photos = db.relationship('TirePhoto', backref='tire', lazy='dynamic', passive_deletes=True)
     withDelivery=db.Column(db.Boolean)  #с доставкой

@@ -1188,27 +1188,38 @@ def delete_rimphoto(photo, rim_id):
     return redirect(url_for('home_blueprint.edit_rim', rim_id=rim_id))
 
 #Показываем склад
-@blueprint.route('/stock_tables/<page>', methods=['GET'])
+@blueprint.route('/stock_tables/<page>', methods=['GET', 'POST'])
 @login_required
 def stock_tables(page):
     cut_bins = [-1, 10, 20, 30, 40, 50, 1000]
 
     #Таблица данных для отображения
     # db_base_data = pd.read_sql('SELECT * FROM tire WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
-    db_base_data = pd.read_sql('''SELECT  t.id, t.baseid, t.price, t.timestamp, t.sold, t.avito_show, t.avtoru_show, t.drom_show, t.ad_status, t.is_for_priority,
-        t.title, t.sezonnost, t.shirina_profilya, t.vysota_profilya, t.diametr, t.protector_height,
+    db_base_data = pd.read_sql('''SELECT  t.id, t.brand, t.baseid, t.price, t.timestamp, t.sold, t.avito_show, t.avtoru_show, t.drom_show, t.ad_status, t.is_for_priority,
+        t.title, t.sezonnost, t.shirina_profilya AS width, t.diametr, t.vysota_profilya AS height, t.protector_height, t.protector_wear,
         (SELECT tf.Photo FROM tire_photo tf WHERE tf.tire_id = t.id ORDER BY Photo ASC LIMIT 1) AS Photo
         FROM tire t WHERE t.user_id = ''' + str(current_user.id) + ' ' \
-        'UNION '\
-        '''SELECT r.id, r.baseid, r.price, r.timestamp, r.sold, r.avito_show, r.avtoru_show, r.drom_show, r.ad_status, r.is_for_priority,
-        r.title, r.rimwidth, r.rimdiametr, r.rimbolts, r.rimboltsdiametr, r.rimoffset, 
-        (SELECT rf.Photo FROM rim_photo rf WHERE rf.rim_id = r.id ORDER BY Photo ASC LIMIT 1) AS Photo
-        FROM rim r WHERE r.user_id = ''' + str(current_user.id) + ' ;', db.session.bind)
+       'UNION ' \
+       '''SELECT r.id, r.rimbrand, r.baseid, r.price, r.timestamp, r.sold, r.avito_show, r.avtoru_show, r.drom_show, r.ad_status, r.is_for_priority,
+       r.title, r.rimtype, r.rimwidth AS width, r.rimdiametr AS diametr, r.rimbolts, r.rimboltsdiametr, r.rimoffset, 
+       (SELECT rf.Photo FROM rim_photo rf WHERE rf.rim_id = r.id ORDER BY Photo ASC LIMIT 1) AS Photo
+       FROM rim r WHERE r.user_id = ''' + str(current_user.id) + ' ;', db.session.bind)
+    #Отфильтруем теперь по параметрам запроса
+    argsDict= request.args.to_dict()
+    argsDict = dict([(k, v) for k, v in argsDict.items() if v !=''])
+
+    if not argsDict: #нет параметров - ничего не делаем
+        pass
+    else: #Фильтруем по параметрам
+        db_base_data=db_base_data.loc[db_base_data[list(argsDict.keys())].isin(list(argsDict.values())).all(axis=1), :]
+
+
     db_base_data.timestamp = pd.to_datetime(db_base_data.timestamp, dayfirst=True)
     db_base_data['days'] = (pd.to_datetime(datetime.today(), dayfirst=True) - db_base_data.timestamp)
     db_base_data['days'] = db_base_data['days'].apply(lambda x: x.days)
     # print(db_base_data.head())
-    if len(db_base_data) > 0 and page != 'all':
+    # print('page=', page)
+    if len(db_base_data) > 0 and page != 'all' and request.method != 'POST':   #Если POST - то показываем все записи по данному фильтру
         db_base_data = db_base_data.loc[(db_base_data['days'] >= cut_bins[int(page)]) & (db_base_data['days'] < cut_bins[int(page)+1])]
     # print(db_base_data.head())
     db_table_toshow = pd.DataFrame(columns=['Photo', 'Description', 'Price', 'Tools', 'Promotion', 'Avtoru_promo', 'HREF'])
@@ -1224,24 +1235,41 @@ def stock_tables(page):
     db_table_toshow['HREF']=db_base_data.baseid.astype(str)
     #А здесь ссылку вставляем либо на edit_tire либо на edit_rim
     db_table_toshow['Description'] =  db_table_toshow['HREF'].apply(lambda x: '<a href="' +
-                (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else url_for('home_blueprint.edit_rim', rim_id=x[1:])) +
+                                                                              (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else url_for('home_blueprint.edit_rim', rim_id=x[1:])) +
                                                                               '"> # в системе: ' + x + '</a><br>')
     db_table_toshow['Description']= db_table_toshow['Description'] +  ' <br> ' + db_base_data['title'] + '<br> '
-    # db_table_toshow['Description']= db_table_toshow['Description'] +  ' <br> ' + db_base_data['title'] + '<br> ' + \
-    #                                  db_base_data['sezonnost'] + ' ' + db_base_data['shirina_profilya'] + '/' + \
-    #                                  db_base_data['vysota_profilya'] + ' R' + db_base_data['diametr'] + '<br> ' + \
-    #                                  'На складе: ' + db_base_data['days'].astype(str) + ' дней ' +\
-    #                                 'Протектор: ' + db_base_data['protector_height'].astype(str) + ' мм'
     db_table_toshow['HREF']=db_table_toshow['HREF'].apply(lambda x: '<a class ="btn btn-secondary text-dark me-4" href="' +
-                                                    (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else url_for('home_blueprint.edit_rim', rim_id=x[1:])) +
-                                                    '"> Изменить #' + x + '</a><br>')
-
+                                                                    (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else url_for('home_blueprint.edit_rim', rim_id=x[1:])) +
+                                                                    '"> Изменить #' + x + '</a><br>')
     default_photo = os.path.join(app.config['PHOTOS_FOLDER'], 'NoPhoto.png')
     pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
+    #Подготовим список брендов для фильтра
+    brandsList = db.session.query(Tire.id, Tire.brand).filter(Tire.user_id==current_user.id).group_by(Tire.brand).all()
+    brandsList.insert(0, (0, ""))
+    #Подготовим список диаметров для фильтра
+    diametrList = db.session.query(Tire.id, Tire.diametr).filter(Tire.user_id==current_user.id).group_by(Tire.diametr).all()
+    diametrList.insert(0, (0, ""))
+    #Подготовим список ширин для фильтра
+    widthList = db.session.query(Tire.id, Tire.shirina_profilya).filter(Tire.user_id==current_user.id).group_by(Tire.shirina_profilya).all()
+    widthList.insert(0, (0, ""))
+    #Подготовим список высот для фильтра
+    heightList = db.session.query(Tire.id, Tire.vysota_profilya).filter(Tire.user_id==current_user.id).group_by(Tire.vysota_profilya).all()
+    heightList.insert(0, (0, ""))
 
-    if request.method == 'GET':
-        return render_template('stock-tables.html', title='Управление складом', user=current_user, row_data=list(db_table_toshow.values.tolist()),
-                                segment='stock-tables', default_photo=default_photo, curr_page=pages_list[page]) #form=form,
+    if request.method=='POST':
+        argsDict=request.get_json(force=True)
+        # print(argsDict)
+        return jsonify({'brand':argsDict['brand'] if 'brand' in argsDict else None,
+                       'link':  url_for('home_blueprint.stock_tables', page='all',
+                                        brand=argsDict['brand'] if 'brand' in argsDict else None,
+                                        diametr=argsDict['diametr'] if 'diametr' in argsDict else None,
+                                        width=argsDict['width'] if 'width' in argsDict else None,
+                                        height=argsDict['height'] if 'height' in argsDict else None)})
+        # return redirect(url_for('home_blueprint.stock_tables', page='all', brand=argsDict['brand'] if 'brand' in argsDict else None))
+
+    return render_template('stock-tables.html', title='Управление складом', user=current_user, row_data=list(db_table_toshow.values.tolist()),
+                           segment='stock-tables', default_photo=default_photo, brandsList=brandsList, diametrList=diametrList,
+                           widthList=widthList, heightList=heightList, curr_page=pages_list[page]) #form=form,
 
 #Показываем склад
 @blueprint.route('/avito_tires/<page>', methods=['GET'])
@@ -1251,7 +1279,7 @@ def avito_tires(page):
     def createLink(link, text):
         return '<a class ="text-dark me-4" href="' + link + '" target="_blank"> ' + text + '</a><br>'
 
-    args = request.args.to_dict()  #в аргументах должны быть характеристики шин
+    args = request.args.to_dict() #в аргументах должны быть характеристики шин
     # Выполняем все проверки
     [abort_if_param_doesnt_exist(param) for param in list(args.keys())]  # Проверяем что параметры валидные
 

@@ -294,6 +294,46 @@ if (document.getElementById('model')) {
     });
 }
 
+
+//Событие смены параметров шин в фильтрах StockTable
+function stockTableFilters(){
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'stock_tables');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            result = JSON.parse(xhr.responseText);
+            window.location.href = result.link;
+//            console.log(result);
+        }
+        else if (xhr.status !== 200) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    var brand=document.getElementById('stockTableBrand').options[document.getElementById('stockTableBrand').selectedIndex].label;
+    xhr.send(JSON.stringify({
+        'brand': brand,
+        'diametr': document.getElementById('stockTablediametr').options[document.getElementById('stockTablediametr').selectedIndex].label,
+        'width': document.getElementById('stockTablewidth').options[document.getElementById('stockTablewidth').selectedIndex].label,
+        'height': document.getElementById('stockTableheight').options[document.getElementById('stockTableheight').selectedIndex].label}));
+}
+
+if (document.getElementById('stockTableBrand')) {
+    document.getElementById('stockTableBrand').addEventListener('change', function () {stockTableFilters(); });
+}
+
+if (document.getElementById('stockTablediametr')) {
+    document.getElementById('stockTablediametr').addEventListener('change', function () {stockTableFilters(); });
+}
+
+if (document.getElementById('stockTablewidth')) {
+    document.getElementById('stockTablewidth').addEventListener('change', function () {stockTableFilters(); });
+}
+if (document.getElementById('stockTableheight')) {
+    document.getElementById('stockTableheight').addEventListener('change', function () {stockTableFilters(); });
+}
+
 //Событие смены модели машины
 if (document.getElementById('carModel')) {
     document.getElementById('carModel').addEventListener('change', function () {

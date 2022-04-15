@@ -110,6 +110,7 @@ class TirePrepareForm(FlaskForm):
     condition = SelectField(u'Состояние', choices=['Б/у', 'Новое'])
     oem = StringField(u'Номенклатурный номер')
     recommended_price = IntegerField (u'Рекомендуемая Стоимость')
+    product_year = IntegerField(u'Год производства')
     # rim_type = SelectField(u'Тип диска', choices=['Кованые', 'Литые', 'Штампованные', 'Спицованные', 'Сборные'])
     # rimwidth = DecimalField(places=1)
     # rimbolts = IntegerField(u'Количество болтов')

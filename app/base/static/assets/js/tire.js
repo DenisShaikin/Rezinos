@@ -143,6 +143,7 @@ if (document.getElementById('brand')) {
                 option.value=object.id;
                 modelElement.add(option, null);
             }
+            updateChart(0, 10)
         }
         else if (xhr.status !== 200) {
         }
@@ -766,6 +767,7 @@ function updateChart(nPage, nTotalPages){
 //    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
     xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
         'protector_wear':document.getElementById('protector_wear').value,
+        'brand':document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label,
         'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
         'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
         'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,

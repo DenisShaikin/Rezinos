@@ -528,19 +528,27 @@ def updateChartNow():
     protector_wear=protector_wear/100.
 
     # Выполняем все проверки
-    argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
+    argsDict = dict([(k, v) for k, v in args.items() if (v != '' and v !='Выберите бренд')])
     # print('argsDict=', argsDict)
     argsDict, region, season, pages, recCount = checkChartArgs(argsDict)
-    # print('argsDict=', argsDict)
+    brand=None
+    if 'brand' in  argsDict: #убираем из фильтра - потом сделаем список из датафрейма
+        brand = argsDict['brand']
+        del argsDict['brand']
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link).filter_by(
         **argsDict).filter(ApiTire.wear_num != None).limit(recCount)
-    # print(query.statement)
     df = pd.read_sql(query.statement, query.session.bind)
     df=df.loc[df.wear_num>0]
     df.drop_duplicates(inplace=True)
+    df['brandName'] = 'Все бренды'
+    if brand: #Второй график делаем с фильтром по бренду
+        df2 = df.loc[df.brand.str.contains(brand, case=False)].copy(deep=True)
+        df2['brandName'] = brand
+        df=pd.concat([df, df2])
+
     # print(df.head())
     fig = px.scatter(
-        df, x='wear_num', y='unitPrice',  trendline='ols', trendline_color_override='orange', hover_data=['brand'],
+        df, x='wear_num', y='unitPrice',  trendline='ols', color='brandName',  hover_data=['brand'],
         labels={
             "wear_num": "Износ, %",
             "unitPrice": "Цена за 1 штуку, руб."
@@ -549,8 +557,11 @@ def updateChartNow():
     model = px.get_trendline_results(fig)
     # print(model)
     predictPrice=None
+
     if not model.empty:
         results = model.iloc[0]["px_fit_results"]
+        if brand and len(model)>1: #значит есть вторая линия
+            results = model.iloc[1]["px_fit_results"]
         # print(results)
         alpha = results.params[0]
         beta = results.params[1]

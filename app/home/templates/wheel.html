@@ -1,0 +1,272 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tire {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+    <form action="" name="tire_Form" method="post" class="form" role="form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+    <div class="row">
+        <div class="col-12 col-xl-8">
+            <div class="card card-body shadow-sm mb-4">
+                <h2 class="h5 mb-4">Введите данные вашего предложения</h2>
+                    <div class="accordion  mb-4" id="accordionRecommendations">
+                        <div class="accordion-item">
+                          <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                <b>Качество оформления объявления принесет Вам больше прибыли!</b>
+                            </button>
+                          </h2>
+                          <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionRecommendations">
+                            <div class="accordion-body">
+                                <b>Практика нам показала как быстрее и дороже продать резину, диски и колеса в сборе.</b><br>
+                                <b>1. Внешний вид </b> это очень важно. Статистика показала, что чистые колеса покупают на 30% дороже и на 40% быстрее. Самое лучшее соостояние - чистые и покрыты чернителем шины.<br>
+                                Эта подготовка займет всего 15-20 минут Вашего времени и 200-500 р. Ваших средств, но значительно увеличит шансы на продажу. <br>
+                                <b>2.</b> Резина всегда имеет разный износ, поэтому важно <b>замерить и сообщить глубину протектора </b> каждого колеса. Это образует к Вам дополнительное доверие и такие объявления увеличивают срок оборачиваемости <b>до 20%</b>.<br>
+                                <b>3. Хороший свет и фото всех надписей, год, название </b>, так как бывают случаи, когда в комплекте разные пары колес. К Вам приезжают клиенты, Вы и они тратите время, но покупки в итоге не произойдет если колеса не соответствуют ожиданиям. Поэтому проще указать достоверную информацию или продавать парами.<br>
+                                <b>4. Ровный фон </b> одного цвета, который легко помыть. Это может быть обратная сторона баннера или профессиональный фон с логотипом компании. Главное, чтобы не было видно в окружении хлама, грязи, и покупатель понимал, что Вы аккуратный пользователь. <br>
+                                <b>5.</b> Ставьте колеса как можно ровнее, круглые предметы даже с небольшим отклонением смотрятся некрасиво.<br>
+                                <b>6.</b> Любая подставка, даже табуретка, значительно упростят процесс фото одного колеса. <br>
+                                <b>7. Адекватная цена</b> состоянию, году и рынку. Мы в помощь всегда указываем рекомендованную цену продажи, эта та цена, по которой другие продали аналогичную резину.<br>
+                                <b>8. Складирование</b> шин и дисков. <br>
+                                Для объявления и если Вы выносите клиенту колесаэто это не так важно, но если Вы приглашаете клиентов на склад, то необходимо, чтобы были стеллажи, маркировки, все было чисто, и аналогичная по размеру резина находилась рядом. В таком случае, если по каким то причинам, клиент не купит резину из объявления, есть вероятность, что купит аналогичную.<br>
+                                <b>9.</b> Желательно, чтобы резина была <b>в закрытом помещении</b>. Если же она хранится на улице, желательно её накрывать, т.к. внутри резины набивается вода в дождь, её трудно вылить, а зимой образуется лёд. И ещё, резина, несмотря на круглогодичную эксплуатацию, имеет свойство впитывать влагу, и потом ее трудно балансировать.<br>
+                                <b>10.</b> Хорошим дополнительным заработком к продаже резины и дисков идет <b>продажа сопутствующих услуг и товаров</b>. <br>
+                                Например: Шиномонтаж и балансировка,<br>
+                                Прокат, покраска и ремонт дисков. <br>
+                                Продажа пакетов и мешков для колес и т.п. <br>
+                                таким образом Вы можете увеличить свой доход на 30%.<br>
+                                <b>11.</b> Предлагайте <b>трейд ин и выкуп</b> резины, дисков и колес в сборе у клиентов.
+
+                            </div>
+                          </div>
+                        </div>
+                        <div class="accordion-item">
+                          <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Калькулятор цен
+                            </button>
+                          </h2>
+                          <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="collapseThree" data-bs-parent="#accordionRecommendations">
+                            <div class="accordion-body">
+                                Раздел <b>Характеристики дисков</b> позволяет подготовить качественный <b>заголовок объявления</b> и сформировать <b>цену</b> предложения. Характеристики дисков будут отображаться в предложении, поэтому важно их заполнить.<br>
+                                Проще всего выбрать Бренд и модель автомобиля, система подберет диски для этой модели.
+                                Калькулятор ищет максимальное совпадение <b>бренда, диаметра и ширины</b> дисков в базе данных. Если совпадение всех параметров найдено в текущих предложениях - получаем точную цену новых дисков.<br>
+                                Далее, в зависимости от </b>года выпуска </b>, вычисляется цена бывших в употреблении дисков: -20% от цены новых за первый год эксплуатации, далее -10% за каждый последующий год эксплуатации. <br>
+                                Если не находится <b>полное</b> соответствие параметрам дисков - берется средняя цена дисков <b>без фильтра по ширине</b>, но с фильтром по бренду и диаметру. Если не находится и такого предложения, то вычисляется средняя цена
+                                <b>по бренду и ширине</b>. Далее - <b>без бренда, </b> и, в конце концев, <b>только по диаметру</b>.
+                            </div>
+                          </div>
+                        </div>
+                        <div class="accordion-item">
+                          <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Какие фото приложить?
+                            </button>
+                          </h2>
+                          <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionRecommendations">
+                            <div class="accordion-body">
+                                    Сделайте не менее 3-х фотографий комплекта колес, желательно на однотонном фоне. <br>
+                                    На одной из фотографий должны считываться Марка, модель и размерность шин. На другой фотографии желательно показать глубину протектора на приборе.
+                                    И две фотографии должы показывать состояние протектора и колес вцелом.
+                                <table align="center">
+                                    <tr>
+                                        {% for photo in tirephotos %}
+                                        <td>
+                                            <img src="{{ photo|safe }}" width="250px" height="250px" class="img-thumbnail" alt="Пример фото колес">
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                </table>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                        <h2 class="h5 col-md-4 mb-4">Автомобиль</h2>
+                        <div class="row">
+                            <div class ="col-md-4 mb-3">
+                                <label>Бренд Авто</label>
+                                {{ form.carBrand(class='form-select', placeholder='Введите название бренда АМ', id='carBrand') }}
+                            </div>
+
+                            <div class ="col-md-4 mb-3">
+                                <label>Модель Авто</label>
+                                {{ form.carModel(class='form-select', placeholder='Введите название модели АМ', id='carModel') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                        <div class="row">
+                            <h2 class="h5 col-md-4 mb-4">Характеристики дисков</h2>
+                            <div class="col-md-4 form-switch" >
+                                {{ form.rimoriginal(class='form-check-input') }}
+                                <label class ="h5 form-check-label" for ="rim_original">Оригинальные диски</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-4 mb-3">
+                                <label>Бренд</label>
+                                {{ form.rimbrand(class='form-select', placeholder='Введите название бренда дисков', id='rimbrand') }}
+                            </div>
+                            <div class ="col-md-4 mb-3">
+                                <label>Модель</label>
+                                {{ form.rimmodel(class='form-select', placeholder='Введите название модели дисков', id='rimmodel') }}
+                            </div>
+                            <div class ="col-md-4 mb-3">
+                                <label>Тип дисков</label>
+                                {{ form.rimtype(class='form-select', placeholder='Введите тип дисков', id='rimtype') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-2 mb-3">
+                                <label>Ширина обода</label>
+                                {{ form.rimwidth(class='form-select', placeholder='Выберите ширину обода') }}
+                            </div>
+                            <div class ="col-md-1 mb-3 align-middle text-center mt-2">
+                                <label> </label>
+                                <H2>R</H2>
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Диаметр</label>
+                                {{ form.rimdiametr(class='form-select', placeholder='Выберите диаметр диска') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-2 mb-3">
+                                <label>Отверстий</label>
+                                {{ form.rimbolts(class='form-select', placeholder='Введите количество отверстий') }}
+                            </div>
+                            <div class ="col-md-1 mb-3 align-middle text-center mt-2">
+                                <label> </label>
+                                <H2>x</H2>
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Диам. сверловки</label>
+                                {{ form.rimboltsdiametr(class='form-select', placeholder='Выберите диаметр отверстий') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Вылет (ET)</label>
+                                {{ form.rimoffset(class='form-select', placeholder='Выберите вылет') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Год произв-ва</label>
+                                {{ form.rimyear(class='form-control', placeholder='Год') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                        <h2 class="h5 mb-4">Характеристики объявления</h2>
+                        <div class = "row">
+                            <div class = "col-md-12 mb-3">
+                                <label>Заголовок</label>
+                                {{ form.title(class='form-control', placeholder='Введите заголовок объявления') }}
+                            </div>
+                        </div>
+                        <div class = "row">
+                            <div class = "col-md-12 mb-3">
+                                <label>Описание</label>
+                                {{ form.description(class='form-control', placeholder='Введите описание объявления') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-4 mb-3">
+                                <label>Вид объявления</label>
+                                {{ form.ad_type(class='form-select', placeholder='Вид объявления') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Кол-во</label>
+                                {{ form.rimqte(class='form-control', placeholder='Шт.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Цена</label>
+                                {{ form.price(class='form-control', placeholder='Руб.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Реком. цена</label>
+                                {{ form.recommended_price(class='form-control', placeholder='Руб.') }}
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-4 mb-3 ">
+                                <label>Продвижение Авито</label>
+                                <div class ='form-check'>
+                                    {% for subfield in form.ad_status %}
+                                        {{ subfield }}
+                                        {% if loop.index<=3 %}
+                                            {{ subfield.label }}
+                                        {% else %}
+                                            {{ subfield.label(data_bs_toggle="tooltip", data_bs_placement="top", title="В 2, 5, 10 раз больше показов на 1 или 7 дней") }}
+                                        {% endif %}
+                                        {% if loop.index % 3 == 0 %}
+                                            <br>
+                                        {% endif %}                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Продвижение Auto.ru</label>
+                                <div class =" form-check form-switch">
+                                    {{ form.is_for_priority(class='form-check-input') }}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class ="col-md-6 mb-3">
+                            <label>Фотографии</label>
+                            {{ form.photo1(class='form-control') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <div class="col-12 col-xl-4">
+
+            <div class="card card-body shadow-sm mb-4 mb-lg-3">
+                <h2 class="h5 mb-4">Адрес магазина и контактное лицо</h2>
+                        <div class="row">
+                            <div class ="col-md-6 mb-3">
+                                    <label>Имя</label>
+                                    {{ form.manager_name(class='form-control', placeholder='Имя контактного лица') }}
+                            </div>
+                            <div class ="col-md-6 mb-3">
+                                    <label>Телефон</label>
+                                    {{ form.contact_phone(class='form-control', placeholder='формат +7XXXXXXXXXX') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-10 mb-3">
+                                    <label>Адрес</label>
+                                    {{ form.address(class='form-control', placeholder='Полный адрес объекта') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-md-10 mb-3">
+                                <label>Зона показа объявления</label>
+                                {{ form.display_area1(class='form-select', placeholder='Зона показа') }}
+                            </div>
+                        </div>
+            </div>
+
+        </div>
+        </div>
+
+    </div>
+    <div class ="col-md-6 mb-3">
+        <button type="submit" name="Save" class="btn btn-primary" autofocus>Отправить</button>
+    </div>
+    </form>
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="/static/assets/js/tire.js"></script>
+
+{% endblock javascripts %}
+

@@ -15,7 +15,7 @@ class Config(object):
     # ADMINS=config('ADMINS', default='chaikide@mail.ru')
 
     # This will create a file in <app> FOLDER
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     DOMAIN_NAME = 'http://rezinos.ru/'
@@ -70,6 +70,8 @@ class ProductionConfig(Config):
 
 class DebugConfig(Config):
     DEBUG = True
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
 
 # Load all possible configurations
 config_dict = {

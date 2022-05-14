@@ -18,6 +18,7 @@ from time import time
 import jwt
 import pandas as pd
 from sqlalchemy import and_
+from sqlalchemy import event
 import numpy as np
 
 
@@ -29,6 +30,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.Binary)
     tires = db.relationship('Tire', backref='owner', lazy='dynamic')
     rims = db.relationship('Rim', backref='owner', lazy='dynamic')
+    wheels = db.relationship('Wheel', backref='owner', lazy='dynamic')
     about_me = db.Column(db.String(140))
     store=db.Column(db.String(64))  #Номер магазина в Авто.ру
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
@@ -301,12 +303,10 @@ class WearDiscounts(db.Model):
         wear_data.index.name='id'
         wear_data.to_sql('wear_discounts', con=db.engine, if_exists='append', index=False )
 
+
 class Tire(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     baseid = db.Column(db.String(20)) #Уникальный идентификатор на все базы, шины диски и колеса, =d+id для дисков или t+id для tire или r+id для колес
-    carBrand=db.Column(db.String(30))
-    carModel=db.Column(db.String(30))
-    carYear=db.Column(db.Integer)
     sold=db.Column(db.Boolean, default=False)
     sold_date=db.Column(db.DateTime())
     store=db.Column(db.String(64))  #Номер магазина в Авто.ру
@@ -470,9 +470,12 @@ class Rim(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     baseid = db.Column(db.String(20)) #Уникальный идентификатор на все базы, шины диски и колеса, =r+id для дисков (rim) или t+id для tire или w+id для колес (wheel)
     store = db.Column(db.String(64))  # Номер магазина в Авто.ру
+    carbrand=db.Column(db.String(30))
+    carmodel=db.Column(db.String(30))
+    # carYear=db.Column(db.Integer)
     rimbrand = db.Column(db.String(70))
     rimmodel = db.Column(db.String(70))
-    rimqte = db.Column(db.Float)  # Количество для продажи
+    qte = db.Column(db.Float)  # Количество для продажи
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # Дата создания объявления
     date_begin = db.Column(db.DateTime, default=datetime.today())  # Дата и время публикации объявления
     date_end = db.Column(db.DateTime, default=datetime.today() + timedelta(
@@ -578,7 +581,7 @@ class Rim(db.Model):
                 if photo is not None:
                     add_avito_element(imagezone, 'image', "url=" + os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         #Раздел properties
-        add_avito_element(ad, 'count', self.rimqte)
+        add_avito_element(ad, 'count', self.qte)
         add_avito_element(ad, 'is_for_priority', self.is_for_priority)
         return ads
 
@@ -626,7 +629,7 @@ class Rim(db.Model):
         add_avito_element(ad, 'RimBolts', self.rimbolts)
         add_avito_element(ad, 'RimBoltsDiameter', self.rimboltsdiametr)
         add_avito_element(ad, 'RimOffset', self.rimoffset)
-        add_avito_element(ad, 'Quantity', self.rimqte)
+        add_avito_element(ad, 'Quantity', self.qte)
         if not self.videourl is None:
             add_avito_element(ad, 'VideoURL', self.videourl)
         #Осталось собрать фотки
@@ -636,6 +639,195 @@ class Rim(db.Model):
                 if photo is not None:
                     add_autoru_property(imagezone, 'Image', '', 'url', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         return ad
+
+class Wheel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    baseid = db.Column(db.String(20)) #Уникальный идентификатор на все базы, шины диски и колеса, =r+id для дисков (rim) или t+id для tire или w+id для колес (wheel)
+    store = db.Column(db.String(64))  # Номер магазина в Авто.ру
+    carbrand=db.Column(db.String(30))
+    carmodel=db.Column(db.String(30))
+    rimbrand = db.Column(db.String(70)) #бренд диска
+    rimmodel = db.Column(db.String(70)) #модель диска
+    qte = db.Column(db.Float)  # Количество для продажи
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # Дата создания объявления
+    date_begin = db.Column(db.DateTime, default=datetime.today())  # Дата и время публикации объявления
+    date_end = db.Column(db.DateTime, default=datetime.today() + timedelta(
+        days=120))  # Дата и время снятия публикации объявления
+    listing_fee = db.Column(db.String(20))  # Пакет размещения: Package, PackageSingle или Single
+    ad_status = db.Column(db.String(15),
+                          default='Free')  # «Free», «Highlight», «XL», «x2_1», «x2_7», «x5_1», «x5_7», «x10_1», «x10_7»
+    is_for_priority=db.Column(db.Boolean, default=False) #Для Авто.ру признак продвижения
+    avito_id = db.Column(db.String(50))  # Номер объявления на Авито, для связки с объявлением вручную
+    user_id = db.Column(db.Integer, db.ForeignKey('User.id'))  # Привязка к владельцу
+    avito_show = db.Column(db.Boolean, default=False)
+    avtoru_show = db.Column(db. Boolean, default=False)
+    drom_show = db.Column(db.Boolean, default=False)
+    sold=db.Column(db.Boolean, default=False)
+    sold_date=db.Column(db.DateTime())
+
+    # Забрать настройки объявления из настроек пользователя
+    allow_email = db.Column(db.Boolean)  # Разрешено написать сообщение через сайт
+    manager_name = db.Column(db.String(100))  # Имя контактного лица по данному объявлению
+    contact_phone = db.Column(db.String(20))  # Телефон контактного лица, только один российский телефон
+    address = db.Column(db.String(256))  # полный адрес объекта — строка до 256 символов, обязательное поле
+    latitude = db.Column(db.Float)  # альтернатива Адрес
+    longitude = db.Column(db.Float)  # альтернатива Адрес
+    display_area1 = db.Column(db.String(256))
+    display_area2 = db.Column(db.String(256))
+    display_area3 = db.Column(db.String(256))
+    display_area4 = db.Column(db.String(256))
+    display_area5 = db.Column(db.String(256))
+    category = db.Column(db.String(50), default='Запчасти и аксессуары')
+    # type_id = db.Column(db.String(6),
+    #                     default='10-046')  # 10-048 — Шины, 10-047 — Мотошины, 10-046 — Диски, 10-045 —  Колёса, 10-044 — Колпаки
+    ad_type = db.Column(db.String(50),
+                        default='Товар приобретен на продажу')  # 'Товар от производителя' или 'Товар приобретен на продажу'
+    title = db.Column(db.String(50))  # Название объявления — строка до 50 символов.
+    description = db.Column(db.String(
+        5000))  # Текстовое описание объявления в соответствии с правилами Авито — строка не более 5000 символов.
+    # Если у вас есть оплаченная Подписка, то поместив описание внутрь CDATA, вы можете использовать дополнительное форматирование с помощью HTML-тегов — строго из указанного списка: p, br, strong, em, ul, ol, li.
+    price = db.Column(db.Integer)
+    condition = db.Column(db.String(10), default='Б/у')  # Новое или Б/у
+
+    oem = db.Column(db.String(10))  # номер делтали OEM, REFERENCE
+    recommended_price = db.Column(db.Integer)
+
+    rimtype =db.Column(db.String(20)) #тип диска: Кованные, литые, штампованные, спицованные, сборные
+    rimwidth = db.Column(db.String(10))  #Ширина обода
+    # wrimdiametr = db.Column(db.String(10))  # в файле xml RimDiameter
+    rimbolts=db.Column(db.Integer)  #количество болтов 3..10
+    rimboltsdiametr=db.Column(db.Float) #Диаметр отверстий
+    rimoffset=db.Column(db.Float) #Вылет, ET
+    rimoriginal=db.Column(db.Boolean, default=False)
+    tirebrand=db.Column(db.String(70)) #бренд шин
+    tiremodel=db.Column(db.String(70)) #модель шин
+    shirina_profilya=db.Column(db.String(10))  #TireSectionWidth
+    vysota_profilya=db.Column(db.String(10))   #TireAspectRatio
+    rimdiametr=db.Column(db.String(10))   #в файле xml RimDiameter
+    sezonnost=db.Column(db.String(40)) #TireType Всесезонные / Летние /  Зимние нешипованные / Зимние шипованные
+    protector_height=db.Column(db.Integer)  #Высота протектора
+    protector_wear = db.Column(db.Integer) #Износ протектора
+    tireproduct_year = db.Column(db.Integer)  #год производства шин
+    differentwidthtires = db.Column(db.Boolean) #Разноширокий комплект шин.
+    backrimdiameter =db.Column(db.String(10)) #Диаметр на задней оси если wdifferentwidthtires=True
+
+    videourl = db.Column(
+        db.String(256))  # VideoURL Формат ссылки на видео должен соответствовать - https://www.youtube.com/watch?v=***
+    rimyear = db.Column(db.Integer)
+    comment = db.Column(db.String(120))  # комментарий
+    photos = db.relationship('WheelPhoto', backref='wheel', lazy='dynamic')
+    withDelivery = db.Column(db.Boolean)  # с доставкой
+    isShop = db.Column(db.Boolean)  # Магазин
+    locationId = db.Column(db.Boolean)  # расположение
+    def __repr__(self):
+        return '<Колеса: диски тип {}, ширина: {} диаметр: {} вылет: {} шины диаметр: {} ширина {} высота профиля {}>'.format(self.rimtype, self.rimwidth, self.rimdiametr, self.rimoffset,
+                                                                                                                              self.rimdiametr, self.shirina_profilya, self.vysota_profilya)
+
+    def add_avtoru_wheel(self, ads):
+        # columns=['id', 'Заголовок', 'Брэнд', 'Описание', 'Новизна',
+        #          'Цена', 'Состояние', 'Диаметр', 'Тип резины', 'Ширина', 'Высота профиля',
+        #          'images', 'Количество', 'Отверстий', 'Диаметр отверстий', 'Вылет']
+        ad = ET.SubElement(ads, 'part')
+        add_avito_element(ad, 'Id', self.baseid)
+        add_avito_element(ad, 'title', self.title)
+        #магазины
+        if self.store is not None:
+            stores = ET.SubElement(ad, 'stores')
+            add_avito_element(stores, 'store', self.store)
+        #снова характеристики объявления
+    #Вернуться и доделать отсюда
+        # add_avito_element(ad, 'manufacturer', self.wrimbrand)
+        # add_avito_element(ad, 'description', self.description)
+        # if self.condition =='Б/у':
+        #     add_avito_element(ad, 'is_new', 'false')
+        # else:
+        #     add_avito_element(ad, 'is_new', 'true')
+        # add_avito_element(ad, 'price', round(self.price, 0))
+        # #Раздел Доступность
+        # avail = ET.SubElement(ad, 'availability')
+        # add_avito_element(avail, 'isAvailable', 'True')
+        # properties = ET.SubElement(ad, 'properties')
+        # add_autoru_property(properties, 'property', self.rimtype, 'name', 'Тип дисков')  #Ширина профиля
+        # if self.rimoriginal:
+        #     add_autoru_property(properties, 'property', 'Да', 'name', 'Оригинал')  # Ширина профиля
+        # add_autoru_property(properties, 'property', self.rimtype, 'name', 'Тип дисков')
+        # add_autoru_property(properties, 'property', self.rimwidth, 'name', 'Ширина диска')
+        # add_autoru_property(properties, 'property', self.rimdiametr,'name', 'Диаметр диска')
+        # add_autoru_property(properties, 'property', self.rimbolts, 'name', 'Количество болтов')
+        # add_autoru_property(properties, 'property', self.rimboltsdiametr, 'name', 'Диаметр сверловки')
+        # add_autoru_property(properties, 'property', self.rimoffset, 'name', 'Вылет диска')
+        # add_autoru_property(properties, 'property', self.rimyear, 'name', 'Год производства')
+        # #Раздел images
+        # if self.photos.first() is not None:
+        #     imagezone = ET.SubElement(ad, 'images')
+        #     for photo in self.photos:
+        #         if photo is not None:
+        #             add_avito_element(imagezone, 'image', "url=" + os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
+        # #Раздел properties
+        # add_avito_element(ad, 'count', self.qte)
+        # add_avito_element(ad, 'is_for_priority', self.is_for_priority)
+        return ads
+
+    def add_avito_wheel(self, ad):
+        add_avito_element(ad, 'Id', self.baseid)
+        add_avito_element(ad, 'DateBegin', self.date_begin.isoformat())
+        #Дату окончания публикации пока не указываем, в будущем возможно понадобится функциональность
+        add_avito_element(ad, 'DateEnd', self.date_end.isoformat())
+        add_avito_element(ad, 'ListingFee', self.listing_fee)
+        add_avito_element(ad, 'AdStatus', self.ad_status)
+        if self.avito_id != '':
+            add_avito_element(ad, 'AvitoId', self.avito_id)
+        if self.allow_email:
+            add_avito_element(ad, 'ContactMethod', 'По телефону и в сообщениях')
+        else:
+            add_avito_element(ad, 'ContactMethod', 'По телефону')
+        if self.manager_name:
+            add_avito_element(ad, 'ManagerName', self.manager_name)
+        if self.contact_phone:
+            add_avito_element(ad, 'ContactPhone', self.contact_phone)
+        if self.address is not None:
+            add_avito_element(ad, 'Address', self.address)
+        if self.address is None and self.latitude is not None:
+            add_avito_element(ad, 'Latitude', self.latitude)
+            add_avito_element(ad, 'Longitude', self.longitude)
+
+        if self.display_area1 is not None:
+            avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).filter(AvitoZones.id == int(self.display_area1)).first()
+            areazone = ET.SubElement(ad, 'DisplayAreas')
+            add_avito_element(areazone, 'Area', avito_zones[1])
+        add_avito_element(ad, 'Category', self.category)
+        # dict_types={'Шины':'10-048', 'Мотошины':'10-047', 'Диски':'10-046', 'Колёса':'10-045', 'Колпаки':'10-044'}
+        add_avito_element(ad, 'TypeId', '10-045')
+        add_avito_element(ad, 'AdType', self.ad_type)
+        add_avito_element(ad, 'Title', self.title)
+        add_avito_element(ad, 'Description', self.description)
+        add_avito_element(ad, 'Price', self.price)
+        add_avito_element(ad, 'Condition', self.condition)
+        # add_avito_element(ad, 'OEM', self.oem)
+        add_avito_element(ad, 'Brand', self.wrimbrand)
+
+        # add_avito_element(ad, 'RimDiameter', self.wrimdiametr)
+        add_avito_element(ad, 'RimType', self.wrimtype)
+        add_avito_element(ad, 'RimWidth', self.wrimwidth)
+        add_avito_element(ad, 'RimBolts', self.wrimbolts)
+        add_avito_element(ad, 'RimBoltsDiameter', self.wrimboltsdiametr)
+        add_avito_element(ad, 'RimOffset', self.wrimoffset)
+        if self.wdifferentwidthtires:
+            add_avito_element(ad, 'BackRimDiameter', self.wbackrimdiameter)
+        add_avito_element(ad, 'Quantity', self.qte)
+#Вернуться и добавить все про шины
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        if not self.videourl is None:
+            add_avito_element(ad, 'VideoURL', self.videourl)
+        #Осталось собрать фотки
+        if self.photos.first() is not None:
+            imagezone = ET.SubElement(ad, 'Images')
+            for photo in self.photos:
+                if photo is not None:
+                    add_autoru_property(imagezone, 'Image', '', 'url', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
+        return ad
+
 
 class TirePhoto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -649,6 +841,15 @@ class TirePhoto(db.Model):
 class RimPhoto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rim_id = db.Column(db.Integer, db.ForeignKey('rim.id')) #Привязка к владельцу
+    photo=db.Column(db.String(120))
+    def __repr__(self):
+        return self.photo
+    def photos_id(self):
+        return self.photo, self.id
+
+class WheelPhoto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    wheel_id = db.Column(db.Integer, db.ForeignKey('wheel.id')) #Привязка к владельцу
     photo=db.Column(db.String(120))
     def __repr__(self):
         return self.photo

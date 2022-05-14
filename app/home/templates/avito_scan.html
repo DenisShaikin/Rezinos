@@ -1,0 +1,64 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Avito Scan {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+    <form action="" name="rim_Form" method="post" class="form" role="form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+    <div class="row">
+        <div class="col-5">
+            <div class = "row form-switch">
+                {% for subfield in form.searchSelector %}
+                <div class="col-sm-2 mt-2">
+                    {{ subfield(class="form-check-input") }}
+                    {{ subfield.label }}
+                </div>
+                {% endfor %}
+                <div class="col-sm-2">
+                    {{ form.searchRadius(class='form-control', placeholder='Радиус поиска') }}
+                </div>
+                <div class="col-sm-1 mt-2">
+                    <H4 class="text-left">км.</H4>
+                </div>
+
+                <div class="col-sm-2 mb-2">
+                    <button type="submit" name="StartSearch" value="StartSearch" class="btn btn-primary">Искать</button>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-7">
+            <div class="row mb-3">
+                <div class="col-sm-2">
+                    {{ form.width(class='form-select', placeholder='Ширина') }}
+                </div>
+
+                <div class="col-sm-2">
+                    {{ form.height(class='form-select', placeholder='Высота профиля') }}
+                </div>
+                <div class="col-sm-1">
+                    <H3 class="text-center">R</H3>
+                </div>
+                <div class="col-sm-2">
+                    {{ form.diametr(class='form-select', placeholder='Диаметр') }}
+                </div>
+                <div class="col-sm-3">
+                    {{ form.sezonnost(class='form-select', placeholder='Сезонность') }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </form>
+
+    {% include "avitoscan-table.html" %}
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+{% endblock javascripts %}

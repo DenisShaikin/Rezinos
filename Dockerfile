@@ -43,6 +43,7 @@ COPY run.py config.py boot.sh thorns.csv wear_discounts.csv TirePricesBase.csv R
 RUN chmod +x boot.sh
 
 ENV FLASK_APP run.py
+ENV FLASK_ENV config.ProductionConfig
 
 RUN chown -R rezinos:rezinos ./
 USER rezinos

@@ -275,6 +275,7 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                     dfTempResult['wear2'] = dfTempResult[0].str.extract('(\d{2}%)', expand=False)
                     #Вычищаем данные
                     dfTempResult=treatAvitoTiresData(dfTempResult)
+                    dfTempResult['request_type'] = 0 #значит добавляем скан без геолокации и радиуса поиска
                     dfResult=pd.concat([dfResult, dfTempResult])
 
                     #Добавляем новые записи в базу
@@ -305,7 +306,212 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
     # myapp=app._get_current_object()
     return dfResult
 
+def getAvitoTirePricesByLocale(app, diametr, width, height, lon, lat, region='rossiya', season='zimnie_neshipovannye', nPages=10, distance=50):
+    app.app_context().push()
+    options = se.webdriver.ChromeOptions()
+    options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko')
+    options.add_argument('Connection=keep-alive')
+    options.add_argument('Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
+    options.add_argument('Accept-Language=ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4')
+    # options.add_argument('headless')
+    options.add_argument('disable-dev-shm-usage')
+    options.add_argument('no-sandbox')  #--no-sandbox
+    options.add_argument('--disable-gpu')
+    options.add_argument('allow-running-insecure-content')
+    options.add_argument('--ignore-certificate-errors-spki-list')
+    options.add_argument("--ignore-certificate-error")
+    options.add_argument("--ignore-ssl-errors")
+    options.add_argument('log-level=3')
+    # print('регион=',region)
+    strLink='https://www.avito.ru/' + str(region) + '/zapchasti_i_aksessuary/shiny_diski_i_kolesa/shiny/'
+    if diametr:
+        strLink +='diametr_' + str(diametr)
+    if season:
+        strLink +='/' + str(season)
+    if width:
+        strLink +='/' + 'shirina_' + str(width)
+    if height:
+        strLink +='/' + 'vysota_' + str(height)
+    # print('diametr={}, season={}, width={}, height={}'.format(diametr, season, width, height))
+    pd.set_option('display.max_colwidth', 1000)
+    # print(strLink)
+#     options.add_argument('headless')
+#     driver = se.webdriver.Chrome(options=options)
+    caps = se.webdriver.DesiredCapabilities.CHROME.copy()
+    caps['acceptInsecureCerts'] = True
+    caps['acceptSslCerts'] = True
+    driver = se.webdriver.Chrome(desired_capabilities=caps, options=options)
+
+    #Удалим все существующие записи
+    with app.app_context():
+        db.session.query(ApiTire).filter(ApiTire.request_type == 1).delete(synchronize_session='fetch')
+        db.session.commit()
+
+    dfResult=pd.DataFrame()
+    strLink += '?geoCoords=' + str(lat) +  '%2C' + str(lon) + '&radius=' + str(distance)
+    print(strLink)
+
+    try:
+        driver.get(strLink)
+    except:
+        time.sleep(10)
+        driver.get(strLink)
+    time.sleep(1)
+
+    #Определим количество страниц
+    pagesNumber=driver.find_elements(by=By.XPATH, value="//span[contains(@class,'pagination-item-JJq_j')]")
+    if len(pagesNumber)==0:
+        time.sleep(10)
+        driver.get(strLink)
+        time.sleep(1)
+        pagesNumber=driver.find_elements(by=By.XPATH, value="//span[contains(@class,'pagination-item-JJq_j')]")
+#             print(pagesNumber)
+    else:
+        pagesList=[page.text for page in pagesNumber]
+        dfPages=pd.DataFrame(data=pagesList, columns=['page'])
+        dfPages['page']=pd.to_numeric(dfPages['page'], errors='coerce')
+        pagesNum=int(dfPages['page'].max())
+        pagesNum = nPages if pagesNum>nPages else pagesNum #По nPages страниц с каждого региона
+        for p in range(1, pagesNum+1):
+            print('Страница:', p)
+            print(strLink  + '&p=' + str(p))
+            try:
+                driver.get(strLink  + '&p=' + str(p)) #+ '-'+ token
+            except:
+                time.sleep(10)
+                driver.get(strLink + '&p=' + str(p))
+            time.sleep(1)
+            metaDescription=driver.find_elements(by=By.XPATH, value="//div[contains(@class,'iva-item-text-Ge6dR iva-item-description-FDgK4 text-text-LurtD text-size-s-BxGpL')]")
+            metaList=[meta.text for meta in metaDescription] #Сохраним все ссылки в список    # print(metaList)
+            if len(metaList)>0:
+                brands=driver.find_elements(by=By.XPATH, value="//h3[contains(@class,'title-listRedesign-_rejR')]")
+                brandsList=[brand.text for brand in brands] #Сохраним все заголовки
+                codes = driver.find_elements(by=By.XPATH, value="//a[contains(@class,'title-listRedesign-_rejR')]")
+                # print(codes)
+                codesList = [code.get_attribute("href").split('_')[-1] for code in codes] #ID объявлений
+
+                #Собираем цены без спец предложений!
+                avitoLinks = driver.find_elements(by=By.XPATH, value="//a[contains(@class,'title-listRedesign-_rejR')]")
+                avitoLinksList = [link.get_attribute("href") for link in avitoLinks]  # Сохраним все ссылки на объявления в список
+                #Собираем цены
+                prices=driver.find_elements(by=By.XPATH, value="//span[@class='price-root-RA1pj price-listRedesign-GXB2V']")
+                pricesList=[]
+                for element in prices:
+                    realPrice=element.find_element(by=By.XPATH, value=".//span[contains(@class,'price-text-_YGDY')]")
+                    pricesList.append(realPrice.text)
+                #Сезонность
+                seasons=driver.find_elements(by=By.XPATH, value="//span[contains(@class,'iva-item-text-Ge6dR text-text-LurtD')]")
+                seasonList=[season.text for season in seasons]
+
+                #Все соединяем только если длины списков совпадают!
+                if len(metaList) == len(brandsList) and len(metaList)==len(pricesList) and \
+                        len(metaList)==len(seasonList) and len(metaList)==len(avitoLinksList):
+                    dfTempResult=pd.DataFrame(data = metaList)
+                    dfTempResult=dfTempResult.assign(brand = brandsList)
+                    dfTempResult=dfTempResult.assign(price = pricesList)
+                    dfTempResult=dfTempResult.assign(season = seasonList)
+                    dfTempResult=dfTempResult.assign(avito_id = codesList)
+                    dfTempResult=dfTempResult.assign(avito_link =avitoLinksList)
+                    dfTempResult['regionReal'] = dfTempResult['avito_link'].apply(lambda x: x.split('/')[3]) #Регион из ссылки - реальный регион
+
+#                     dfTempResult=dfTempResult.assign(geo = geoList)
+                    dfTempResult['region']= region
+                    #В параметрах может не приходить размер, тогда его можно взять из заголовка
+                    dfTempResult['size'] = dfTempResult['brand'].str.extract('(\d{3}\/\d{2,3}\sR\d{1,2})', expand=False)
+                    dfTempResult['sizeDiametr'] = dfTempResult['size'].str.extract('(R\d{1,2})', expand=False) #Выбираем только диаметр, бывает NaN
+                    dfTempResult['size'] = dfTempResult['brand'].str.extract('(\d{3}\/\d{2,3})', expand=False) #Оставляем только ширину и высоту профиля
+                    if diametr:
+                        dfTempResult['diametr']=diametr
+                    else:
+                        dfTempResult['diametr']=dfTempResult['size'].str.extract('(R\d{1,2})', expand=False)
+                    if width:
+                        dfTempResult['width']=width
+                    else:
+                        dfTempResult['width'] = pd.to_numeric(dfTempResult['size'].str.extract('(\d{3})', expand=False), errors='coerce').astype('Int32', errors='ignore')
+                    if height:
+                        dfTempResult['height'] = height
+                    else:
+                        dfTempResult['height'] = dfTempResult['size'].str.extract('(\/\d{2,3})', expand=False) #Высота бывает 2 или 3 знака
+                        dfTempResult['height'] = pd.to_numeric(dfTempResult['height'].str.replace('/', ''), errors='coerce').astype('int32', errors='ignore')
+                    dfTempResult.drop(columns=['size','sizeDiametr'], axis=1, inplace=True)
+                    dfTempResult['wear'] = dfTempResult[0].str.extract('(\Sзнос\s.{,3})', expand=False)
+                    dfTempResult['wear2'] = dfTempResult[0].str.extract('(\d{2}%)', expand=False)
+                    #Вычищаем данные
+                    dfTempResult=treatAvitoTiresData(dfTempResult)
+                    dfTempResult['request_type'] = 1 #значит добавляем скан по геолокации  и радиусу
+                    dfResult=pd.concat([dfResult, dfTempResult])
+
+                    #Добавляем новые записи в базу
+                    with app.app_context():
+                        # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
+                        lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
+                        lastRec = 0 if not lastRec else lastRec
+                        dfTempResult['index'] = range(lastRec + 1, lastRec + len(dfTempResult) + 1)
+                        dfTempResult.set_index('index', inplace=True)
+                        dfTempResult.index.name = 'id'
+                        dfTempResult['update_date'] = datetime.utcnow()
+                        dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
+            else:
+                time.sleep(3)
+    driver.quit()
+    # currTire=Tire()
+    # myapp=app._get_current_object()
+    return len(dfResult)  #Возвращаем количество добавленных записей
+
 def updateTires(app, region, season, diametr, width, height, pages=20):
     dfUpdateBase=getAvitoTirePrices(app, diametr, width, height, region, season, pages)
     # print(dfUpdateBase.head())
     return dfUpdateBase
+
+def getAvitoAccountData(id):
+    options = se.webdriver.ChromeOptions()
+    # options.add_argument('--proxy-server=138.21.89.91:3128');
+    # options.add_argument('--Proxy-Authorization=au00449:88akakiy')
+    options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko')
+    options.add_argument('Connection=keep-alive')
+    options.add_argument('Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
+    options.add_argument('Accept-Language=ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4')
+    options.add_argument("start-maximized")
+
+    driver = se.webdriver.Chrome(options=options,
+                                 executable_path='c:/Users/au00449/Python Marketing/chromedriver/chromedriver.exe')
+    dfResult = pd.DataFrame()
+
+    try:
+        driver.get('https://www.avito.ru/i182209893')
+    #             break
+    except:
+        time.sleep(10)
+        driver.get('https://www.avito.ru/i182209893')
+    time.sleep(1)
+
+    time.sleep(1)
+    avitolinks = driver.find_elements(by=By.XPATH, value="//a[contains(@class, 'item-description-title-link')]")
+    avitolinksList = [link.get_attribute("href") for link in avitolinks]
+    # print(avitolinksList)
+    for link in avitolinksList:
+        driver.get(link)
+        time.sleep(5)
+        title = driver.find_element(by=By.XPATH, value="//span[contains(@class, 'title-info-title-text')]").text
+        #     titlesList = [title.text for title in titles]
+        photos = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'gallery-img-frame')]")
+        photosList = [photo.get_attribute("data-url") for photo in photos]
+        #     photo = driver.find_element(by=By.XPATH, value="//div[contains(@class, 'gallery-img-frame')]").get_attribute('data-url')
+        price = driver.find_element(by=By.XPATH, value="//span[contains(@class, 'js-item-price')]").get_attribute("content")
+        characts = driver.find_elements(by=By.XPATH, value="//li[contains(@class, 'item-params-list-item')]")  # item-params-list-item
+        charactsList = [char.text for char in characts]
+        description = driver.find_element(by=By.XPATH, value="//div[contains(@class, 'item-description-html')]").text
+        #     charactsList.append(title, photo, price, description)
+        #     mydf=pd.DataFrame(data=charactsList)
+        dataDict = dict()
+        dataDict['title'] = title
+        dataDict['price'] = price
+        dataDict['description'] = description
+
+        if charactsList:  # Переводим list в dict
+            for item in charactsList:
+                dataDict[item.split(':')[0]] = item.split(':')[1]
+
+        break
+
+    driver.close()

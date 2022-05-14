@@ -11,7 +11,8 @@ import logging
 
 from config import config_dict
 from app import create_app, db
-from app.base.models import  User, Tire, Rim
+from app.base.models import  User, Tire, Rim, Wheel
+
 from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 
@@ -33,9 +34,10 @@ except KeyError:
 app = create_app( app_config )
 Migrate(app, db, render_as_batch=True)
 
+
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'User': User, 'Tire': Tire, 'Rim':Rim}
+    return {'db': db, 'User': User, 'Tire': Tire, 'Rim':Rim, 'Wheel':Wheel}
 
 
 if DEBUG:

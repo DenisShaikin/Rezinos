@@ -10,6 +10,7 @@ import jwt
 class ApiTire(db.Model):
     __tablename__ = 'tire_api'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    request_type = db.Column(db.Integer, default=0)  #0=prices scan, 1=scan for nearest offerts
     brand = db.Column(db.String(200))
     price = db.Column(db.Float)
     season = db.Column(db.String(20))

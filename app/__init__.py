@@ -11,9 +11,13 @@ from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 from flask_wtf.csrf import CSRFProtect
 from flask_restful import Api
+from turbo_flask import Turbo
+import threading
+# from concurrent import futures
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+turbo = Turbo()
 
 
 def register_extensions(app):
@@ -39,19 +43,38 @@ def configure_database(app):
     def shutdown_session(exception=None):
         db.session.remove()
 
+def create_sizesGuides():
+
+    return True
+
+# def init_tireDiameters(diamList, session):
+
 def create_app(config):
     global mail
 
     app = Flask(__name__, static_folder='base/static')
     app.config.from_object(config)
     csrf=register_extensions(app)
+
+    from app.home.routes import avito_offerstable #Регистрируем процессор avito_offerstable
+    app.context_processor(avito_offerstable)
+
     register_blueprints(app)
     configure_database(app)
+    turbo.init_app(app)
+
+    #Инициализируем потоки сканера Авито
+    # from app.api.scaner import Scaner
+    # with futures.ThreadPoolExecutor(max_workers=3) as pool:
+    #     scaner = Scaner(pool)
 
     from app.api import bp as api_bp
     # csrf.exempt(api_bp)
     app.register_blueprint(api_bp, url_prefix='/api')
     api = Api(app, decorators=[csrf.exempt])
+
+
+
 
     from app.api.apiroutes import TirePrices, NewUser, GetUser
     api.add_resource(NewUser, '/api/users')

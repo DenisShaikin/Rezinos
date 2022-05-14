@@ -6,4 +6,4 @@ flask db init
 flask db migrate -m "Mar 15.2022"
 flask db upgrade
 
-exec gunicorn -b :5000 --workers 3 --timeout 90 --access-logfile - --error-logfile - run:app
+exec gunicorn -b :5000 --workers 3 --threads 100 --timeout 90 --access-logfile - --error-logfile - run:app

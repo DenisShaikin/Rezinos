@@ -111,11 +111,6 @@ class TirePrepareForm(FlaskForm):
     oem = StringField(u'Номенклатурный номер')
     recommended_price = IntegerField (u'Рекомендуемая Стоимость')
     product_year = IntegerField(u'Год производства')
-    # rim_type = SelectField(u'Тип диска', choices=['Кованые', 'Литые', 'Штампованные', 'Спицованные', 'Сборные'])
-    # rimwidth = DecimalField(places=1)
-    # rimbolts = IntegerField(u'Количество болтов')
-    # rimboltsdiameter = DecimalField(places=1)
-    # rimoffset = DecimalField(places=1)
     shirina_profilya = SelectField(u'Ширина профиля', choices=['', '115', '125', '130', '135', '145', '155', '165', '175', '185', '195', '205', '215',
                                                                '225', '230', '235', '245', '255', '265', '275', '285', '295', '305', '315', '325', '335', '345',
                                                                '355', '360','365','375', '380','385','395','400','405','415', '420','425','435','445','455','530','600','605', 'Другое'])
@@ -160,10 +155,24 @@ class EditTireForm(FlaskForm):
     videourl=StringField(u'Ссылка на видео Youtube')
     submit = SubmitField('Отправить')
 
+class AvitoScanForm(FlaskForm):
+    searchSelector = RadioField(choices=[('idTireBtn','Шины'),('idRimBtn','Диски'),('idWheelBtn','Колеса')], default='idTireBtn')
+    width = SelectField(u'Ширина профиля', choices=['205', '115', '125', '130', '135', '145', '155', '165', '175', '185', '195', '205', '215',
+                                                               '225', '230', '235', '245', '255', '265', '275', '285', '295', '305', '315', '325', '335', '345',
+                                                               '355', '360','365','375', '380','385','395','400','405','415', '420','425','435','445','455','530','600','605', 'Другое'])
+    height=SelectField('Высота профиля', choices=['55', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '95',
+                                                           '100', '105', '110', 'Другое'])
+    diametr=SelectField('Внутренний Диаметр', choices=['16', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16',
+                                                       '16.5', '17', '17.5', '18', '19', '19.5', '20', '21', '22', '22.5',
+                                                       '23','24','25','26', '26.5', '27', '28', '29', '30', '32', '34', '35', '36', '38',
+                                                       '40', '42', '45', '50', '55'])
+    sezonnost=SelectField('Сезонность', choices=['Зимние нешипованные', 'Зимние шипованные', 'Летние', 'Всесезонные']) #сезонность
+    searchRadius = StringField('Радиус поиска', default=50)
+    submit = SubmitField('Искать')
 
 class RimPrepareForm(FlaskForm):
-    carBrand = SelectField('Брэнд АМ', validate_choice=False, coerce=int)
-    carModel = SelectField('Модель АМ', validate_choice=False, coerce=int)
+    carbrand = SelectField('Брэнд АМ', validate_choice=False, coerce=int)
+    carmodel = SelectField('Модель АМ', validate_choice=False, coerce=int)
     carYear = SelectField('Год произво-ва АМ', validate_choice=False, coerce=int)
 
     rimbrand=SelectField('Производитель', validate_choice=False, coerce=int)
@@ -189,7 +198,7 @@ class RimPrepareForm(FlaskForm):
     display_area5 = StringField('Пятая зона показа')
     ad_type = SelectField(u'Вид объявления', choices=['Товар приобретен на продажу', 'Товар от производителя'])
     is_for_priority =BooleanField(u'Продвижение на Auto.ru', default='unchecked') #auto.ru кнопка продвижения
-    rimqte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
+    qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
     title = StringField(u'Название объявления')
     description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
     price = IntegerField(u'Цена', validators=[DataRequired()])
@@ -219,6 +228,89 @@ class RimPrepareForm(FlaskForm):
                                             "133","134","135","136","138","140","142","143","144","145","147","148","152","156","157",
                                             "161","163","165","167","168","172","175","185","185+"])
     rimyear = IntegerField(default=2021, validators=[DataRequired()], id='rimyear')
+    photo1=MultipleFileField('Выберите файлы с фото') #'image', validators=[FileAllowed(images, 'Images only!')]
+    videourl=StringField(u'Ссылка на видео Youtube')
+    submit = SubmitField('Отправить')
+
+class WheelPrepareForm(FlaskForm):
+    carbrand = SelectField('Брэнд АМ', validate_choice=False, coerce=int)
+    carmodel = SelectField('Модель АМ', validate_choice=False, coerce=int)
+    rimbrand=SelectField('Производитель', validate_choice=False, coerce=int)
+    rimmodel=SelectField('Модель', validate_choice=False, coerce=int)
+    qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
+    title = StringField(u'Название объявления')
+    description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
+    price = IntegerField(u'Цена', validators=[DataRequired()])
+    condition = SelectField(u'Состояние', choices=['Б/у', 'Новое'])
+    oem = StringField(u'Номенклатурный номер')
+    recommended_price = IntegerField (u'Рекомендуемая Стоимость')
+    rimtype = SelectField(u'Тип диска', choices=['Кованые', 'Литые', 'Штампованные', 'Спицованные', 'Сборные'], default='Литые')
+    rimwidth = SelectField('Ширина обода', choices=['', '3.5', '4', '4.5','5','5.5','6','6.5','6.75', '7','7.5', '8', '8.25', '8.5','9', '9.5',
+                                                    '10', '10.5', '11', '11.5', '12', '12.5', '13', '14', '15'] )
+    rimdiametr=SelectField('Диаметр', choices=['', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16',
+                                                       '16.5', '17', '17.5', '18', '19', '19.5', '20', '21', '22', '22.5',
+                                                       '23','24','25','26', '26.5', '27', '28', '29', '30', '32', '34', '35', '36', '38',
+                                                       '40', '42', '45', '50', '55'])
+    rimoriginal = BooleanField('Оригинал', id='wrim_original', default=False)
+
+    rimbolts = SelectField(u'Количество отверстий', choices=['', '3', '4', '5', '6', '8', '9', '10'])
+    rimboltsdiametr = SelectField(u'PCD диаметр расп-я отверстий', choices=['', '98', '100', '105', '107.95', '108', '110', '112', '114.3', '115', '118', '120', '127',
+                                                            '130', '135', '139.7', '150', '160', '165', '170', '180', '205', '225', '245', '256', '275', '335'])
+    rimoffset = SelectField(u'Вылет', choices=['', "-2", "-5","-6","-7","-8","-10","-12","-13","-14","-15","-16","-20","-22","-24","-25",
+                                            "-28","-30","-32","-35","-36","-38","-40","-44","-45","-46","-50","-65","-88","-98",
+                                            "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18",
+                                            "19","20","21","22","23","23.5","24","25","26","27","28","29","30","31","31.5","32","33",
+                                            "34","34.5","35","36","36.5","37","37.5","38","39","39.5","40","40.5","41","41.3","41.5",
+                                            "42","43","43.5","43.8","44","45","45.5","46","47","47.5","48","49","49.5","50","50.5",
+                                            "50.8","51","52","52.2","52.5","53","54","55","56","57","58","59","60","61","62","63",
+                                            "64","65","66","67","68","69","70","75","83","100","102","105","105.5","106","107","108",
+                                            "110","111","115","116","118","120","123","124","125","126","127","128","129","130","132",
+                                            "133","134","135","136","138","140","142","143","144","145","147","148","152","156","157",
+                                            "161","163","165","167","168","172","175","185","185+"])
+    rimyear = IntegerField(default=2021, validators=[DataRequired()], id='rimyear')
+    differentwidthtires = BooleanField(u'Разноширокий комплект', id='wDifferentWheels', default=False)
+    backrimdiameter = SelectField('Диаметр зад. колес', choices=['', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16',
+                                                       '16.5', '17', '17.5', '18', '19', '19.5', '20', '21', '22', '22.5',
+                                                       '23','24','25','26', '26.5', '27', '28', '29', '30', '32', '34', '35', '36', '38',
+                                                       '40', '42', '45', '50', '55'])
+    tirebrand=SelectField('Производитель', validate_choice=False, coerce=int) #бренд шин
+    tiremodel=SelectField('Модель', validate_choice=False, coerce=int) #модель шин
+    shirina_profilya = SelectField(u'Ширина профиля', choices=['', '115', '125', '130', '135', '145', '155', '165', '175', '185', '195', '205', '215',
+                                                               '225', '230', '235', '245', '255', '265', '275', '285', '295', '305', '315', '325', '335', '345',
+                                                               '355', '360','365','375', '380','385','395','400','405','415', '420','425','435','445','455','530','600','605', 'Другое'])
+    vysota_profilya=SelectField('Высота профиля', choices=['', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '95',
+                                                           '100', '105', '110', 'Другое'])
+    sezonnost=SelectField('Сезонность', choices=['Зимние нешипованные', 'Зимние шипованные', 'Летние', 'Всесезонные']) #сезонность
+    # wtirediametr=SelectField('Внутренний Диаметр', choices=['', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16',
+    #                                                    '16.5', '17', '17.5', '18', '19', '19.5', '20', '21', '22', '22.5',
+    #                                                    '23','24','25','26', '26.5', '27', '28', '29', '30', '32', '34', '35', '36', '38',
+    #                                                    '40', '42', '45', '50', '55'])
+    protector_height=IntegerField('Глубина протектора', validators=[DataRequired()])
+    protector_wear = IntegerField('Износ протектора, %', validators=[DataRequired()])
+    tireproduct_year = IntegerField(u'Год производства шин')
+
+    listing_fee=SelectField('Пакет размещения', choices=['PackageSingle', 'Package', 'Single'], default='Package')
+    ad_status=RadioField('Платная услуга', choices=[('Free', 'Free'), ('Highlight', 'Highlight'), ('XL', 'XL'),
+                                                     ('x2_1', 'x2_1'), ('x2_7', 'x2_7'), ('x5_1', 'x5_1'), ('x5_7', 'x5_7'), ('x10_1', 'x10_1'), ('x10_7', 'x10_7')],
+                         validators=[Required()], default='Free')
+    avito_id=StringField('Номер объявления на Авито, если разместили его вручную')
+    avito_show=BooleanField('Выставить на Авито',default=True)
+    avtoru_show=BooleanField('Выставить на Auto.ru', default=False)
+    drom_show=BooleanField('Выставить на Drom', default=False)
+    allow_email=BooleanField('Возможность написать сообщение по объявлению через сайт', default="checked")
+    manager_name=StringField('Контактное лицо', validators=[Length(min=0, max=40)])
+    contact_phone=StringField('Телефон менеджера')
+    address=TextAreaField('Полный адрес объекта', validators=[Length(min=0, max=256)])
+    latitude = FloatField('Широта', default=0)
+    longitude = FloatField('Долгота', default=0)
+    display_area1 = SelectField('Первая зона показа', validate_choice=False, coerce=int)
+    display_area2 = StringField('Вторая зона показа')
+    display_area3 = StringField('Третья зона показа')
+    display_area4 = StringField('Четвертая зона показа')
+    display_area5 = StringField('Пятая зона показа')
+    ad_type = SelectField(u'Вид объявления', choices=['Товар приобретен на продажу', 'Товар от производителя'])
+    is_for_priority =BooleanField(u'Продвижение на Auto.ru', default='unchecked') #auto.ru кнопка продвижения
+
     photo1=MultipleFileField('Выберите файлы с фото') #'image', validators=[FileAllowed(images, 'Images only!')]
     videourl=StringField(u'Ссылка на видео Youtube')
     submit = SubmitField('Отправить')

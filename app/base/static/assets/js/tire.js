@@ -18,8 +18,9 @@ function encode_params(object) {
 //При любом изменении параметров шины - пересчитываем рекомендованную цену
 function change_tire(){
 //            console.log(myResponse)
-    var strTitle = 'Шины ';
     var strDescription = document.getElementById('sezonnost').value + ' ' + document.getElementById('condition').value + ' шины';
+    var currPage=window.location.href.split("/").pop().split(".")[0]; //Определяем на какой мы странице
+    var strTitle = (currPage === 'tire') ? ('Шины ') : (document.getElementById('title').value + ' '); //Если мы на wheel то title предзаполнено
 
     if (!document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label.includes('Выберите')) {
         strTitle = strTitle + ' ' + document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
@@ -39,9 +40,10 @@ function change_tire(){
         strTitle = strTitle + '/' + document.getElementById('vysota_profilya').value;
         strDescription = strDescription + '/' + document.getElementById('vysota_profilya').value;
     }
-    if (document.getElementById('diametr').value) {
-        strTitle = strTitle + 'R' + document.getElementById('diametr').value;
-        strDescription = strDescription + 'R' + document.getElementById('diametr').value;
+    var elementName = (currPage === 'tire') ? ('diametr') : ('rimdiametr');
+    if (document.getElementById(elementName).value) {
+        strTitle = strTitle + 'R' + document.getElementById(elementName).value;
+        strDescription = strDescription + 'R' + document.getElementById(elementName).value;
     }
     if (document.getElementById('tire_purpose').value) {
         strDescription = strDescription + ' ' + document.getElementById('tire_purpose').value;
@@ -113,12 +115,12 @@ function change_rim(){
         'ET' : document.getElementById('rimoffset').value,
         'bolts' : document.getElementById('rimbolts').value,
         'dia' : document.getElementById('rimboltsdiametr').value,
-        'qte' : document.getElementById('rimqte').value,
+        'qte' : document.getElementById('qte').value,
         'rimyear': document.getElementById('rimyear').value
         }));
 }
 
-//Событие смены бренда шины
+//Событие смены бренда шины на странице шин
 if (document.getElementById('brand')) {
     document.getElementById('brand').addEventListener('change', function () {
 //    ПРи смене бренда надо заполнить список моделей
@@ -158,16 +160,56 @@ if (document.getElementById('brand')) {
     });
 }
 
-//Событие смены бренда авто
-if (document.getElementById('carBrand')) {
-    document.getElementById('carBrand').addEventListener('change', function () {
+//Событие смены бренда шины на странице колес
+if (document.getElementById('tirebrand')) {
+    document.getElementById('tirebrand').addEventListener('change', function () {
 //    ПРи смене бренда надо заполнить список моделей
-    var element = document.getElementById('carBrand');
+    var element = document.getElementById('tirebrand');
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'changeBrandRequest');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            var modelElement = document.getElementById('tiremodel');
+            var myResponse = JSON.parse(xhr.responseText);
+            while (modelElement.options.length > 0) { //Чистим список
+                modelElement.remove(0);
+            }
+            var option=document.createElement('option'); //Теперь заполняем
+            option.text="Выберите модель";
+            option.value=-1;
+            modelElement.add(option, null);
+            for (var i = 0; i < myResponse.length; i++) {
+                var object = myResponse[i];
+                var option=document.createElement('option'); //Теперь заполняем
+                option.text=object.model;
+                option.value=object.id;
+                modelElement.add(option, null);
+            }
+//            updateChart(0, 10) - на странице колес пока нет графика
+        }
+        else if (xhr.status !== 200) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send(JSON.stringify({
+        'brand': element.options[element.selectedIndex].label }));
+
+//    change_tire()
+    });
+}
+
+//Событие смены бренда авто
+if (document.getElementById('carbrand')) {
+    document.getElementById('carbrand').addEventListener('change', function () {
+//    ПРи смене бренда надо заполнить список моделей
+    var element = document.getElementById('carbrand');
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'changeCarBrandRequest');
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 200) {
-            var modelElement = document.getElementById('carModel');
+            var modelElement = document.getElementById('carmodel');
             var myResponse = JSON.parse(xhr.responseText);
             while (modelElement.options.length > 0) { //Чистим список
                 modelElement.remove(0);
@@ -336,9 +378,9 @@ if (document.getElementById('stockTableheight')) {
 }
 
 //Событие смены модели машины
-if (document.getElementById('carModel')) {
-    document.getElementById('carModel').addEventListener('change', function () {
-    var element = document.getElementById('carModel');
+if (document.getElementById('carmodel')) {
+    document.getElementById('carmodel').addEventListener('change', function () {
+    var element = document.getElementById('carmodel');
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'changeCarModelRequest');
     xhr.onload = function() {
@@ -382,8 +424,8 @@ if (document.getElementById('carModel')) {
     var csrf_token = document.querySelector('meta[name=csrf-token]').content;
     xhr.setRequestHeader("X-CSRFToken", csrf_token);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    var brand=document.getElementById('carBrand').options[document.getElementById('carBrand').selectedIndex].label;
-    var model=document.getElementById('carModel').options[document.getElementById('carModel').selectedIndex].label;
+    var brand=document.getElementById('carbrand').options[document.getElementById('carbrand').selectedIndex].label;
+    var model=document.getElementById('carmodel').options[document.getElementById('carmodel').selectedIndex].label;
 //    console.log('brand, model='+brand + ' ' + model);
     xhr.send(JSON.stringify({
         'brand': brand,
@@ -395,7 +437,7 @@ if (document.getElementById('carModel')) {
 //Событие выбора оригинальных дисков
 if (document.getElementById('rim_original')) {
     document.getElementById('rim_original').addEventListener('change', function () {
-    var element = document.getElementById('carModel');
+    var element = document.getElementById('carmodel');
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'changeCarModelRequest');
     rimBrand=document.getElementById('rimbrand');
@@ -411,13 +453,16 @@ if (document.getElementById('rim_original')) {
                 }
                 var option=document.createElement('option'); //Теперь заполняем
                 option.text=myResponse.brand;
+                option.value=myResponse.brand;
+                option.setAttribute('selected', '');
                 rimBrand.add(option, null);
-                rimBrand.value=myResponse.brand;
                 while (rimModel.options.length > 0) { //Чистим список
                     rimModel.remove(0);
                 }
                 var option=document.createElement('option'); //Теперь заполняем
                 option.text=myResponse.model;
+                option.value=myResponse.model;
+                option.setAttribute('selected', '');
                 rimModel.add(option, null);
                 rimModel.value=myResponse.model;
             } else {
@@ -445,13 +490,13 @@ if (document.getElementById('rim_original')) {
     xhr.setRequestHeader("X-CSRFToken", csrf_token);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     try{
-        var brand= document.getElementById('carBrand').options[document.getElementById('carBrand').selectedIndex].label;
+        var brand= document.getElementById('carbrand').options[document.getElementById('carbrand').selectedIndex].label;
         }
         catch(e){
             if (e instanceof TypeError) var brand='';
         }
     try{
-        var model= document.getElementById('carModel').options[document.getElementById('carModel').selectedIndex].label;
+        var model= document.getElementById('carmodel').options[document.getElementById('carmodel').selectedIndex].label;
         }
         catch(e){
             if (e instanceof TypeError) var model='';
@@ -575,8 +620,8 @@ if (document.getElementById('rimboltsdiametr')) {
     });
 }
 
-if (document.getElementById('rimqte')) {
-    document.getElementById('rimqte').addEventListener('change', function () {
+if (document.getElementById('qte')) {
+    document.getElementById('qte').addEventListener('change', function () {
     change_rim();
     });
 }
@@ -682,6 +727,8 @@ function handlePersonalPhoto() {
 if (document.getElementById('protector_height')) {
     document.getElementById('protector_height').addEventListener('change', function () {
     var element = document.getElementById('protector_height');
+    var currPage=window.location.href.split("/").pop().split(".")[0]; //Определяем на какой мы странице
+
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'updateWear');
     xhr.onload = function() {
@@ -691,7 +738,9 @@ if (document.getElementById('protector_height')) {
 //            Plotly.newPlot('chart',graphs,{});
             document.getElementById('protector_wear').value=xhr.response;
             change_tire();
-            updateChart(0, 10);
+            if (currPage==="tire"){
+                updateChart(0, 10);
+            }
         }
         else if (xhr.status !== 200) {
         }
@@ -699,13 +748,14 @@ if (document.getElementById('protector_height')) {
     var csrf_token = document.querySelector('meta[name=csrf-token]').content;
     xhr.setRequestHeader("X-CSRFToken", csrf_token);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+
+    var elementName = (currPage === 'tire') ? ('diametr') : ('rimdiametr'); //В зависимости от страницы разные названия поля диаметр
     xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
         'protector_height':document.getElementById('protector_height').value,
         'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
         'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
         'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
-        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':10}));
+        'diametr':document.getElementById(elementName).options[document.getElementById(elementName).selectedIndex].label, 'pages':10}));
     });
 }
 

@@ -8,9 +8,10 @@ from flask import render_template, redirect, url_for, request,  jsonify
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 import requests
-from app import db
-from app.base.forms import EditProfileForm, TirePrepareForm, RimPrepareForm, EditTireForm
-from app.base.models import Tire, TirePhoto, TirePrices, ThornPrices, WearDiscounts, TireGuide, AvitoZones, CarsGuide
+from app import db, turbo
+from app.base.forms import EditProfileForm, TirePrepareForm, RimPrepareForm, EditTireForm, WheelPrepareForm, AvitoScanForm
+from app.base.models import Tire, TirePhoto, TirePrices, ThornPrices, WearDiscounts, TireGuide, AvitoZones, CarsGuide, Wheel, WheelPhoto
+
 from app.base.models import Rim, RimPhoto, RimPrices
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import MultiDict
@@ -32,7 +33,8 @@ from app.api.apimodels import ApiTire
 import plotly.express as px
 import threading
 from threading import Timer
-from app.api.avitoutils import updateTires, getAvitoCoordinates, calculateTheDistance
+from app.api.avitoutils import updateTires, calculateTheDistance, getAvitoTirePricesByLocale
+from time import sleep
 
 # def allowed_file(filename):
 #     return '.' in filename and \
@@ -218,6 +220,7 @@ def init_tire_prix():
     if AvitoZones.query.get(1) is None:
         avitozones=AvitoZones()
         avitozones.load_avitozones()
+
     return render_template('index.html', segment='index')
 
 
@@ -226,6 +229,7 @@ def init_tire_prix():
 def load_rim_prix():
     # tire_price=''
     s = request.get_json(force=True)
+
     brand = '' if str(s['brand']).find('Выберите')>=0 else s['brand']
     model = '' if str(s['model']).find('Выберите')>=0 else s['model']
     diametr = s['diametr']
@@ -399,6 +403,7 @@ def changeCarModelRequest():
     s = request.get_json(force=True)
     brand= s['brand']
     model = s['model']
+    # print(s)
     yearList=CarsGuide.query.with_entities(CarsGuide.id, CarsGuide.brand, CarsGuide.model, CarsGuide.ET, CarsGuide.rimDiametr, CarsGuide.rimWidth,
                                            CarsGuide.rimBolts, CarsGuide.rimDia, CarsGuide.year)\
         .filter((CarsGuide.model==model) & (CarsGuide.brand==brand) & (CarsGuide.rimDiametr.isnot(None)))\
@@ -442,7 +447,7 @@ def change_avtorupromo_state():
     current_user.to_avtoru_xml()
     return jsonify({'id': id_field, 'value':new_value})
 
-@blueprint.route('/index')
+@blueprint.route('/index.html')
 @login_required
 def index():
     return render_template('index.html', segment='index') #, graphJSON=createGraph(dfTire, regionsList[0]), regions=regionsList
@@ -626,9 +631,10 @@ def updateTirePrices():
 @blueprint.route('/settings.html', methods=['GET', 'POST'])
 @login_required
 def settings():
-    # print(request)
+    # print(request.form)
     form = EditProfileForm(request.form)  #current_user.username
     if 'Get_Avito' in request.form:
+        # print('Мы здесь')
         if is_not_blank(form.avito_client_id.data) and is_not_blank(form.avito_client_secret.data):
             avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(
                 AvitoZones.zone).order_by(AvitoZones.id).all()
@@ -673,8 +679,8 @@ def settings():
             form.def_latitude = current_user.def_latitude
             form.def_longitude = current_user.def_longitude
 
-
     if 'Save' in request.form:
+    # if form.validate_on_submit():
         current_user.def_contact_mail = form.def_contact_mail.data
         # current_user.avito_balance_bonus = form.avito_balance_bonus.data
         current_user.def_contact_phone = form.def_contact_phone.data
@@ -729,6 +735,7 @@ def tire():
                 url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example2.jpg').replace('\\', '/')),
                 url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example3.jpg').replace('\\', '/'))]
     if 'Save' in request.form:
+        # print('Мы здесь')
         brands=dict(brands)
         currBrand=brands[form.brand.data] if form.brand.data else None
         if currBrand:
@@ -737,7 +744,7 @@ def tire():
             # print(tire.recommended_price)
         newtire = Tire(
             brand=currBrand,
-            model=models[form.model.data] if form.model.data!=-1 else None,
+            model=models[form.model.data] if (form.model.data and form.model.data!=-1) else None,
             listing_fee=form.listing_fee.data, ad_status=form.ad_status.data, avito_id=form.avito_id.data,
             manager_name=form.manager_name.data, contact_phone=form.contact_phone.data, address=form.address.data,
             display_area1=form.display_area1.data,
@@ -791,24 +798,33 @@ def tire():
 def rim():
     curr_store=current_user.store
     carBrands=CarsGuide.query.with_entities(CarsGuide.id, CarsGuide.brand).group_by(CarsGuide.brand).all()
-
     carBrands.insert(0, (-1, 'Выберите бренд'))
+
+    # carModels=CarsGuide.query.with_entities(CarsGuide.id, CarsGuide.model).filter((CarsGuide.brand==brand) & (CarsGuide.rimDiametr.isnot(None)))\
+    #     .group_by(CarsGuide.model).order_by(CarsGuide.model).all()
+
     brands=RimPrices.query.with_entities(RimPrices.id, RimPrices.brand).group_by(RimPrices.brand).all()
     brands.insert(0, (-1, 'Выберите бренд'))
 
     form = RimPrepareForm(CombinedMultiDict((request.files, request.form)))
-    form.carBrand.choices=carBrands
-    form.rimbrand.choices=brands
-    rimphotos=[url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg').replace('\\', '/')),
-                url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example2.jpg').replace('\\', '/')),
-                url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example3.jpg').replace('\\', '/'))]
+    if request.method =='GET':
+        form.carbrand.choices=carBrands
+        form.rimbrand.choices=brands
+        rimphotos=[url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg').replace('\\', '/')),
+                    url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example2.jpg').replace('\\', '/')),
+                    url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example3.jpg').replace('\\', '/'))]
     if 'Save' in request.form:
+        carBrands = dict(carBrands)
+        rimModel= request.form['rimmodel'] if 'rimmodel' in request.form else None  #Если не выбирали бренд дисков - то модели дисков нет
         newrim = Rim(
-            rimbrand=form.rimbrand.data, rimmodel=form.rimmodel.data,
+            carbrand=carBrands[int(request.form['carbrand'])] if request.form['carbrand'] else None,
+            carmodel=request.form['carmodel'],
+            rimbrand=request.form['rimbrand'],
+            rimmodel=rimModel, #Они менялись динамически на фронте, поэтому берем из request.for,
             listing_fee=form.listing_fee.data, ad_status=form.ad_status.data, avito_id=form.avito_id.data,
             manager_name=form.manager_name.data, contact_phone=form.contact_phone.data, address=form.address.data,
             display_area1=form.display_area1.data,
-            ad_type=form.ad_type.data, rimqte=form.rimqte.data, title=form.title.data, description=form.description.data,
+            ad_type=form.ad_type.data, qte=form.qte.data, title=form.title.data, description=form.description.data,
             price=form.price.data, condition=form.condition.data,
             owner=current_user,
             rimtype=form.rimtype.data,
@@ -855,8 +871,96 @@ def rim():
         return render_template('rim.html', title='Предложение по дискам', user=current_user, form=form,
                                segment='rim', rimphotos=rimphotos)
 
+#Создаем новое объявление о продаже шин
+@blueprint.route('/wheel.html', methods=['GET', 'POST'])
+@login_required
+def wheel():
+    curr_store=current_user.store
+    # form = TirePrepareForm(request.form)  #current_user.username
+    brands=TireGuide.query.with_entities(TireGuide.id, TireGuide.brand).group_by(TireGuide.brand).all()
+    brands.insert(0, (-1, 'Выберите бренд'))
+    form = WheelPrepareForm(CombinedMultiDict((request.files, request.form)))
+    form.tirebrand.choices=brands
+
+    carBrands=CarsGuide.query.with_entities(CarsGuide.id, CarsGuide.brand).group_by(CarsGuide.brand).all()
+    carBrands.insert(0, (-1, 'Выберите бренд'))
+    rimBrands=RimPrices.query.with_entities(RimPrices.id, RimPrices.brand).group_by(RimPrices.brand).all()
+    rimBrands.insert(0, (-1, 'Выберите бренд'))
+    form.carbrand.choices=carBrands
+    form.rimbrand.choices=rimBrands
+    tirephotos=[url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg').replace('\\', '/')),
+                url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example2.jpg').replace('\\', '/')),
+                url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example3.jpg').replace('\\', '/'))]
+
+    if 'Save' in request.form:
+        brands=dict(brands)
+        currBrand=brands[form.tirebrand.data] if form.tirebrand.data else None
+        if currBrand:
+            models=dict(TireGuide.query.with_entities(TireGuide.id, TireGuide.model).filter(TireGuide.brand.__eq__(currBrand)).group_by(TireGuide.model).all())
+        carBrands = dict(carBrands)
+        newwheel = Wheel(
+            carbrand=carBrands[int(request.form['carbrand'])] if request.form['carbrand'] else None,
+            carmodel=request.form['carmodel'] if request.form['carmodel'] else None,
+            rimbrand=request.form['rimbrand'] if request.form['rimbrand'] else None,
+            # rimmodel=request.form['rimmodel'] if request.form['rimmodel'] else None, #Они менялись динамически на фронте, поэтому берем из request.for,
+            rimtype = form.rimtype.data,
+            rimwidth = form.rimwidth.data,
+            rimdiametr = form.rimdiametr.data,
+            rimbolts = form.rimbolts.data,
+            rimboltsdiametr = form.rimboltsdiametr.data,
+            rimoffset = form.rimoffset.data,
+            rimyear = form.rimyear.data,
+            tirebrand = currBrand,
+            tiremodel = models[form.tiremodel.data] if (form.tiremodel.data and form.tiremodel.data!=-1) else None,
+            listing_fee = form.listing_fee.data, ad_status=form.ad_status.data, avito_id=form.avito_id.data,
+            manager_name = form.manager_name.data, contact_phone=form.contact_phone.data, address=form.address.data,
+            display_area1 = form.display_area1.data,
+            ad_type = form.ad_type.data, qte = form.qte.data, title = form.title.data, description = form.description.data,
+            price = form.price.data, recommended_price = form.recommended_price.data, condition = form.condition.data, shirina_profilya=form.shirina_profilya.data,
+            vysota_profilya = form.vysota_profilya.data,
+            owner = current_user, sezonnost = form.sezonnost.data,
+            protector_height  = form.protector_height.data,  protector_wear = form.protector_wear.data,
+            store = curr_store,
+            avito_show = form.avito_show.data, avtoru_show = form.avtoru_show.data, drom_show=form.drom_show.data,
+            videourl=form.videourl.data,
+            tireproduct_year=form.tireproduct_year.data)
+        newwheel.baseid='w' + str(newwheel.id)
+    #Займемся фотками
+        for file in form.photo1.data:
+            photo1 = secure_filename(file.filename)
+            if photo1:
+                new_filename=current_user.username + "_" + datetime.today().strftime('%Y_%m_%d_%H_%M_%S') + "_" + photo1
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], new_filename))
+                newphoto = WheelPhoto(wheel=newwheel, photo=new_filename)
+                db.session.add(newphoto)
+
+        db.session.add(newwheel)
+        db.session.commit()
+        newwheel.baseid='w' + str(newwheel.id)
+        db.session.commit()
+#Когда доделаю публикацию вернуться сюда
+        # current_user.to_avito_xml()
+        # current_user.to_avtoru_xml()
+        return redirect(url_for('home_blueprint.wheel'))
+    elif request.method == 'GET':
+        form.tirebrand.choices = brands
+        avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(AvitoZones.zone).order_by(AvitoZones.id).all()
+        form.display_area1.choices = avito_zones
+        form.display_area1.default=current_user.def_display_area1
+        form.process()
+        form.listing_fee.data='Package',
+        # form.ad_status.data='Free',
+        form.condition.data='Б/у',
+
+        form.description.data='Комплект резины'
+        form.manager_name.data = current_user.def_manager_name
+        form.contact_phone.data = current_user.def_contact_phone
+        form.address.data = current_user.def_adress
+        return render_template('wheel.html', title='Предложение по колесам', user=current_user, form=form,
+                               segment='wheel', tirephotos=tirephotos, graphJSON=[])
+
 #Корректировка объявления по шинам
-@blueprint.route('/edit_tire.html/<tire_id>', methods=['GET', 'POST'])
+@blueprint.route('/edit_tire/<tire_id>', methods=['GET', 'POST'])
 @login_required
 def edit_tire(tire_id):
     current_tire=current_user.tires.filter(Tire.id==tire_id).first()
@@ -948,8 +1052,95 @@ def edit_tire(tire_id):
         return render_template('edit_tire.html', title='Предложение по шинам', tire_id=tire_id, form=form, segment='edit_tire',
             df_photos=df_photos)
 
+def update_load():
+    with app.app_context():
+        while True:
+            sleep(3)
+            turbo.push(turbo.replace(render_template('avitoscan-table.html'), 'offerstable'))
+
+# @app.context_processor
+def avito_offerstable():
+    #Собираем данные для отображения на странице
+    args = dict(request_type=1) #Фильтруем по сканированным по локале и радиусу поиска
+
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.region, ApiTire.diametr, ApiTire.width,
+                                 ApiTire.height,
+                                 ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link, ApiTire.avito_lat, ApiTire.avito_lon,
+                                 ApiTire.update_date).filter_by(**args).order_by(ApiTire.unitPrice.asc())
+    df = pd.read_sql(query.statement, query.session.bind)
+    df.drop_duplicates(inplace=True)
+    db_table_toshow = pd.DataFrame(
+        columns=['Date', 'Size', 'Price', 'Title', 'Region', 'Season', 'Wear', 'Distance'])
+    if not df.empty:
+        db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
+        db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
+        db_table_toshow['Region']=df['avito_link'].apply(lambda x: x.split('/')[3])
+        db_table_toshow['Season']=df['season']
+        db_table_toshow['Size']=df['width'].astype(str) + '/' + \
+                df['height'].astype(str) + ' R' + df['diametr'].astype(str)
+        db_table_toshow['Size']=db_table_toshow['Size'].apply(lambda x: x.replace('.0', ''))
+        df['wear_num'].fillna(-1, inplace=True)
+        db_table_toshow['Wear']=(df['wear_num']*100).round(0).astype(int).astype(str) + '%'
+        db_table_toshow['Wear'].replace('-100%', '---', inplace=True)
+        # db_table_toshow['Wear']=db_table_toshow['Wear'].astype(str) + '%'
+        db_table_toshow['Price']=df['unitPrice'].astype(str)
+        if current_user.def_latitude and current_user.def_longitude:
+            db_table_toshow['Distance'] = df.apply(lambda x: calculateTheDistance(current_user.def_latitude, x['avito_lat'], current_user.def_longitude, x['avito_lon']), axis=1)
+            db_table_toshow['Distance'].fillna(-1, inplace=True)
+            db_table_toshow['Distance'] = db_table_toshow['Distance'].round(0).astype(int)
+            db_table_toshow['Distance'].replace(-1, '--', inplace=True)
+
+    # print(list(df.values.tolist()))
+    row_data = list(db_table_toshow.values.tolist())
+    columnWidths = [1, 1, 1, 3, 2, 2, 1, 1]
+    return {'offerstable': row_data, 'columnWidths' :columnWidths}
+
+
+@blueprint.route('/avito_scan.html', methods=['GET', 'POST'])
+@login_required
+def avito_scan():
+    seasonDict = {'Зимние шипованные': 'zimnie_shipovannye',
+                  'Зимние нешипованные': 'zimnie_neshipovannye',
+                  'Летние': 'letnie',
+                  'Всесезонные': 'vsesezonnye'}
+
+    form = AvitoScanForm(CombinedMultiDict((request.files, request.form)))
+    # print(request.form)
+    # if 'StartSearch' in request.form:
+    # if form.validate_on_submit():
+    if 'StartSearch' in request.form:
+        #Выбираем регион из справочника
+        if current_user.def_display_area1:
+            region = AvitoZones.query.with_entities(AvitoZones.engzone).filter(AvitoZones.id == current_user.def_display_area1).first()
+            region=region[0]
+        else:
+            region = 'rossiya'
+
+        if request.form['sezonnost']:
+            season = seasonDict.get(request.form['sezonnost'])  # А в авито - латиница
+        else:
+            season = 'zimnie_neshipovannye'
+
+        lat = current_user.def_latitude if current_user.def_latitude else 55.755814 #Если не указано - Москва
+        lon = current_user.def_longitude if current_user.def_longitude else 37.617635 #Если не указано - Москва
+        print(region)
+        #Запускаем поток сканирования
+        threading.Thread(target=getAvitoTirePricesByLocale,
+                         kwargs={'app': app._get_current_object(), 'diametr': request.form['diametr'],
+                                 'width': request.form['width'], 'height': request.form['height'],
+                                 'lon':lon, 'lat':lat,
+                                 'region': region, 'season': season,
+                                 'nPages':10, 'distance':request.form['searchRadius']}).start()
+
+        threading.Thread(target=update_load).start()
+
+        return redirect(url_for('home_blueprint.avito_scan'))
+    elif request.method == 'GET':
+        return render_template('avito_scan.html', segment='avito_acan', form=form)
+
+
 #Корректировка объявления по дискам
-@blueprint.route('/edit_rim.html/<rim_id>', methods=['GET', 'POST'])
+@blueprint.route('/edit_rim/<rim_id>', methods=['GET', 'POST'])
 @login_required
 def edit_rim(rim_id):
     current_rim=current_user.rims.filter(Rim.id==rim_id).first()
@@ -962,6 +1153,7 @@ def edit_rim(rim_id):
         # current_tire.delete
         return redirect(url_for('home_blueprint.stocks'))
     if 'Save' in request.form:
+        current_rim.rimbrand = request.form['rimbrand'], current_rim.rimmodel = request.form['rimmodel'],  # Они менялись динамически на фронте, поэтому берем из request.for,
         current_rim.listing_fee=form.listing_fee.data
         current_rim.ad_status=form.ad_status.data
         current_rim.avito_id=form.avito_id.data
@@ -1007,8 +1199,7 @@ def edit_rim(rim_id):
                                                                width=current_rim.rimwidth,
                                                                bolts=current_rim.rimbolts,
                                                                dia=current_rim.rimboltsdiametr, age=datetime.today().year - int(current_rim.rimyear))
-        # print(newTire_price)
-        tire_price = int(rim_price * int(current_rim.rimqte))
+        rim_price = int(rim_price * int(current_rim.qte))
         form.recommended_price.data = int(round(rim_price, 0))
         # current_tire_photos = current_user.tires.filter(Tire.id == tire_id).first().photos.all()
         current_rim_photos = current_user.rims.filter(Rim.id == current_rim.id).first().photos.all()
@@ -1032,7 +1223,7 @@ def edit_rim(rim_id):
         form.drom_show.data = current_rim.drom_show
 
         # print('Qte=', current_tire.qte)
-        form.qte.data = current_rim.rimqte
+        form.qte.data = current_rim.qte
         form.title.data = current_rim.title
         form.description.data = current_rim.description
         form.price.data = current_rim.price
@@ -1061,11 +1252,18 @@ def stocks():
     stocks_dict['SoldRimStock'] = db.session.query(func.sum(Rim.price)).filter(Rim.sold.__eq__(True)) \
         .filter(
         (Rim.owner.__eq__(current_user)) & (Rim.sold_date.isnot(None)) & (Rim.sold_date >= first_month_day)).scalar()
+    # Формируем данные по колесам
+    stocks_dict['ActiveWheelStock'] = db.session.query(func.sum(Wheel.price)).filter(Wheel.sold.__eq__(False)) \
+        .filter(Wheel.owner.__eq__(current_user)).scalar()
+    stocks_dict['SoldWheelStock'] = db.session.query(func.sum(Wheel.price)).filter(Wheel.sold.__eq__(True)) \
+        .filter(
+        (Wheel.owner.__eq__(current_user)) & (Wheel.sold_date.isnot(None)) & (Wheel.sold_date >= first_month_day)).scalar()
 
     #Таблица данных
     table_data=pd.DataFrame(columns=['Days', 'Qte', 'Percent', 'Cost', 'Cost_perc', 'Avg'])
     db_base_data = pd.read_sql('SELECT id, timestamp, price FROM tire WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ') UNION ' \
-                                'SELECT id, timestamp, price FROM rim WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
+                                'SELECT id, timestamp, price FROM rim WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ') UNION ' \
+                                'SELECT id, timestamp, price FROM wheel WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
     # print(db_base_data.head())
     table_data = pd.DataFrame(columns=['Days', 'Qte', 'Percent', 'Cost', 'Cost_perc', 'Avg'])
     table_data.Days = ['До 10', '11..20', '21..30', '31..40', '41..50', '>50']
@@ -1215,7 +1413,12 @@ def stock_tables(page):
        '''SELECT r.id, r.rimbrand, r.baseid, r.price, r.timestamp, r.sold, r.avito_show, r.avtoru_show, r.drom_show, r.ad_status, r.is_for_priority,
        r.title, r.rimtype, r.rimwidth AS width, r.rimdiametr AS diametr, r.rimbolts, r.rimboltsdiametr, r.rimoffset, r.rimyear AS year,
        (SELECT rf.Photo FROM rim_photo rf WHERE rf.rim_id = r.id ORDER BY Photo ASC LIMIT 1) AS Photo
-       FROM rim r WHERE r.user_id = ''' + str(current_user.id) + ' ;', db.session.bind)
+       FROM rim r WHERE r.user_id = ''' + str(current_user.id) + ' ' \
+        'UNION ' \
+        '''SELECT w.id, w.rimbrand, w.baseid, w.price, w.timestamp, w.sold, w.avito_show, w.avtoru_show, w.drom_show, w.ad_status, w.is_for_priority,
+       w.title, w.rimtype, w.rimwidth AS width, w.rimdiametr AS diametr, w.rimbolts, w.rimboltsdiametr, w.rimoffset, w.rimyear AS year,
+       (SELECT wf.Photo FROM wheel_photo wf WHERE wf.wheel_id = w.id ORDER BY Photo ASC LIMIT 1) AS Photo
+       FROM wheel w WHERE w.user_id = ''' + str(current_user.id) + ' ;', db.session.bind)
     #Отфильтруем теперь по параметрам запроса
     argsDict= request.args.to_dict()
     argsDict = dict([(k, v) for k, v in argsDict.items() if v !=''])
@@ -1283,13 +1486,13 @@ def stock_tables(page):
                            segment='stock-tables', default_photo=default_photo, brandsList=brandsList, diametrList=diametrList,
                            widthList=widthList, heightList=heightList, curr_page=pages_list[page]) #form=form,
 
+def createLink(link, text):
+    return '<a class ="text-dark me-4" href="' + link + '" target="_blank"> ' + text + '</a><br>'
+
 #Показываем склад
 @blueprint.route('/avito_tires/<page>', methods=['GET'])
 @login_required
 def avito_tires(page):
-
-    def createLink(link, text):
-        return '<a class ="text-dark me-4" href="' + link + '" target="_blank"> ' + text + '</a><br>'
 
     args = request.args.to_dict() #в аргументах должны быть характеристики шин
     # Выполняем все проверки
@@ -1314,6 +1517,7 @@ def avito_tires(page):
         args['region']=region #Меняем на латиницу
     else:
         args['region'] = 'rossiya'
+    args['request_type'] = 0 #Смотрим сканированные без привязки к локации
 
     # print(args)
     #Для пажинации выясним количество страниц

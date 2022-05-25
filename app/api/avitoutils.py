@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import time
 from sqlalchemy import func
-from app import db
+from app import db, celery
 from app.api.apimodels import ApiTire
 from datetime import datetime, timedelta
 from flask_restful import abort
@@ -61,7 +61,7 @@ def treatAvitoTiresData(df):
     df['wear_num'] = pd.to_numeric(df['wear'].str.rstrip('%'), errors='coerce') / 100
     pd.options.mode.chained_assignment=currMode
     #Убираем без износа и с 0 износом
-    df.to_csv(r'c:\Users\au00449\Python Marketing\Data\df1.csv', sep=';', encoding='utf-8')
+    # df.to_csv(r'c:\Users\au00449\Python Marketing\Data\df1.csv', sep=';', encoding='utf-8')
     # print(df.loc[~df.wear.isnull()].head())
     #убираем износ =0
     # df=df.loc[df['wear_num']>=0]
@@ -150,8 +150,9 @@ def getAvitoCoordinates(app):
     driver.close()
     return 'Success'
 
-def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zimnie_neshipovannye', nPages=10):
-    app.app_context().push()
+@celery.task(bind=True)
+def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='zimnie_neshipovannye', nPages=10):
+    # app.app_context().push()
     options = se.webdriver.ChromeOptions()
     options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko')
     options.add_argument('Connection=keep-alive')
@@ -279,26 +280,26 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
                     dfResult=pd.concat([dfResult, dfTempResult])
 
                     #Добавляем новые записи в базу
-                    with app.app_context():
-                        # Проверяем эти записи в базе и уже существующие удаляем из базы
-                        # print(codesList)
-                        # query = db.session.query(ApiTire).filter(ApiTire.avito_id.in_(codesList))
-                        # print(query.statement)
-                        db.session.query(ApiTire).filter(ApiTire.avito_id.in_(codesList)).delete(synchronize_session='fetch')
-                        db.session.commit()
-                        #Так же надо удалить записи старше месяца
-                        oldDate = datetime.today() - timedelta(days=15)
-                        db.session.query(ApiTire).filter(ApiTire.update_date < oldDate).delete(synchronize_session='fetch')
-                        db.session.commit()
+                    # with app.app_context():
+                    # Проверяем эти записи в базе и уже существующие удаляем из базы
+                    # print(codesList)
+                    # query = db.session.query(ApiTire).filter(ApiTire.avito_id.in_(codesList))
+                    # print(query.statement)
+                    db.session.query(ApiTire).filter(ApiTire.avito_id.in_(codesList)).delete(synchronize_session='fetch')
+                    db.session.commit()
+                    #Так же надо удалить записи старше месяца
+                    oldDate = datetime.today() - timedelta(days=15)
+                    db.session.query(ApiTire).filter(ApiTire.update_date < oldDate).delete(synchronize_session='fetch')
+                    db.session.commit()
 
-                        # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
-                        lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
-                        lastRec = 0 if not lastRec else lastRec
-                        dfTempResult['index'] = range(lastRec + 1, lastRec + len(dfTempResult) + 1)
-                        dfTempResult.set_index('index', inplace=True)
-                        dfTempResult.index.name = 'id'
-                        dfTempResult['update_date'] = datetime.utcnow()
-                        dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
+                    # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
+                    lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
+                    lastRec = 0 if not lastRec else lastRec
+                    dfTempResult['index'] = range(lastRec + 1, lastRec + len(dfTempResult) + 1)
+                    dfTempResult.set_index('index', inplace=True)
+                    dfTempResult.index.name = 'id'
+                    dfTempResult['update_date'] = datetime.utcnow()
+                    dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
     driver.quit()
@@ -306,8 +307,9 @@ def getAvitoTirePrices(app, diametr, width, height, region='rossiya', season='zi
     # myapp=app._get_current_object()
     return dfResult
 
-def getAvitoTirePricesByLocale(app, diametr, width, height, lon, lat, region='rossiya', season='zimnie_neshipovannye', nPages=10, distance=50):
-    app.app_context().push()
+@celery.task(bind=True)
+def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, season='zimnie_neshipovannye', nPages=10, distance=50):
+    # app.app_context().push()
     options = se.webdriver.ChromeOptions()
     options.add_argument('User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko')
     options.add_argument('Connection=keep-alive')
@@ -343,9 +345,9 @@ def getAvitoTirePricesByLocale(app, diametr, width, height, lon, lat, region='ro
     driver = se.webdriver.Chrome(desired_capabilities=caps, options=options)
 
     #Удалим все существующие записи
-    with app.app_context():
-        db.session.query(ApiTire).filter(ApiTire.request_type == 1).delete(synchronize_session='fetch')
-        db.session.commit()
+    # with app.app_context():
+    db.session.query(ApiTire).filter(ApiTire.request_type == 1).delete(synchronize_session='fetch')
+    db.session.commit()
 
     dfResult=pd.DataFrame()
     strLink += '?geoCoords=' + str(lat) +  '%2C' + str(lon) + '&radius=' + str(distance)
@@ -442,15 +444,15 @@ def getAvitoTirePricesByLocale(app, diametr, width, height, lon, lat, region='ro
                     dfResult=pd.concat([dfResult, dfTempResult])
 
                     #Добавляем новые записи в базу
-                    with app.app_context():
-                        # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
-                        lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
-                        lastRec = 0 if not lastRec else lastRec
-                        dfTempResult['index'] = range(lastRec + 1, lastRec + len(dfTempResult) + 1)
-                        dfTempResult.set_index('index', inplace=True)
-                        dfTempResult.index.name = 'id'
-                        dfTempResult['update_date'] = datetime.utcnow()
-                        dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
+                    # with app.app_context():
+                    # необходимо ручками присвоить id с max до длины нового набора, иначе они будут пустыми
+                    lastRec = db.session.query(func.max(ApiTire.id)).one()[0]
+                    lastRec = 0 if not lastRec else lastRec
+                    dfTempResult['index'] = range(lastRec + 1, lastRec + len(dfTempResult) + 1)
+                    dfTempResult.set_index('index', inplace=True)
+                    dfTempResult.index.name = 'id'
+                    dfTempResult['update_date'] = datetime.utcnow()
+                    dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
     driver.quit()
@@ -458,10 +460,10 @@ def getAvitoTirePricesByLocale(app, diametr, width, height, lon, lat, region='ro
     # myapp=app._get_current_object()
     return len(dfResult)  #Возвращаем количество добавленных записей
 
-def updateTires(app, region, season, diametr, width, height, pages=20):
-    dfUpdateBase=getAvitoTirePrices(app, diametr, width, height, region, season, pages)
-    # print(dfUpdateBase.head())
-    return dfUpdateBase
+# def updateTires(app, region, season, diametr, width, height, pages=20):
+#     dfUpdateBase=getAvitoTirePrices(app, diametr, width, height, region, season, pages)
+#     # print(dfUpdateBase.head())
+#     return dfUpdateBase
 
 def getAvitoAccountData(id):
     options = se.webdriver.ChromeOptions()

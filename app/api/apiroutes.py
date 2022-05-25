@@ -8,7 +8,7 @@ from flask import jsonify, g, request
 from flask_httpauth import HTTPBasicAuth
 from app.api.apimodels import ApiUser, ApiTire
 import threading
-from app.api.avitoutils import updateTires
+from app.api.avitoutils import getAvitoTirePrices
 from flask import current_app
 
 auth = HTTPBasicAuth()
@@ -92,7 +92,8 @@ class TirePrices(Resource):
             season='zimnie_neshipovannye'
         [abort_if_param_doesnt_exist(param) for param in list(args.keys())] #Проверяем что параметры валидные
 
-        threading.Thread(target=updateTires, kwargs={'app':current_app._get_current_object(), 'region': region,  'season':season, 'width': args.get('width'), 'height':args.get('height'), 'diametr': args.get('diametr'), 'pages':pages}).start()
+        dfUpdateBase = getAvitoTirePrices(args.get('diametr'), args.get('width'), args.get('height'), region, season, pages)
+        # threading.Thread(target=updateTires, kwargs={'app':current_app._get_current_object(), 'region': region,  'season':season, 'width': args.get('width'), 'height':args.get('height'), 'diametr': args.get('diametr'), 'pages':pages}).start()
 
         query=db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(**args).limit(recCount)
         tires = query.all()

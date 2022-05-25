@@ -31,9 +31,9 @@ import json
 from app.api.apiroutes import abort_if_param_doesnt_exist
 from app.api.apimodels import ApiTire
 import plotly.express as px
-import threading
-from threading import Timer
-from app.api.avitoutils import updateTires, calculateTheDistance, getAvitoTirePricesByLocale
+# import threading
+# from threading import Timer
+from app.api.avitoutils import  getAvitoTirePricesByLocale, getAvitoTirePrices, calculateTheDistance
 from time import sleep
 
 # def allowed_file(filename):
@@ -591,10 +591,11 @@ def updateTirePrices():
     argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
     args, region, season, pages, recCount = checkChartArgs(argsDict)
 
-    threading.Thread(target=updateTires,
-                     kwargs={'app': app._get_current_object(), 'region': region, 'season': season,
-                             'width': args.get('width'), 'height': args.get('height'), 'diametr': args.get('diametr'),
-                             'pages': pages}).start()
+    # threading.Thread(target=updateTires,
+    #                  kwargs={'app': app._get_current_object(), 'region': region, 'season': season,
+    #                          'width': args.get('width'), 'height': args.get('height'), 'diametr': args.get('diametr'),
+    #                          'pages': pages}).start()
+    getAvitoTirePrices(args.get('diametr'), args.get('width'), args.get('height'), region, season, pages)
     #Проверяем и обновляем координаты объявлений только когда загрузим и обновим актуальные записи! Запуск через 5 минуты
     # threading.Timer(interval=5*60, function=getAvitoCoordinates, kwargs={'app': app._get_current_object()}).start()
 
@@ -691,8 +692,8 @@ def settings():
         # current_user.def_longitude = form.def_longitude.data
         current_user.def_display_area1 = form.def_display_area1.data
         current_user.store = form.store.data
-        current_user.def_latitude = form.def_latitude.data
-        current_user.def_longitude = form.def_longitude.data
+        current_user.def_latitude = form.def_latitude.data if form.def_latitude.data != '' else None
+        current_user.def_longitude = form.def_longitude.data if form.def_latitude.data != '' else None
 
         db.session.commit()
         # flash('Your changes have been saved.')
@@ -1059,6 +1060,8 @@ def update_load():
             turbo.push(turbo.replace(render_template('avitoscan-table.html'), 'offerstable'))
 
 # @app.context_processor
+# @blueprint.context_processor
+# @login_required
 def avito_offerstable():
     #Собираем данные для отображения на странице
     args = dict(request_type=1) #Фильтруем по сканированным по локале и радиусу поиска
@@ -1114,7 +1117,7 @@ def avito_scan():
             region = AvitoZones.query.with_entities(AvitoZones.engzone).filter(AvitoZones.id == current_user.def_display_area1).first()
             region=region[0]
         else:
-            region = 'rossiya'
+            region = 'moskva'
 
         if request.form['sezonnost']:
             season = seasonDict.get(request.form['sezonnost'])  # А в авито - латиница
@@ -1125,14 +1128,19 @@ def avito_scan():
         lon = current_user.def_longitude if current_user.def_longitude else 37.617635 #Если не указано - Москва
         print(region)
         #Запускаем поток сканирования
-        threading.Thread(target=getAvitoTirePricesByLocale,
-                         kwargs={'app': app._get_current_object(), 'diametr': request.form['diametr'],
-                                 'width': request.form['width'], 'height': request.form['height'],
-                                 'lon':lon, 'lat':lat,
-                                 'region': region, 'season': season,
-                                 'nPages':10, 'distance':request.form['searchRadius']}).start()
+        # threading.Thread(target=getAvitoTirePricesByLocale,
+        #                  kwargs={'app': app._get_current_object(), 'diametr': request.form['diametr'],
+        #                          'width': request.form['width'], 'height': request.form['height'],
+        #                          'lon':lon, 'lat':lat,
+        #                          'region': region, 'season': season,
+        #                          'nPages':10, 'distance':request.form['searchRadius']}).start()
 
-        threading.Thread(target=update_load).start()
+        getAvitoTirePricesByLocale.delay(request.form['diametr'],
+                  request.form['width'], request.form['height'],
+                  lon, lat,
+                  region, season,
+                  10, request.form['searchRadius'])
+        # threading.Thread(target=update_load).start()
 
         return redirect(url_for('home_blueprint.avito_scan'))
     elif request.method == 'GET':

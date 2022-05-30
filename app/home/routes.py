@@ -534,18 +534,19 @@ def updateChartNow():
 
     # Выполняем все проверки
     argsDict = dict([(k, v) for k, v in args.items() if (v != '' and v !='Выберите бренд')])
-    # print('argsDict=', argsDict)
     argsDict, region, season, pages, recCount = checkChartArgs(argsDict)
     brand=None
     if 'brand' in  argsDict: #убираем из фильтра - потом сделаем список из датафрейма
         brand = argsDict['brand']
         del argsDict['brand']
+    # print('argsDict=', argsDict)
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link).filter_by(
         **argsDict).filter(ApiTire.wear_num != None).limit(recCount)
     df = pd.read_sql(query.statement, query.session.bind)
     df=df.loc[df.wear_num>0]
     df.drop_duplicates(inplace=True)
     df['brandName'] = 'Все бренды'
+    # print(df.head())
     if brand: #Второй график делаем с фильтром по бренду
         df2 = df.loc[df.brand.str.contains(brand, case=False)].copy(deep=True)
         df2['brandName'] = brand

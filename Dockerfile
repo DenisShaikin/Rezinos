@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye
+﻿FROM python:3.9-slim-bullseye
 
 # Environment variables, setting app home path and copy of the python app in the container
 ENV PYTHONUNBUFFERED True
@@ -14,6 +14,8 @@ COPY . ./
 # Update/upgrade the system
 RUN apt -y update
 RUN apt -y upgrade
+
+RUN apt install redis
 
 # Install App dependencies and chrome webdriver
 RUN apt install -yqq unzip curl wget python3-pip

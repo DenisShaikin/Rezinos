@@ -1114,37 +1114,35 @@ def avito_scan():
     # if form.validate_on_submit():
     if 'StartSearch' in request.form:
         #Выбираем регион из справочника
-        if current_user.def_display_area1:
-            region = AvitoZones.query.with_entities(AvitoZones.engzone).filter(AvitoZones.id == current_user.def_display_area1).first()
+        # print(form.searchRegion.data)
+        if form.searchRegion.data:
+            region = AvitoZones.query.with_entities(AvitoZones.engzone).filter(AvitoZones.id == form.searchRegion.data).first()
             region=region[0]
         else:
-            region = 'moskva'
+            region = 'moskva_i_mo'
 
         if request.form['sezonnost']:
             season = seasonDict.get(request.form['sezonnost'])  # А в авито - латиница
         else:
             season = 'zimnie_neshipovannye'
 
-        lat = current_user.def_latitude if current_user.def_latitude else 55.755814 #Если не указано - Москва
-        lon = current_user.def_longitude if current_user.def_longitude else 37.617635 #Если не указано - Москва
-        print(region)
+        lat = form.searchLat.data if form.searchLat.data else 55.755814 #Если не указано - Москва
+        lon = form.searchLon.data if form.searchLon.data else 37.617635 #Если не указано - Москва
         #Запускаем поток сканирования
-        # threading.Thread(target=getAvitoTirePricesByLocale,
-        #                  kwargs={'app': app._get_current_object(), 'diametr': request.form['diametr'],
-        #                          'width': request.form['width'], 'height': request.form['height'],
-        #                          'lon':lon, 'lat':lat,
-        #                          'region': region, 'season': season,
-        #                          'nPages':10, 'distance':request.form['searchRadius']}).start()
-
         getAvitoTirePricesByLocale.delay(request.form['diametr'],
                   request.form['width'], request.form['height'],
                   lon, lat,
                   region, season,
                   10, request.form['searchRadius'])
-        # threading.Thread(target=update_load).start()
 
         return redirect(url_for('home_blueprint.avito_scan'))
     elif request.method == 'GET':
+        avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(AvitoZones.zone).order_by(AvitoZones.id).all()
+        form.searchRegion.choices = avito_zones
+        form.searchRegion.default=current_user.def_display_area1
+        form.process()
+        form.searchLon.data = current_user.def_longitude
+        form.searchLat.data = current_user.def_latitude
         return render_template('avito_scan.html', segment='avito_acan', form=form)
 
 

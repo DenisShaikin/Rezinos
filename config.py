@@ -39,7 +39,7 @@ class Config(object):
     PRICES_FILE = os.path.join(basedir, 'TirePricesBase.csv')
     RIMS_FILE = os.path.join(basedir, 'RimPricesBase.csv')
     TIREGUIDE_FILE = os.path.join(basedir, 'TireGide.csv')
-    CARSGUIDE_FILE = os.path.join(basedir, 'RimsCatalogue.csv')
+    CARSGUIDE_FILE = os.path.join(basedir, 'RimsCagit talogue.csv')
     # TIREREGIONPRICES = os.path.join(basedir, 'RossiyaAllTires_Result.csv')
     THORNPRICE_FILE = os.path.join(basedir, 'thorns.csv')
     WEARDISCOUNTS_FILE = os.path.join(basedir, 'wear_discounts.csv')

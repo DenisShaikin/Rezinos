@@ -156,6 +156,7 @@ class EditTireForm(FlaskForm):
     submit = SubmitField('Отправить')
 
 class AvitoScanForm(FlaskForm):
+
     searchSelector = RadioField(choices=[('idTireBtn','Шины'),('idRimBtn','Диски'),('idWheelBtn','Колеса')], default='idTireBtn')
     width = SelectField(u'Ширина профиля', choices=['205', '115', '125', '130', '135', '145', '155', '165', '175', '185', '195', '205', '215',
                                                                '225', '230', '235', '245', '255', '265', '275', '285', '295', '305', '315', '325', '335', '345',
@@ -167,6 +168,9 @@ class AvitoScanForm(FlaskForm):
                                                        '23','24','25','26', '26.5', '27', '28', '29', '30', '32', '34', '35', '36', '38',
                                                        '40', '42', '45', '50', '55'])
     sezonnost=SelectField('Сезонность', choices=['Зимние нешипованные', 'Зимние шипованные', 'Летние', 'Всесезонные']) #сезонность
+    searchRegion = SelectField('Регион', choices=[])
+    searchLat = StringField('Широта точки')
+    searchLon = StringField('Долгота точки')
     searchRadius = StringField('Радиус поиска', default=50)
     submit = SubmitField('Искать')
 

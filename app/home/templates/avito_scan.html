@@ -10,29 +10,37 @@
         {{ form.hidden_tag() }}
 
     <div class="row">
-        <div class="col-5">
+        <div class="col-10">
             <div class = "row form-switch">
                 {% for subfield in form.searchSelector %}
-                <div class="col-sm-2 mt-2">
+                <div class="col-sm-1 mt-2">
                     {{ subfield(class="form-check-input") }}
                     {{ subfield.label }}
                 </div>
                 {% endfor %}
                 <div class="col-sm-2">
+                    {{ form.searchRegion(class='form-select', placeholder='Регион поиска') }}
+                </div>
+                <div class="col-sm-2">
+                    {{ form.searchLat(class='form-control', placeholder='Широта точки') }}
+                </div>
+                <div class="col-sm-2">
+                    {{ form.searchLon(class='form-control', placeholder='Долгота точки') }}
+                </div>
+                <div class="col-sm-1">
                     {{ form.searchRadius(class='form-control', placeholder='Радиус поиска') }}
                 </div>
                 <div class="col-sm-1 mt-2">
                     <H4 class="text-left">км.</H4>
                 </div>
 
-                <div class="col-sm-2 mb-2">
-                    <button type="submit" name="StartSearch" value="StartSearch" class="btn btn-primary">Искать</button>
-                </div>
-
             </div>
         </div>
-        <div class="col-7">
-            <div class="row mb-3">
+    </div>
+    <div class="row">
+
+        <div class="col-10">
+            <div class="row mb-3 mt-2">
                 <div class="col-sm-2">
                     {{ form.width(class='form-select', placeholder='Ширина') }}
                 </div>
@@ -49,6 +57,10 @@
                 <div class="col-sm-3">
                     {{ form.sezonnost(class='form-select', placeholder='Сезонность') }}
                 </div>
+                <div class="col-sm-2 mb-2">
+                    <button type="submit" name="StartSearch" value="StartSearch" class="btn btn-primary">Искать</button>
+                </div>
+
             </div>
         </div>
 

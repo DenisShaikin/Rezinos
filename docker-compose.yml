@@ -1,27 +1,62 @@
-version: '3'
+version: '3.8'
 services:
-  appseed-app:
+  rezinos:
+    image: rezinos:latest
     restart: always
-    env_file: .env
-    build: .
+    security_opt:    
+      - seccomp=chrome.json
     ports:
-      - "5005:5005"
-    networks:
-      - db_network
-      - web_network
-  nginx:
-    restart: always
-    image: "nginx:latest"
-    ports:
-      - "85:85"
+      - "80:5000"
+    depends_on:
+      - mysql
+    links:
+      - "mysql:dbserver"
+    environment:
+      - SECRET_KEY=rezinosecret
+      - MAIL_SERVER=smtp.mail.ru
+      - MAIL_PORT=465
+      - MAIL_USE_TLS=0
+      - MAIL_USE_SSL=1
+      - MAIL_USERNAME=chaikide@mail.ru
+      - MAIL_PASSWORD=Akakiy00!
+      - "DATABASE_URL = mysql+pymysql://rezinos:rezinopass@dbserver/rezinos"
+      - DEBUG=False
+     
     volumes:
-      - ./nginx:/etc/nginx/conf.d
-    networks:
-      - web_network
-    depends_on: 
-      - appseed-app
-networks:
-  db_network:
-    driver: bridge
-  web_network:
-    driver: bridge
+      - rezinos_photos:/home/rezinos/app/base/static/assets/img/tire_photos
+  
+    
+  mysql:
+    image: mysql/mysql-server:5.7
+    volumes:
+      - rezinos_db:/db/
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=rezinos
+      - MYSQL_USER=rezinos
+      - MYSQL_PASSWORD=rezinopass
+    command: 
+      --sql-mode=""
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    restart: on-failure
+      
+
+  redis:
+    image: redis:6-alpine
+    
+  celery_worker:
+    build: .
+    image: rezinos:latest
+    command: ["celery", "worker", "--app=celery_worker.celery", "--pool=gevent", "--loglevel=INFO"]
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - mysql
+
+volumes:
+    rezinos_photos:
+    rezinos_db:
+      

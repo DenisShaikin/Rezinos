@@ -15,7 +15,7 @@ COPY . ./
 RUN apt -y update
 RUN apt -y upgrade
 
-RUN apt install redis
+RUN apt install -y redis
 
 # Install App dependencies and chrome webdriver
 RUN apt install -yqq unzip curl wget python3-pip
@@ -45,7 +45,9 @@ COPY run.py config.py boot.sh thorns.csv wear_discounts.csv TirePricesBase.csv R
 RUN chmod +x boot.sh
 
 ENV FLASK_APP run.py
-ENV FLASK_ENV config.ProductionConfig
+ENV DEBUG False
+ENV DATABASE_URL "mysql+pymysql://rezinos:rezinopass@dbserver/rezinos"
+# ENV FLASK_ENV config.ProductionConfig
 
 RUN chown -R rezinos:rezinos ./
 USER rezinos

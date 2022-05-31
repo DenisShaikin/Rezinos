@@ -23,6 +23,7 @@ app/base/__pycache__
 app/home/__pycache__
 migrations/
 *.db
+.env
 app/base/static/assets/img/tire_photos
 
 

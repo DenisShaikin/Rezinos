@@ -45,8 +45,9 @@ COPY run.py config.py boot.sh thorns.csv wear_discounts.csv TirePricesBase.csv R
 RUN chmod +x boot.sh
 
 ENV FLASK_APP run.py
-ENV DEBUG False
-ENV DATABASE_URL "mysql+pymysql://rezinos:rezinopass@dbserver/rezinos"
+# ENV DEBUG False
+ENV FLASK_ENV production
+# ENV DATABASE_URL "mysql+pymysql://rezinos:rezinopass@dbserver/rezinos"
 # ENV FLASK_ENV config.ProductionConfig
 
 RUN chown -R rezinos:rezinos ./

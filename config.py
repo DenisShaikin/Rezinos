@@ -16,7 +16,7 @@ class Config(object):
 
     # This will create a file in <app> FOLDER
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # SQLALCHEMY_TRACK_MODIFICATIONS = False
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     DOMAIN_NAME = 'http://rezinos.ru/'
 
@@ -45,8 +45,11 @@ class Config(object):
     WEARDISCOUNTS_FILE = os.path.join(basedir, 'wear_discounts.csv')
     AVITOZONES_FILE = os.path.join(basedir, 'Areas.csv')
     TIREPRICES_FILE = os.path.join(basedir, 'RossiyaAllTires_Result.csv')
-    CELERY_BROKER_URL = 'redis://rezinos.ru:6379/0'
-    CELERY_RESULT_BACKEND = 'redis://rezinos.ru:6379/0'
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class ProductionConfig(Config):
     DEBUG = False
@@ -58,22 +61,22 @@ class ProductionConfig(Config):
 
     # PostgreSQL database
     # SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
-    #     config( 'DB_ENGINE'   , default='postgresql'    ),
-    #     config( 'DB_USERNAME' , default='appseed'       ),
-    #     config( 'DB_PASS'     , default='pass'          ),
-    #     config( 'DB_HOST'     , default='localhost'     ),
-    #     config( 'DB_PORT'     , default=5432            ),
-    #     config( 'DB_NAME'     , default='appseed-flask' )
-
-    #MySQL database
+    #     os.getenv('DB_ENGINE'   , 'mysql'),
+    #     os.getenv('DB_USERNAME' , 'appseed_db_usr'),
+    #     os.getenv('DB_PASS'     , 'pass'),
+    #     os.getenv('DB_HOST'     , 'localhost'),
+    #     os.getenv('DB_PORT'     , 3306),
+    #     os.getenv('DB_NAME'     , 'appseed_db')
+    # )
+    #MySQL database - переопределяем на переменную
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    CELERY_BROKER_URL = 'redis://rezinos.ru:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://rezinos.ru:6379/0'
+
 
 
 class DebugConfig(Config):
     DEBUG = True
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
-#Celery const
 
 
 # Load all possible configurations

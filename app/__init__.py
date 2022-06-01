@@ -66,6 +66,7 @@ def create_app(config):
     turbo.init_app(app)
 
     #celery
+
     celery.conf.broker_url = app.config['CELERY_BROKER_URL']
     celery.conf.result_backend = app.config['CELERY_RESULT_BACKEND']
     celery.conf.update(app.config)

@@ -45,9 +45,6 @@ class Config(object):
     WEARDISCOUNTS_FILE = os.path.join(basedir, 'wear_discounts.csv')
     AVITOZONES_FILE = os.path.join(basedir, 'Areas.csv')
     TIREPRICES_FILE = os.path.join(basedir, 'RossiyaAllTires_Result.csv')
-#Celery const
-    CELERY_BROKER_URL = 'redis://localhost:6379/0'
-    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 
 class ProductionConfig(Config):
@@ -57,6 +54,8 @@ class ProductionConfig(Config):
     SESSION_COOKIE_HTTPONLY  = True
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_DURATION = 3600
+    CELERY_BROKER_URL = 'redis://rezinos.ru:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://rezinos.ru:6379/0'
 
     # PostgreSQL database
     # SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
@@ -75,6 +74,10 @@ class DebugConfig(Config):
     DEBUG = True
     basedir = os.path.abspath(os.path.dirname(__file__))
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
+#Celery const
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
 
 # Load all possible configurations
 config_dict = {

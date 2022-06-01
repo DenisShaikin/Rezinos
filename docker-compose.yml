@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   rezinos:
-    image: rezinos:latest
+    build: .
     restart: always
     security_opt:    
       - seccomp=chrome.json
@@ -20,11 +20,12 @@ services:
       - MAIL_USERNAME=chaikide@mail.ru
       - MAIL_PASSWORD=Akakiy00!
       - "DATABASE_URL = mysql+pymysql://rezinos:rezinopass@dbserver/rezinos"
-      - DEBUG=False
-     
+      - "DEBUG = false"
     volumes:
       - rezinos_photos:/home/rezinos/app/base/static/assets/img/tire_photos
-  
+    depends_on:
+      - mysql
+      - redis
     
   mysql:
     image: mysql/mysql-server:5.7
@@ -43,20 +44,19 @@ services:
       --collation-server=utf8mb4_unicode_ci
     restart: on-failure
       
-
   redis:
-    image: redis:6-alpine
-    
-  celery_worker:
+    image: "redis:alpine"
+  
+  celery:
     build: .
-    image: rezinos:latest
-    command: ["celery", "worker", "--app=celery_worker.celery", "--pool=gevent", "--loglevel=INFO"]
-    restart: unless-stopped
+    command: celery -A celery_worker.celery worker -P gevent --loglevel=INFO
+    volumes:
+      - .:/code
     depends_on:
       - redis
       - mysql
-
+      
 volumes:
-    rezinos_photos:
-    rezinos_db:
+  rezinos_photos:
+  rezinos_db:
       

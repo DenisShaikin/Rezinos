@@ -1,5 +1,38 @@
 version: '3.8'
 services:
+    
+  mysql:
+    image: mysql/mysql-server:5.7
+    volumes:
+      - rezinos_db:/db/
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=rezinos
+      - MYSQL_USER=rezinos
+      - MYSQL_PASSWORD=rezinopass
+
+    command: 
+      --sql-mode=""
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    restart: on-failure
+
+      
+  redis:
+    image: "redis:alpine"
+
+  
+  celery:
+    build: .
+    command: celery -A celery_worker.celery worker -P gevent --loglevel=INFO
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+      - mysql
+
   rezinos:
     build: .
     restart: always
@@ -26,38 +59,6 @@ services:
     depends_on:
       - mysql
       - redis
-    
-  mysql:
-    image: mysql/mysql-server:5.7
-    volumes:
-      - rezinos_db:/db/
-    ports:
-      - 3306:3306
-    environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_DATABASE=rezinos
-      - MYSQL_USER=rezinos
-      - MYSQL_PASSWORD=rezinopass
-      - MYSQL_ROOT_HOST='%'
-    command: 
-      --sql-mode=""
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
-    restart: on-failure
-
-      
-  redis:
-    image: "redis:alpine"
-
-  
-  celery:
-    build: .
-    command: celery -A celery_worker.celery worker -P gevent --loglevel=INFO
-    volumes:
-      - .:/code
-    depends_on:
-      - redis
-      - mysql
       
 volumes:
   rezinos_photos:

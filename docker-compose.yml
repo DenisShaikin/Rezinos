@@ -38,14 +38,17 @@ services:
       - MYSQL_DATABASE=rezinos
       - MYSQL_USER=rezinos
       - MYSQL_PASSWORD=rezinopass
+      - MYSQL_ROOT_HOST='%'
     command: 
       --sql-mode=""
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
     restart: on-failure
+
       
   redis:
     image: "redis:alpine"
+
   
   celery:
     build: .
@@ -59,4 +62,5 @@ services:
 volumes:
   rezinos_photos:
   rezinos_db:
+
       

@@ -31,7 +31,6 @@ services:
       - .:/code
     depends_on:
       - redis
-      - mysql
 
   rezinos:
     build: .

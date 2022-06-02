@@ -45,8 +45,8 @@ class Config(object):
     WEARDISCOUNTS_FILE = os.path.join(basedir, 'wear_discounts.csv')
     AVITOZONES_FILE = os.path.join(basedir, 'Areas.csv')
     TIREPRICES_FILE = os.path.join(basedir, 'RossiyaAllTires_Result.csv')
-    CELERY_BROKER_URL = 'redis://rezinos.ru:6379/0'
-    CELERY_RESULT_BACKEND = 'redis://rezinos.ru:6379/0'
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
 class ProductionConfig(Config):
     DEBUG = False
@@ -67,6 +67,9 @@ class ProductionConfig(Config):
 
     #MySQL database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    CELERY_BROKER_URL = 'redis://redis:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+
 
 
 class DebugConfig(Config):

@@ -15,7 +15,7 @@ class Config(object):
     # ADMINS=config('ADMINS', default='chaikide@mail.ru')
 
     # This will create a file in <app> FOLDER
-    # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
     DOMAIN_NAME = 'http://rezinos.ru/'
@@ -50,12 +50,10 @@ class Config(object):
 
 class ProductionConfig(Config):
     DEBUG = False
-
     # Security
     SESSION_COOKIE_HTTPONLY  = True
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_DURATION = 3600
-
     # PostgreSQL database
     # SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
     #     config( 'DB_ENGINE'   , default='postgresql'    ),
@@ -64,7 +62,6 @@ class ProductionConfig(Config):
     #     config( 'DB_HOST'     , default='localhost'     ),
     #     config( 'DB_PORT'     , default=5432            ),
     #     config( 'DB_NAME'     , default='appseed-flask' )
-
     #MySQL database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     CELERY_BROKER_URL = 'redis://redis:6379/0'
@@ -75,8 +72,6 @@ class ProductionConfig(Config):
 class DebugConfig(Config):
     DEBUG = True
     basedir = os.path.abspath(os.path.dirname(__file__))
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'sqlite3.db')
-#Celery const
 
 
 # Load all possible configurations

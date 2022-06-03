@@ -18,6 +18,7 @@ from flask_mail import Mail
 
 # WARNING: Don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
+# print(DEBUG)
 
 
 # The configuration
@@ -27,6 +28,7 @@ try:
     
     # Load the configuration using the default values 
     app_config = config_dict[get_config_mode.capitalize()]
+    # print(get_config_mode.capitalize())
 
 except KeyError:
     exit('Error: Invalid <config_mode>. Expected values [Debug, Production] ')

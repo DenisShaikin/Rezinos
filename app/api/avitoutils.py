@@ -46,6 +46,8 @@ def treatAvitoTiresData(df):
     cond2 = (~df['wear2'].isnull())  #Тогда присваиваем wear2
     df['wear'] = np.select([cond1, cond2], [df['wear3'], df['wear2']], np.NaN)
     df.drop(columns=['qte2', 'qte3', 'qte4', 'wear2', 'wear3', 'qteFinal'], inplace=True)
+
+    df['price'] = df['price'].apply(lambda x: str(x).split('₽')[0] if '₽' in x else x)
     df['price']=df['price'].str.replace('₽', '').str.replace(' ', '')
     df['price']=df['price'].str.replace(' ', '')
 #     print(dtypes(df['price']))
@@ -158,7 +160,7 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
     options.add_argument('Connection=keep-alive')
     options.add_argument('Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
     options.add_argument('Accept-Language=ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4')
-    options.add_argument('headless')
+    # options.add_argument('headless')
     options.add_argument('disable-dev-shm-usage')
     options.add_argument('no-sandbox')  #--no-sandbox
     options.add_argument('--disable-gpu')
@@ -254,6 +256,7 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
 
 #                     dfTempResult=dfTempResult.assign(geo = geoList)
                     dfTempResult['region']= region
+                    print(dfTempResult['price'].head())
                     #В параметрах может не приходить размер, тогда его можно взять из заголовка
                     dfTempResult['size'] = dfTempResult['brand'].str.extract('(\d{3}\/\d{2,3}\sR\d{1,2})', expand=False)
                     dfTempResult['sizeDiametr'] = dfTempResult['size'].str.extract('(R\d{1,2})', expand=False) #Выбираем только диаметр, бывает NaN

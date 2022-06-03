@@ -16,6 +16,7 @@ env
 venv
 
 .idea
+.env
 __pycache__
 app/__pycache__
 media/__pycache__

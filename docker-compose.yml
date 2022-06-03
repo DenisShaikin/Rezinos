@@ -42,8 +42,8 @@ services:
       - MAIL_USE_SSL=1
       - MAIL_USERNAME=chaikide@mail.ru
       - MAIL_PASSWORD=Akakiy00!
-      - "DATABASE_URL = mysql+pymysql://rezinos:rezinopass@dbserver/rezinos"
-      - "DEBUG = false"
+      - DATABASE_URL = mysql+pymysql://rezinos:rezinopass@dbserver/rezinos
+      - "DEBUG = False"
     volumes:
       - rezinos_photos:/home/rezinos/app/base/static/assets/img/tire_photos
     depends_on:

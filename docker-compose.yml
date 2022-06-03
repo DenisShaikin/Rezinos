@@ -18,20 +18,9 @@ services:
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
     restart: on-failure
-
       
   redis:
     image: "redis:alpine"
-
-  
-  celery:
-    build: .
-    command: celery -A celery_worker.celery worker -P gevent --loglevel=INFO
-    volumes:
-      - .:/code
-    depends_on:
-      - redis
-      - mysql
 
   rezinos:
     build: .
@@ -44,6 +33,7 @@ services:
       - mysql
     links:
       - "mysql:dbserver"
+    command: celery -A celery_worker.celery worker -P gevent --loglevel=INFO
     environment:
       - SECRET_KEY=rezinosecret
       - MAIL_SERVER=smtp.mail.ru

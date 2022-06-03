@@ -256,7 +256,7 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
 
 #                     dfTempResult=dfTempResult.assign(geo = geoList)
                     dfTempResult['region']= region
-                    print(dfTempResult['price'].head())
+                    # print(dfTempResult['price'].head())
                     #В параметрах может не приходить размер, тогда его можно взять из заголовка
                     dfTempResult['size'] = dfTempResult['brand'].str.extract('(\d{3}\/\d{2,3}\sR\d{1,2})', expand=False)
                     dfTempResult['sizeDiametr'] = dfTempResult['size'].str.extract('(R\d{1,2})', expand=False) #Выбираем только диаметр, бывает NaN

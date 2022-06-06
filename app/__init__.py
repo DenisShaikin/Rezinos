@@ -58,8 +58,8 @@ def create_app(config):
     app.config.from_object(config)
     csrf=register_extensions(app)
 
-    from app.home.routes import avito_offerstable #Регистрируем процессор avito_offerstable
-    app.context_processor(avito_offerstable)
+    # from app.home.routes import avito_offerstable #Регистрируем процессор avito_offerstable
+    # app.context_processor(avito_offerstable)
 
     register_blueprints(app)
     configure_database(app)

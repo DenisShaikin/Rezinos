@@ -31,7 +31,7 @@ import json
 from app.api.apiroutes import abort_if_param_doesnt_exist
 from app.api.apimodels import ApiTire
 import plotly.express as px
-# import threading
+import threading
 # from threading import Timer
 from app.api.avitoutils import  getAvitoTirePricesByLocale, getAvitoTirePrices, calculateTheDistance
 from time import sleep
@@ -1054,51 +1054,96 @@ def edit_tire(tire_id):
         return render_template('edit_tire.html', title='Предложение по шинам', tire_id=tire_id, form=form, segment='edit_tire',
             df_photos=df_photos)
 
-def update_load():
-    with app.app_context():
-        while True:
-            sleep(3)
-            turbo.push(turbo.replace(render_template('avitoscan-table.html'), 'offerstable'))
+# def update_load():
+#     with app.app_context():  #app_context
+#         while True:
+#             sleep(3)
+#             # with app.test_request_context('/avito_scan.html'):
+#             turbo.push(turbo.replace(render_template('avitoscan-table.html'), 'offerstable'))
 
-# @app.context_processor
 # @blueprint.context_processor
-# @login_required
-def avito_offerstable():
-    #Собираем данные для отображения на странице
-    args = dict(request_type=1) #Фильтруем по сканированным по локале и радиусу поиска
-
-    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.region, ApiTire.diametr, ApiTire.width,
-                                 ApiTire.height,
-                                 ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link, ApiTire.avito_lat, ApiTire.avito_lon,
-                                 ApiTire.update_date).filter_by(**args).order_by(ApiTire.unitPrice.asc())
-    df = pd.read_sql(query.statement, query.session.bind)
-    df.drop_duplicates(inplace=True)
-    db_table_toshow = pd.DataFrame(
-        columns=['Date', 'Size', 'Price', 'Title', 'Region', 'Season', 'Wear', 'Distance'])
-    if not df.empty:
-        db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
-        db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
-        db_table_toshow['Region']=df['avito_link'].apply(lambda x: x.split('/')[3])
-        db_table_toshow['Season']=df['season']
-        db_table_toshow['Size']=df['width'].astype(str) + '/' + \
-                df['height'].astype(str) + ' R' + df['diametr'].astype(str)
-        db_table_toshow['Size']=db_table_toshow['Size'].apply(lambda x: x.replace('.0', ''))
-        df['wear_num'].fillna(-1, inplace=True)
-        db_table_toshow['Wear']=(df['wear_num']*100).round(0).astype(int).astype(str) + '%'
-        db_table_toshow['Wear'].replace('-100%', '---', inplace=True)
-        # db_table_toshow['Wear']=db_table_toshow['Wear'].astype(str) + '%'
-        db_table_toshow['Price']=df['unitPrice'].astype(str)
-        if current_user.def_latitude and current_user.def_longitude:
-            db_table_toshow['Distance'] = df.apply(lambda x: calculateTheDistance(current_user.def_latitude, x['avito_lat'], current_user.def_longitude, x['avito_lon']), axis=1)
-            db_table_toshow['Distance'].fillna(-1, inplace=True)
-            db_table_toshow['Distance'] = db_table_toshow['Distance'].round(0).astype(int)
-            db_table_toshow['Distance'].replace(-1, '--', inplace=True)
-
-    # print(list(df.values.tolist()))
-    row_data = list(db_table_toshow.values.tolist())
+@blueprint.route('/avito_offerstable/<task_id>', methods=['GET'])
+@login_required
+def avito_offerstable(task_id):
+    print('Задача:', task_id)
+    task = getAvitoTirePricesByLocale.AsyncResult(task_id)
     columnWidths = [1, 1, 1, 3, 2, 2, 1, 1]
-    return {'offerstable': row_data, 'columnWidths' :columnWidths}
+    columnNames=['Дата проверки', 'Размерность', 'Цена, Руб.', 'Ссылка на объявление',
+                 'Регион', 'Сезонность', 'Износ, %', 'Расстояние, Км']
+    #До начала работы статус будет PENDING, потом PROGRESS
+    if task.state in ['PROGRESS', 'FINISHED']:
+        print(task.state, task.result)
+        # print('Task state={}, page={}', task.state, task.info['page'])
 
+        #Собираем данные для отображения на странице
+        args = dict(request_type=1) #Фильтруем по сканированным по локале и радиусу поиска
+
+        query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.region, ApiTire.diametr, ApiTire.width,
+                                     ApiTire.height,
+                                     ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link, ApiTire.avito_lat, ApiTire.avito_lon,
+                                     ApiTire.update_date).filter_by(**args).order_by(ApiTire.unitPrice.asc())
+        df = pd.read_sql(query.statement, query.session.bind)
+        df.drop_duplicates(inplace=True)
+        db_table_toshow = pd.DataFrame(
+            columns=['Date', 'Size', 'Price', 'Title', 'Region', 'Season', 'Wear', 'Distance'])
+        if not df.empty:
+            db_table_toshow['Date']=pd.to_datetime(df['update_date'], dayfirst=True).dt.strftime('%Y/%m/%d')
+            db_table_toshow['Title']=df.apply(lambda x: createLink(x['avito_link'], x['brand']), axis=1)
+            db_table_toshow['Region']=df['avito_link'].apply(lambda x: x.split('/')[3])
+            db_table_toshow['Season']=df['season']
+            # print(df['season'].head())
+            db_table_toshow['Size']=df['width'].astype(str) + '/' + \
+                    df['height'].astype(str) + ' R' + df['diametr'].astype(str)
+            db_table_toshow['Size']=db_table_toshow['Size'].apply(lambda x: x.replace('.0', ''))
+            df['wear_num'].fillna(-1, inplace=True)
+            db_table_toshow['Wear']=(df['wear_num']*100).round(0).astype(int).astype(str) + '%'
+            db_table_toshow['Wear'].replace('-100%', '---', inplace=True)
+            # db_table_toshow['Wear']=db_table_toshow['Wear'].astype(str) + '%'
+            db_table_toshow['Price']=df['unitPrice'].astype(str)
+            # print(current_user)
+            db_table_toshow['Distance']=''
+            if current_user.def_latitude and current_user.def_longitude:
+                db_table_toshow['Distance'] = df.apply(lambda x: calculateTheDistance(current_user.def_latitude, x['avito_lat'], current_user.def_longitude, x['avito_lon']), axis=1)
+                db_table_toshow['Distance'].fillna(-1, inplace=True)
+                db_table_toshow['Distance'] = db_table_toshow['Distance'].round(0).astype(int)
+                db_table_toshow['Distance'].replace(-1, '--', inplace=True)
+
+        # print(list(df.values.tolist()))
+        row_data = list(db_table_toshow.values.tolist())
+        db_table_toshow.to_csv(r'c:\Users\ESPERANCE\Documents\test.csv', encoding='cp1251', sep=';')
+        return jsonify({'state':task.state, 'offerstable': row_data, 'columnWidths' :columnWidths, 'columnNames':columnNames})
+    else: #task.state!=Progress && != Finished
+        return jsonify({'state':task.state, 'offerstable': None, 'columnWidths' :columnWidths, 'columnNames':columnNames})
+
+@blueprint.route('/start_avitoscan', methods=['POST'])
+def start_avitoscan():
+    seasonDict = {'Зимние шипованные': 'zimnie_shipovannye',
+                  'Зимние нешипованные': 'zimnie_neshipovannye',
+                  'Летние': 'letnie',
+                  'Всесезонные': 'vsesezonnye'}
+    s = request.get_json(force=True)
+    # print(s)
+    if s['region']:
+        region = AvitoZones.query.with_entities(AvitoZones.engzone).filter(
+            AvitoZones.zone == s['region']).first()
+        # print(region)
+        region = region[0]
+    else:
+        region = 'moskva_i_mo'
+
+    if s['season']:
+        season = seasonDict.get(s['season'])  # А в авито - латиница
+    else:
+        season = 'zimnie_neshipovannye'
+
+    lat = s['lat'] if s['lat'] else 55.755814 #Если не указано - Москва
+    lon = s['lon'] if s['lon'] else 37.617635 #Если не указано - Москва
+
+    avitoScanTask = getAvitoTirePricesByLocale.delay(s['diametr'], s['width'], s['height'],
+                                                               lon, lat,
+                                                               region, season,
+                                                               s['pages'], s['searchRadius'])
+    return jsonify({}), 202, {'Location': url_for('home_blueprint.avito_offerstable', task_id=avitoScanTask.id)}
 
 @blueprint.route('/avito_scan.html', methods=['GET', 'POST'])
 @login_required
@@ -1128,12 +1173,14 @@ def avito_scan():
 
         lat = form.searchLat.data if form.searchLat.data else 55.755814 #Если не указано - Москва
         lon = form.searchLon.data if form.searchLon.data else 37.617635 #Если не указано - Москва
-        #Запускаем поток сканирования
-        getAvitoTirePricesByLocale.delay(request.form['diametr'],
-                  request.form['width'], request.form['height'],
-                  lon, lat,
-                  region, season,
-                  10, request.form['searchRadius'])
+        #Запускаем поток сканирования в celery
+        # avitoScanTask = getAvitoTirePricesByLocale.delay(request.form['diametr'],
+        #           request.form['width'], request.form['height'],
+        #           lon, lat,
+        #           region, season,
+        #           10, request.form['searchRadius'])
+
+        # threading.Thread(target=update_load, kwargs={'app': app._get_current_object()}).start()
 
         return redirect(url_for('home_blueprint.avito_scan'))
     elif request.method == 'GET':

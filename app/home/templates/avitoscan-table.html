@@ -1,30 +1,29 @@
 
       <div class="card border-light shadow-sm ">
-            <div class="table-responsive">
+            <div class="table-responsive" name="avito_table" id="avito_table">
                 <table class="table table-flush table-striped  table-sm table-hover"> <!--align-items-center -->
                     <thead class="thead-light">
-                    <tr class="d-flex">
-                        <th class="col-sm-1">Дата проверки</th> <!--scope="col"-->
-                        <th class="col-sm-1">Размерность</th>
-                        <th class="col-sm-1">Цена, Руб.</th>
-                        <th class="col-sm-3">Ссылка на объявление</th>
-                        <th class="col-sm-2">Регион</th>
-                        <th class="col-sm-2">Сезонность</th>
-                        <th class="col-sm-1">Износ, %</th>
-                        <th class="col-sm-1">Расстояние, Км</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for row in offerstable %}
-                    <tr class="d-flex">
-                    {% for cell_ in row %}
-                        <td class="col-sm-{{ columnWidths[loop.index-1] }}">
-                        {{ cell_|safe }}
-                        </td>
-                    {% endfor %}
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        <tr class="d-flex">
+                            <th class="col-sm-1">Дата проверки</th> <!--scope="col"-->
+                            <th class="col-sm-1">Размерность</th>
+                            <th class="col-sm-1">Цена, Руб.</th>
+                            <th class="col-sm-3">Ссылка на объявление</th>
+                            <th class="col-sm-2">Регион</th>
+                            <th class="col-sm-2">Сезонность</th>
+                            <th class="col-sm-1">Износ, %</th>
+                            <th class="col-sm-1">Расстояние, Км</th>
+                        </tr>
+                        </thead>
+                                {% for row in offerstable %}
+                                <tr class="d-flex">
+                                {% for cell_ in row %}
+                                    <td class="col-sm-{{ columnWidths[loop.index-1] }}">
+                                        {{ cell_|safe }}
+                                    </td>
+                                {% endfor %}
+                                </tr>
+                                {% endfor %}
+                        </tbody>
+               </table>
             </div>
       </div>

@@ -832,3 +832,114 @@ if (document.getElementById('Refresh')) {
 if (document.getElementById('protector_wear')) {
     document.getElementById('protector_wear').addEventListener('change', function(){updateChart(0, 10)}, false);}
 
+//Событие нажатия кнопки Скан предложений Авито
+if (document.getElementById('StartAvitoSearch')) {
+    document.getElementById('StartAvitoSearch').addEventListener('click', function () {
+//    При смене региона надо перерисовать график
+    var pages = 5;
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'start_avitoscan');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 202) {
+            console.log(xhr.getResponseHeader('Location'));
+            update_avitodata(xhr.getResponseHeader('Location'));
+        }
+        else if (xhr.status !== 200 && xhr.status !== 202){
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'diametr': document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label,
+        'width':document.getElementById('width').value,
+        'height':document.getElementById('height').value,
+        'lon':document.getElementById('searchLon').value,
+        'lat':document.getElementById('searchLat').value,
+        'region':document.getElementById('searchRegion').options[document.getElementById('searchRegion').selectedIndex].label,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'pages':pages,
+        'searchRadius':document.getElementById('searchRadius').value}));
+    });
+}
+
+function update_avitodata(status_url) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', status_url, true);
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            console.log(xhr.response);
+            data = JSON.parse(xhr.response);
+             if (data['state'] != 'PENDING') { //&& data['state'] != 'PROGRESS'
+
+                if ('offerstable' in data) {
+                    // show result
+                    var myTable='';
+                    myTable +='<table class="table table-flush table-striped  table-sm table-hover">';
+                    myTable += '<thead class="thead-light">';
+                    myTable += '<tr class="d-flex">';
+                    var colName, colWidth;
+                    for (colName in data['columnNames'], colWidth in data['columnWidths']){  //Собираем заголовки таблицы
+                        myTable += '<th class="col-sm-' + colWidth +'">' + colName + '</th>';
+                        console.log(colName, colWidth);
+                    };
+                    console.log(myTable);
+                    myTable +='</tr> </thead>';
+                    for (var dataStr in data['offerstable']){  //Собираем заголовки таблицы
+                        myTable += '<tr class="d-flex">';
+                        for (colWidth in data['columnWidths']){
+                            myTable += '<td class="col-sm-' + colWidth + '>';
+                            myTable += 'test' + '</td>';
+                        };
+                    };
+
+                    document.getElementById("avito_table").innerHTML = myTable
+//                    data['offerstable']
+//                    var xhrTable = new XMLHttpRequest();
+//                    xhrTable.open('GET', 'avitoscan-table.html', true);
+//                    xhrTable.send({'offerstable':data['offerstable']})
+                }
+                else {
+                    // something unexpected happened
+                }
+                }
+             else {
+                    // rerun in 4 seconds
+                    setTimeout(function() {
+                        update_avitodata(status_url);
+                    }, 4000);
+                }
+             }
+        else if (xhr.status !== 200 ){
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send();
+}
+
+//        $.getJSON(status_url, function(data) {
+//            // update UI
+//            percent = parseInt(data['current'] * 100 / data['total']);
+//            nanobar.go(percent);
+//            $(status_div.childNodes[1]).text(percent + '%');
+//            $(status_div.childNodes[2]).text(data['status']);
+//            if (data['state'] != 'PENDING' && data['state'] != 'PROGRESS') {
+//                if ('result' in data) {
+//                    // show result
+//                    $(status_div.childNodes[3]).text('Result: ' + data['result']);
+//                }
+//                else {
+//                    // something unexpected happened
+//                    $(status_div.childNodes[3]).text('Result: ' + data['state']);
+//                }
+//            }
+//            else {
+//                // rerun in 2 seconds
+//                setTimeout(function() {
+//                    update_progress(status_url, nanobar, status_div);
+//                }, 2000);
+//            }
+//        });
+//    }

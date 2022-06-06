@@ -7,6 +7,9 @@ services:
       - rezinos_db:/db/
     ports:
       - 3306:3306
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=rezinos
@@ -32,7 +35,7 @@ services:
     depends_on:
       - mysql
     links:
-      - "mysql:dbserver"
+      - mysql
     command: celery -A celery_worker.celery worker -P gevent --loglevel=INFO
     environment:
       - SECRET_KEY=rezinosecret
@@ -42,8 +45,10 @@ services:
       - MAIL_USE_SSL=1
       - MAIL_USERNAME=chaikide@mail.ru
       - MAIL_PASSWORD=Akakiy00!
-      - DATABASE_URL = mysql+pymysql://rezinos:rezinopass@dbserver/rezinos
-      - "DEBUG = False"
+      - "DATABASE_URL=mysql+pymysql://rezinos:rezinopass@mysql/rezinos"
+      - DB_HOST=mysql
+      - DEBUG=False
+      
     volumes:
       - rezinos_photos:/home/rezinos/app/base/static/assets/img/tire_photos
     depends_on:

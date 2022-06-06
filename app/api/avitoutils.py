@@ -310,7 +310,7 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
     # myapp=app._get_current_object()
     return dfResult
 
-@celery.task(bind=True)
+@celery.task(name='getAvitoTirePricesByLocale', bind=True)
 def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, season='zimnie_neshipovannye', nPages=10, distance=50):
     # app.app_context().push()
     options = se.webdriver.ChromeOptions()
@@ -318,7 +318,7 @@ def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, s
     options.add_argument('Connection=keep-alive')
     options.add_argument('Accept=text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8')
     options.add_argument('Accept-Language=ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4')
-    options.add_argument('headless')
+    # options.add_argument('headless')
     options.add_argument('disable-dev-shm-usage')
     options.add_argument('no-sandbox')  #--no-sandbox
     options.add_argument('--disable-gpu')
@@ -458,6 +458,9 @@ def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, s
                     dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
+            self.update_state(state='PROGRESS', meta={'page':p})
+        self.update_state(state='FINISHED', meta={'page':p})
+
     driver.quit()
     # currTire=Tire()
     # myapp=app._get_current_object()

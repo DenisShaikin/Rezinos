@@ -836,12 +836,12 @@ if (document.getElementById('protector_wear')) {
 if (document.getElementById('StartAvitoSearch')) {
     document.getElementById('StartAvitoSearch').addEventListener('click', function () {
 //    При смене региона надо перерисовать график
-    var pages = 5;
+    var pages = 10;
     var xhr = new XMLHttpRequest();
     xhr.open('post', 'start_avitoscan');
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 202) {
-            console.log(xhr.getResponseHeader('Location'));
+//            console.log(xhr.getResponseHeader('Location'));
             update_avitodata(xhr.getResponseHeader('Location'));
         }
         else if (xhr.status !== 200 && xhr.status !== 202){
@@ -868,78 +868,44 @@ function update_avitodata(status_url) {
     xhr.open('GET', status_url, true);
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 200) {
-            console.log(xhr.response);
             data = JSON.parse(xhr.response);
-             if (data['state'] != 'PENDING') { //&& data['state'] != 'PROGRESS'
-
+             if (data['state'] == 'PENDING' || data['state'] == 'PROGRESS') { //&& data['state'] != 'PROGRESS'
+                    // rerun in 4 seconds
+                    setTimeout(function() {
+                        update_avitodata(status_url);
+                    }, 4000);
+             }
+             if (data['state'] != 'PENDING'){
                 if ('offerstable' in data) {
                     // show result
                     var myTable='';
                     myTable +='<table class="table table-flush table-striped  table-sm table-hover">';
                     myTable += '<thead class="thead-light">';
                     myTable += '<tr class="d-flex">';
-                    var colName, colWidth;
-                    for (colName in data['columnNames'], colWidth in data['columnWidths']){  //Собираем заголовки таблицы
-                        myTable += '<th class="col-sm-' + colWidth +'">' + colName + '</th>';
-                        console.log(colName, colWidth);
+                    for (var i=0; i< data['columnNames'].length; i++){  //Собираем заголовки таблицы
+                        myTable += '<th class="col-sm-' + data['columnWidths'][i] +'">' + data['columnNames'][i] + '</th>';
                     };
-                    console.log(myTable);
                     myTable +='</tr> </thead>';
-                    for (var dataStr in data['offerstable']){  //Собираем заголовки таблицы
+                    console.log('длина масива данных: ' + data['offerstable'].length)
+                    for (var i=0; i< data['offerstable'].length; i++){  //Собираем значения таблицы
                         myTable += '<tr class="d-flex">';
-                        for (colWidth in data['columnWidths']){
-                            myTable += '<td class="col-sm-' + colWidth + '>';
-                            myTable += 'test' + '</td>';
+                        for (var j=0;  j<data['columnWidths'].length; j++){
+                            myTable += '<td class="col-sm-' + data['columnWidths'][j] + '">';
+                            //
+                            myTable += data['offerstable'][i][j] + '</td>';
                         };
                     };
-
                     document.getElementById("avito_table").innerHTML = myTable
-//                    data['offerstable']
-//                    var xhrTable = new XMLHttpRequest();
-//                    xhrTable.open('GET', 'avitoscan-table.html', true);
-//                    xhrTable.send({'offerstable':data['offerstable']})
-                }
-                else {
-                    // something unexpected happened
-                }
-                }
-             else {
-                    // rerun in 4 seconds
-                    setTimeout(function() {
-                        update_avitodata(status_url);
-                    }, 4000);
                 }
              }
+        }
         else if (xhr.status !== 200 ){
         }
+
     };
+
     var csrf_token = document.querySelector('meta[name=csrf-token]').content;
     xhr.setRequestHeader("X-CSRFToken", csrf_token);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.send();
 }
-
-//        $.getJSON(status_url, function(data) {
-//            // update UI
-//            percent = parseInt(data['current'] * 100 / data['total']);
-//            nanobar.go(percent);
-//            $(status_div.childNodes[1]).text(percent + '%');
-//            $(status_div.childNodes[2]).text(data['status']);
-//            if (data['state'] != 'PENDING' && data['state'] != 'PROGRESS') {
-//                if ('result' in data) {
-//                    // show result
-//                    $(status_div.childNodes[3]).text('Result: ' + data['result']);
-//                }
-//                else {
-//                    // something unexpected happened
-//                    $(status_div.childNodes[3]).text('Result: ' + data['state']);
-//                }
-//            }
-//            else {
-//                // rerun in 2 seconds
-//                setTimeout(function() {
-//                    update_progress(status_url, nanobar, status_div);
-//                }, 2000);
-//            }
-//        });
-//    }

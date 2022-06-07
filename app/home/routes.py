@@ -1071,10 +1071,9 @@ def avito_offerstable(task_id):
     columnNames=['Дата проверки', 'Размерность', 'Цена, Руб.', 'Ссылка на объявление',
                  'Регион', 'Сезонность', 'Износ, %', 'Расстояние, Км']
     #До начала работы статус будет PENDING, потом PROGRESS
+    print(task.state, task.result)
     if task.state in ['PROGRESS', 'FINISHED']:
         print(task.state, task.result)
-        # print('Task state={}, page={}', task.state, task.info['page'])
-
         #Собираем данные для отображения на странице
         args = dict(request_type=1) #Фильтруем по сканированным по локале и радиусу поиска
 
@@ -1110,7 +1109,7 @@ def avito_offerstable(task_id):
 
         # print(list(df.values.tolist()))
         row_data = list(db_table_toshow.values.tolist())
-        db_table_toshow.to_csv(r'c:\Users\ESPERANCE\Documents\test.csv', encoding='cp1251', sep=';')
+        # db_table_toshow.to_csv(r'c:\Users\ESPERANCE\Documents\test.csv', encoding='cp1251', sep=';')
         return jsonify({'state':task.state, 'offerstable': row_data, 'columnWidths' :columnWidths, 'columnNames':columnNames})
     else: #task.state!=Progress && != Finished
         return jsonify({'state':task.state, 'offerstable': None, 'columnWidths' :columnWidths, 'columnNames':columnNames})

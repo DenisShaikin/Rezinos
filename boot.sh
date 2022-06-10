@@ -10,7 +10,7 @@ done
 flask db init
 #flask db revision --rev-id 622180f5499e
 
-flask db migrate -m "Mar 15.2022"
+flask db migrate -m "Juin10 2022"
 flask db upgrade
 
 exec celery -A celery_worker.celery worker -P gevent --loglevel=INFO &

@@ -143,10 +143,10 @@ class User(db.Model, UserMixin):
         tires = self.tires.filter(Tire.drom_show == True).all()
         rims = self.rims.filter(Rim.drom_show == True).all()
         for tire in tires:
-            ad = ET.SubElement(adOffers, 'offer')
+            ad = ET.SubElement(root, 'offer')
             tire.add_drom_tire(ad)
         # for rim in rims:
-        #     ad = ET.SubElement(adOffers, 'offer')
+        #     ad = ET.SubElement(root, 'offer')
             # rim.add_avito_rim(ad)
         message = ET.tostring(root, "utf-8")
 

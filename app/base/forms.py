@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from flask_wtf import FlaskForm
-from wtforms import TextField, PasswordField
+from wtforms import TextField, PasswordField, StringField
 from wtforms.validators import InputRequired, Email, DataRequired
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, MultipleFileField, RadioField
 from wtforms import FloatField, DecimalField, DateField, DateTimeField
@@ -54,8 +54,9 @@ class EditProfileForm(FlaskForm):
     def_longitude = TextField('Долгота', id='lon')
 
     store = StringField('ID магазина Auto.ru')
-    avito_path = StringField('Путь к фидам Avito')
+    avito_path: StringField = StringField('Путь к фидам Avito')
     autoru_path = StringField('Путь к фидам Auto.ru')
+    drom_path = StringField('Путь к фидам Drom.ru')
 
     # def_latitude = FloatField('Широта', default=0)
     # def_longitude = FloatField('Долгота', default=0)
@@ -104,6 +105,7 @@ class TirePrepareForm(FlaskForm):
     ad_type = SelectField(u'Вид объявления', choices=['Товар приобретен на продажу', 'Товар от производителя'])
     is_for_priority =BooleanField(u'Продвижение на Auto.ru', default=False) #auto.ru кнопка продвижения
     qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
+    inSet = IntegerField (u'В комплекте', default=1)
     title = StringField(u'Название объявления')
     description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
     price = IntegerField(u'Цена', validators=[DataRequired()])
@@ -172,6 +174,7 @@ class AvitoScanForm(FlaskForm):
     searchLat = StringField('Широта точки')
     searchLon = StringField('Долгота точки')
     searchRadius = StringField('Радиус поиска', default=50)
+    pages = IntegerField('Страниц', default=10)
     submit = SubmitField('Искать')
 
 class RimPrepareForm(FlaskForm):

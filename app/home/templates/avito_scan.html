@@ -39,23 +39,32 @@
     </div>
     <div class="row">
 
-        <div class="col-10">
+        <div class="col-11">
             <div class="row mb-3 mt-2">
-                <div class="col-sm-2">
+                <div class="col-sm-1">
                     {{ form.width(class='form-select', placeholder='Ширина') }}
                 </div>
 
-                <div class="col-sm-2">
+                <div class="col-sm-1">
                     {{ form.height(class='form-select', placeholder='Высота профиля') }}
                 </div>
                 <div class="col-sm-1">
                     <H3 class="text-center">R</H3>
                 </div>
-                <div class="col-sm-2">
+                <div class="col-sm-1">
                     {{ form.diametr(class='form-select', placeholder='Диаметр') }}
                 </div>
                 <div class="col-sm-3">
                     {{ form.sezonnost(class='form-select', placeholder='Сезонность') }}
+                </div>
+                <div class="col-sm-1">
+                    {{ form.pages(class='form-control', placeholder='Страниц', data_bs_toggle="tooltip", data_bs_placement="top", title="Укажите количество страниц для сканирования") }}
+                </div>
+                <div class="col-sm-1 mt-2">
+                    <H4 class="text-left">стр.</H4>
+                </div>
+                <div class="col-sm-1 mt-2">
+                    <H4 class="text-left" id="AVITO_STATUS"></H4>
                 </div>
                 <div class="col-sm-2 mb-2">
                     <button type="button" name="StartAvitoSearch" id="StartAvitoSearch" class="btn btn-primary">Искать</button>

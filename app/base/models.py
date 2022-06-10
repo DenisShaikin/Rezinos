@@ -54,6 +54,7 @@ class User(db.Model, UserMixin):
     def_display_area5 = db.Column(db.String(256))
     avito_path = db.Column(db.String(256))
     autoru_path = db.Column(db.String(256))
+    drom_path = db.Column(db.String(256))
     avatar_photo = db.Column(db.String(100))
 
     def __init__(self, **kwargs):
@@ -134,6 +135,30 @@ class User(db.Model, UserMixin):
         # file.save(os.path.join(app.config['XML_FOLDER'], new_filename))
         return message
 
+    def to_drom_xml(self):
+        # root = ET.Element("?xml")
+        # root.set('version', "1.0")
+        # root.set('encoding', "UTF-8")
+        root = ET.Element('offers')
+        tires = self.tires.filter(Tire.drom_show == True).all()
+        rims = self.rims.filter(Rim.drom_show == True).all()
+        for tire in tires:
+            ad = ET.SubElement(adOffers, 'offer')
+            tire.add_drom_tire(ad)
+        # for rim in rims:
+        #     ad = ET.SubElement(adOffers, 'offer')
+            # rim.add_avito_rim(ad)
+        message = ET.tostring(root, "utf-8")
+
+        # print(message)url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg'
+        # myfile = open(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), "w")
+        root.write(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), encoding = "UTF-8", xml_declaration = True)
+        # myfile.close()
+        # file.save(os.path.join(app.config['XML_FOLDER'], new_filename))
+        return message
+
+
+
 @login_manager.user_loader
 def user_loader(id):
     return User.query.filter_by(id=id).first()
@@ -144,7 +169,7 @@ def request_loader(request):
     user = User.query.filter_by(username=username).first()
     return user if user else None
 
-def add_avito_element(root, elem_name, elem_value):
+def add_avito_element(root, elem_name, elem_value):  #Подходит так же и для дрома
     if (elem_value is not None) and (elem_value!=''):
         elem=ET.SubElement(root, elem_name)
         elem.text=str(elem_value)
@@ -156,6 +181,7 @@ def add_autoru_property(root, elem_name, elem_value, attribname, attribvalue):
         elem.set(attribname, str(attribvalue))
         elem.text=str(elem_value)
     return root
+
 
 class AvitoZones(db.Model):
     __tablename__ = 'avito_zones'
@@ -312,7 +338,9 @@ class Tire(db.Model):
     store=db.Column(db.String(64))  #Номер магазина в Авто.ру
     brand=db.Column(db.String(70))
     model=db.Column(db.String(70))
-    qte = db.Column(db.Integer)   #Количество для продажи
+    qte = db.Column(db.Integer)   #Количество комплектов для продажи
+    inSet = db.Column(db.Integer)  #Количество в комплекте
+    inStock = db.Column(db.Boolean, default=True) #В наличии (или под заказ)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow) #Дата создания объявления
     date_begin=db.Column(db.DateTime, default=datetime.utcnow) #Дата и время публикации объявления
     date_end=db.Column(db.DateTime, default=datetime.today()+timedelta(days=120)) #Дата и время снятия публикации объявления
@@ -432,7 +460,6 @@ class Tire(db.Model):
         if self.address is None and self.latitude is not None:
             add_avito_element(ad, 'Latitude', self.latitude)
             add_avito_element(ad, 'Longitude', self.longitude)
-
         if self.display_area1 is not None:
             avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).filter(AvitoZones.id == int(self.display_area1)).first()
             areazone = ET.SubElement(ad, 'DisplayAreas')
@@ -464,6 +491,29 @@ class Tire(db.Model):
                     # add_avito_element(imagezone, 'Image', "url=" + os.path.join(app.config['DOMAIN_NAME'], 'photos', str(photo)).replace('\\', '/'))
                 # print(os.path.join(app.config['DOMAIN_NAME'], str(photo)))
 
+        return ad
+
+    def add_drom_tire(self, ad):
+        add_avito_element(ad, 'name', self.title)
+        add_avito_element(ad, 'manufacturer', self.brand)
+        add_avito_element(ad, 'model', self.model)
+        add_avito_element(ad, 'mark', self.brand + self.model + self.shirina_profilya + '/' + self.vysota_profilya +
+                          self.diametr)
+        add_avito_element(ad, 'inSet', self.inSet)
+        add_avito_element(ad, 'price', self.price)
+        add_avito_element(ad, 'inStock', 'true' if self.inStock else 'false')
+        add_avito_element(ad, 'condition', 'used' if self.condition=='Б/у' else 'new')
+        add_avito_element(ad, 'wear', self.protector_wear)
+        add_avito_element(ad, 'season', 'Зимняя' if 'Зимн' in self.sezonnost else ('Летняя' if 'Летн' in self.sezonnost else 'Всесезонная'))
+        add_avito_element(ad, 'quantity', self.qte)
+        add_avito_element(ad, 'year', self.product_year)
+        add_avito_element(ad, 'spike', 'Шипованная' if 'ипован' in self.sezonnost else 'Без шипов')
+        add_avito_element(ad, 'quantity', self.qte)
+        #Осталось собрать фотки
+        if self.photos.first() is not None:
+            for photo in self.photos:
+                if photo is not None:
+                    add_avito_element(ad, 'picture', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         return ad
 
 class Rim(db.Model):

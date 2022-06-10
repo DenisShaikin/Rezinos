@@ -858,9 +858,17 @@ if (document.getElementById('StartAvitoSearch')) {
         'lat':document.getElementById('searchLat').value,
         'region':document.getElementById('searchRegion').options[document.getElementById('searchRegion').selectedIndex].label,
         'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
-        'pages':pages,
+        'pages':document.getElementById('pages').value,
         'searchRadius':document.getElementById('searchRadius').value}));
     });
+}
+
+function update_spinner(){
+    var spinner = document.getElementById('AVITO_STATUS');
+    spinner.innerHTML = spinner.innerHTML === '.' ? '..' :
+        (spinner.innerHTML === '..') ? '...' :
+        (spinner.innerHTML === '...') ? '.' :
+        '.';
 }
 
 function update_avitodata(status_url) {
@@ -869,13 +877,25 @@ function update_avitodata(status_url) {
     xhr.onload = function() {
         if (this.readyState === 4 && this.status === 200) {
             data = JSON.parse(xhr.response);
-             if (data['state'] == 'PENDING' || data['state'] == 'PROGRESS') { //&& data['state'] != 'PROGRESS'
+//            console.log(data['state']);
+            if (data['state'] === 'FINISHED' || data['state'] === 'SUCCESS'){
+                document.getElementById('AVITO_STATUS').innerHTML = '';
+            }
+
+             if (data['state'] === 'PENDING' || data['state'] === 'PROGRESS') { //&& data['state'] != 'PROGRESS'
                     // rerun in 4 seconds
                     setTimeout(function() {
                         update_avitodata(status_url);
                     }, 4000);
+//                    console.log(data['currPage'])
+                    update_spinner();
+
+                    if (data['currPage']!== null) {
+                        document.getElementById('AVITO_STATUS').innerHTML = Math.round(parseInt(data['currPage']['page']) / parseInt(document.getElementById('pages').value) * 100.) + '%';
+//                        console.log('Значение = ' + parseInt(data['currPage']['page']) / parseInt(document.getElementById('pages').value) * 100.);
+                    }
              }
-             if (data['state'] != 'PENDING'){
+             if (data['state'] != 'PENDING' && data['state'] != 'SUCCESS'){
                 if ('offerstable' in data) {
                     // show result
                     var myTable='';

@@ -300,6 +300,8 @@ def change_tire_state():
     db.session.commit()
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
+    current_user.to_drom_xml()
+
     return jsonify({'id': id_field, 'sold':blSold})
 
 
@@ -329,6 +331,7 @@ def change_promo_state():
     db.session.commit()
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
+    current_user.to_drom_xml()
 
     return jsonify({'id': id_field, 'status':promo_status})
 
@@ -445,6 +448,8 @@ def change_avtorupromo_state():
     db.session.commit()
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
+    current_user.to_drom_xml()
+
     return jsonify({'id': id_field, 'value':new_value})
 
 @blueprint.route('/index.html')
@@ -649,6 +654,7 @@ def settings():
             form.store.data=current_user.store
             form.avito_path.data=os.path.join(request.host_url, app.config['XML_FOLDER'], current_user.avito_path).replace('\\', '/')
             form.autoru_path.data=os.path.join(request.host_url, app.config['XML_FOLDER'], current_user.autoru_path).replace('\\', '/')
+            form.drom_path.data=os.path.join(request.host_url, app.config['XML_FOLDER'], current_user.drom_path).replace('\\', '/')
             avito = get_avito_data(current_user.avito_client_id, current_user.avito_client_secret)
             if avito['id']:
                 current_user.avito_profile_idNum = avito['id']
@@ -711,6 +717,7 @@ def settings():
         form.store.data=current_user.store
         form.avito_path.data=os.path.join(request.host_url, app.config['XML_FOLDER'], current_user.avito_path).replace('\\', '/')
         form.autoru_path.data=os.path.join(request.host_url, app.config['XML_FOLDER'], current_user.autoru_path).replace('\\', '/')
+        form.drom_path.data=os.path.join(request.host_url, app.config['XML_FOLDER'], current_user.drom_path).replace('\\', '/')
         form.avito_balance_real.data = current_user.avito_balance_real
         form.avito_balance_bonus.data = current_user.avito_balance_bonus
         form.def_allow_email.data = current_user.def_allow_email
@@ -775,6 +782,7 @@ def tire():
         db.session.commit()
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
+        current_user.to_drom_xml()
         # flash('Ваше предложение зарегистрировано!')
         return redirect(url_for('home_blueprint.tire'))
     elif request.method == 'GET':
@@ -855,6 +863,8 @@ def rim():
 
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
+        current_user.to_drom_xml()
+
         # flash('Ваше предложение зарегистрировано!')
         return redirect(url_for('home_blueprint.rim'))
     elif request.method == 'GET':
@@ -943,6 +953,8 @@ def wheel():
 #Когда доделаю публикацию вернуться сюда
         # current_user.to_avito_xml()
         # current_user.to_avtoru_xml()
+        # current_user.to_drom_xml()
+
         return redirect(url_for('home_blueprint.wheel'))
     elif request.method == 'GET':
         form.tirebrand.choices = brands
@@ -1009,6 +1021,8 @@ def edit_tire(tire_id):
         # flash('Ваше предложение зарегистрировано!')
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
+        current_user.to_drom_xml()
+
         return redirect(url_for('home_blueprint.edit_tire', tire_id=tire_id))
     elif request.method == 'GET':
         avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(AvitoZones.zone).order_by(AvitoZones.id).all()
@@ -1065,15 +1079,15 @@ def edit_tire(tire_id):
 @blueprint.route('/avito_offerstable/<task_id>', methods=['GET'])
 @login_required
 def avito_offerstable(task_id):
-    print('Задача:', task_id)
+    # print('Задача:', task_id)
     task = getAvitoTirePricesByLocale.AsyncResult(task_id)
     columnWidths = [1, 1, 1, 3, 2, 2, 1, 1]
     columnNames=['Дата проверки', 'Размерность', 'Цена, Руб.', 'Ссылка на объявление',
                  'Регион', 'Сезонность', 'Износ, %', 'Расстояние, Км']
     #До начала работы статус будет PENDING, потом PROGRESS
-    print(task.state, task.result)
+    # print(task.state, task.result)
     if task.state in ['PROGRESS', 'FINISHED']:
-        print(task.state, task.result)
+        # print(task.state, task.result)
         #Собираем данные для отображения на странице
         args = dict(request_type=1) #Фильтруем по сканированным по локале и радиусу поиска
 
@@ -1110,9 +1124,9 @@ def avito_offerstable(task_id):
         # print(list(df.values.tolist()))
         row_data = list(db_table_toshow.values.tolist())
         # db_table_toshow.to_csv(r'c:\Users\ESPERANCE\Documents\test.csv', encoding='cp1251', sep=';')
-        return jsonify({'state':task.state, 'offerstable': row_data, 'columnWidths' :columnWidths, 'columnNames':columnNames})
+        return jsonify({'state':task.state, 'offerstable': row_data, 'columnWidths' :columnWidths, 'columnNames':columnNames, 'currPage':task.result})
     else: #task.state!=Progress && != Finished
-        return jsonify({'state':task.state, 'offerstable': None, 'columnWidths' :columnWidths, 'columnNames':columnNames})
+        return jsonify({'state':task.state, 'offerstable': None, 'columnWidths' :columnWidths, 'columnNames':columnNames, 'currPage':None})
 
 @blueprint.route('/start_avitoscan', methods=['POST'])
 def start_avitoscan():
@@ -1141,7 +1155,7 @@ def start_avitoscan():
     avitoScanTask = getAvitoTirePricesByLocale.delay(s['diametr'], s['width'], s['height'],
                                                                lon, lat,
                                                                region, season,
-                                                               s['pages'], s['searchRadius'])
+                                                               int(s['pages']), s['searchRadius'])
     return jsonify({}), 202, {'Location': url_for('home_blueprint.avito_offerstable', task_id=avitoScanTask.id)}
 
 @blueprint.route('/avito_scan.html', methods=['GET', 'POST'])
@@ -1240,6 +1254,8 @@ def edit_rim(rim_id):
         # flash('Ваше предложение зарегистрировано!')
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
+        current_user.to_drom_xml()
+
         return redirect(url_for('home_blueprint.edit_rim', rim_id=rim_id))
     elif request.method == 'GET':
         avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(AvitoZones.zone).order_by(AvitoZones.id).all()
@@ -1434,6 +1450,7 @@ def delete_photo(photo, tire_id):
     db.session.commit()
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
+    current_user.to_drom_xml()
 
     # print('Здесь удаляем фото {} с id {}'.format(Tire_photo.photo, Tire_photo.id))
     return redirect(url_for('home_blueprint.edit_tire', tire_id=tire_id))
@@ -1446,6 +1463,7 @@ def delete_rimphoto(photo, rim_id):
     db.session.commit()
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
+    current_user.to_drom_xml()
 
     # print('Здесь удаляем фото {} с id {}'.format(Tire_photo.photo, Tire_photo.id))
     return redirect(url_for('home_blueprint.edit_rim', rim_id=rim_id))

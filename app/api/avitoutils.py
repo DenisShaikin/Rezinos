@@ -182,7 +182,6 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
     # print('diametr={}, season={}, width={}, height={}'.format(diametr, season, width, height))
     pd.set_option('display.max_colwidth', 1000)
     print(strLink)
-#     options.add_argument('headless')
 #     driver = se.webdriver.Chrome(options=options)
     caps = se.webdriver.DesiredCapabilities.CHROME.copy()
     caps['acceptInsecureCerts'] = True
@@ -340,7 +339,6 @@ def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, s
     # print('diametr={}, season={}, width={}, height={}'.format(diametr, season, width, height))
     pd.set_option('display.max_colwidth', 1000)
     # print(strLink)
-#     options.add_argument('headless')
 #     driver = se.webdriver.Chrome(options=options)
     caps = se.webdriver.DesiredCapabilities.CHROME.copy()
     caps['acceptInsecureCerts'] = True

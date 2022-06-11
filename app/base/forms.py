@@ -104,8 +104,8 @@ class TirePrepareForm(FlaskForm):
     # type_id = SelectField(u'Выберите категорию', choices=['Шины', 'Колёса', 'Диски', 'Колпаки'])
     ad_type = SelectField(u'Вид объявления', choices=['Товар приобретен на продажу', 'Товар от производителя'])
     is_for_priority =BooleanField(u'Продвижение на Auto.ru', default=False) #auto.ru кнопка продвижения
-    qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
-    inSet = IntegerField (u'В комплекте', default=1)
+    qte=IntegerField(u'Количество', validators=[DataRequired()], default=1)
+    inSet = IntegerField (u'В комплекте', default=4)
     title = StringField(u'Название объявления')
     description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
     price = IntegerField(u'Цена', validators=[DataRequired()])

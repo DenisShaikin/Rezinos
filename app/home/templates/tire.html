@@ -166,9 +166,13 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class ="col-md-5 mb-3">
+                            <div class ="col-md-3 mb-3">
                                 <label>Вид объявления</label>
                                 {{ form.ad_type(class='form-select', placeholder='Вид объявления') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>В комплекте</label>
+                                {{ form.inSet(class='form-control', placeholder='Шт.') }}
                             </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Кол-во</label>

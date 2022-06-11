@@ -757,7 +757,7 @@ def tire():
             listing_fee=form.listing_fee.data, ad_status=form.ad_status.data, avito_id=form.avito_id.data,
             manager_name=form.manager_name.data, contact_phone=form.contact_phone.data, address=form.address.data,
             display_area1=form.display_area1.data,
-            ad_type=form.ad_type.data, qte=form.qte.data, title=form.title.data, description=form.description.data,
+            ad_type=form.ad_type.data, qte=form.qte.data,  inSet=form.inSet.data, title=form.title.data, description=form.description.data,
             price=form.price.data, recommended_price=form.recommended_price.data, condition=form.condition.data, shirina_profilya=form.shirina_profilya.data,
             vysota_profilya=form.vysota_profilya.data,
             diametr=form.diametr.data, owner=current_user, sezonnost=form.sezonnost.data,

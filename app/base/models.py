@@ -139,6 +139,9 @@ class User(db.Model, UserMixin):
         # root = ET.Element("?xml")
         # root.set('version', "1.0")
         # root.set('encoding', "UTF-8")
+        # root = ET.fromstring("")
+
+        # tree = ET.ElementTree()
         root = ET.Element('offers')
         tires = self.tires.filter(Tire.drom_show == True).all()
         rims = self.rims.filter(Rim.drom_show == True).all()
@@ -152,7 +155,7 @@ class User(db.Model, UserMixin):
 
         # print(message)url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg'
         # myfile = open(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), "w")
-        root.write(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), encoding = "UTF-8", xml_declaration = True)
+        ET.ElementTree(root).write(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), encoding = "UTF-8", xml_declaration = True)
         # myfile.close()
         # file.save(os.path.join(app.config['XML_FOLDER'], new_filename))
         return message
@@ -434,7 +437,7 @@ class Tire(db.Model):
                 if photo is not None:
                     add_avito_element(imagezone, 'image', "url=" + os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         #Раздел properties
-        add_avito_element(ad, 'count', self.qte)
+        add_avito_element(ad, 'count', int(self.qte) * int(self.inStock))
         add_avito_element(ad, 'is_for_priority', self.is_for_priority)
         return ads
 
@@ -480,7 +483,7 @@ class Tire(db.Model):
         add_avito_element(ad, 'TireAspectRatio', self.vysota_profilya)
         add_avito_element(ad, 'Model', self.model)
         add_avito_element(ad, 'ResidualTread', self.protector_height)
-        add_avito_element(ad, 'Quantity', self.qte)
+        add_avito_element(ad, 'Quantity', int(self.qte) * int(self.inStock))
         add_avito_element(ad, 'VideoURL', self.videourl)
         #Осталось собрать фотки
         if self.photos.first() is not None:
@@ -508,7 +511,6 @@ class Tire(db.Model):
         add_avito_element(ad, 'quantity', self.qte)
         add_avito_element(ad, 'year', self.product_year)
         add_avito_element(ad, 'spike', 'Шипованная' if 'ипован' in self.sezonnost else 'Без шипов')
-        add_avito_element(ad, 'quantity', self.qte)
         #Осталось собрать фотки
         if self.photos.first() is not None:
             for photo in self.photos:

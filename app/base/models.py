@@ -48,6 +48,7 @@ class User(db.Model, UserMixin):
     def_latitude = db.Column(db.Float)             # альтернатива Адрес
     def_longitude = db.Column(db.Float)            # альтернатива Адрес
     def_display_area1 = db.Column(db.String(256))
+    idCity = db.Column(db.String(20))
     def_display_area2 = db.Column(db.String(256))
     def_display_area3 = db.Column(db.String(256))
     def_display_area4 = db.Column(db.String(256))
@@ -136,22 +137,30 @@ class User(db.Model, UserMixin):
         return message
 
     def to_drom_xml(self):
-        # root = ET.Element("?xml")
-        # root.set('version', "1.0")
-        # root.set('encoding', "UTF-8")
-        # root = ET.fromstring("")
+        # root = ET.Element('avtoxml')
 
-        # tree = ET.ElementTree()
-        root = ET.Element('offers')
+        root = ET.Element('Dealers')
+        dealer = ET.SubElement(root, 'Dealer')
+        if self.idCity:
+            add_avito_element(dealer, 'idCity', self.idCity)
+        if self.def_manager_name:
+            add_avito_element(dealer, 'Name', self.def_manager_name)
+        add_avito_element(dealer, 'Contact', 'Адрес: ' + (self.def_adress if self.def_adress else '') +
+                          ', Телефон: ' + self.def_contact_phone if self.def_contact_phone else '')
+        offers = ET.SubElement(root, 'offers')
         tires = self.tires.filter(Tire.drom_show == True).all()
         rims = self.rims.filter(Rim.drom_show == True).all()
+        wheels = self.wheels.filter(Wheel.drom_show == True).all()
         for tire in tires:
-            ad = ET.SubElement(root, 'offer')
+            ad = ET.SubElement(offers, 'offer')
             tire.add_drom_tire(ad)
-        # for rim in rims:
-        #     ad = ET.SubElement(root, 'offer')
-            # rim.add_avito_rim(ad)
-        message = ET.tostring(root, "utf-8")
+        for rim in rims:
+            ad = ET.SubElement(root, 'offer')
+            rim.add_drom_rim(ad)
+        for wheel in wheels:
+            ad = ET.SubElement(root, 'offer')
+            wheel.add_drom_wheel(ad)
+        message = ET.tostring(offers, "utf-8")
 
         # print(message)url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg'
         # myfile = open(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), "w")
@@ -316,6 +325,56 @@ class ThornPrices(db.Model):
         # print(thorn_data.head())
         thorn_data.to_sql('thorn_prices', con=db.engine, if_exists='append', index=False)
 
+class DromGuide(db.Model):
+    __tablename__ = 'drom_guide'
+
+    id = db.Column(db.Integer, primary_key=True)
+    idMark = db.Column(db.Integer)
+    sMark = db.Column(db.String(20))
+    idModel = db.Column(db.Integer)
+    sModel = db.Column(db.String(20))
+    idMark2 = db.Column(db.Integer)
+    idCity = db.Column(db.Integer)
+    sCity = db.Column(db.String(100))
+    idNewType = db.Column(db.Boolean)
+    sNewType = db.Column(db.String(5))
+    idFrameType = db.Column(db.Integer)
+    sFrameType = db.Column(db.String(30))
+    idColor = db.Column(db.Integer)
+    sColor = db.Column(db.String(18))
+    idTransmission = db.Column(db.Integer)
+    sTransmission = db.Column(db.String(18))
+    idEngineType = db.Column(db.Integer)
+    sEngineType = db.Column(db.String(18))
+    idHybridType = db.Column(db.Boolean)
+    sHybridType = db.Column(db.String(5))
+    idDamagedType = db.Column(db.Boolean)
+    sDamagedType = db.Column(db.String(5))
+    idGbo = db.Column(db.Boolean)
+    sGbo = db.Column(db.String(5))
+    idDriveType = db.Column(db.Integer)
+    sDriveType = db.Column(db.String(18))
+    idWheelType = db.Column(db.Integer)
+    sWheelType = db.Column(db.String(10))
+    idHaulRussiaType = db.Column(db.Boolean)
+    sHaulRussiaType = db.Column(db.String(5))
+    Whereabouts = db.Column(db.Integer)
+    sWhereabouts = db.Column(db.String(15))
+    idMarket = db.Column(db.Integer)
+    sMarket = db.Column(db.String(150))
+    idCity3 = db.Column(db.Integer)
+    idCertProgram = db.Column(db.Integer)
+    sCertProgram = db.Column(db.String(50))
+    idMark4 = db.Column(db.Integer)
+    infoCertProgram = db.Column(db.String(150))
+    idDiscountType = db.Column(db.Integer)
+    sDiscountType = db.Column(db.String(5))
+    # def __repr__(self):
+    #     return '<Диаметр R{} {}>'.format(self.diametr, self.thorn_price)
+    def load_dromguide(self):
+        drom_data=pd.read_excel(app.config['DROMGUIDE_FILE'])
+        drom_data.to_sql('drom_guide', con=db.engine, if_exists='append', index=False)
+
 class WearDiscounts(db.Model):
     __tablename__ = 'wear_discounts'
 
@@ -437,7 +496,7 @@ class Tire(db.Model):
                 if photo is not None:
                     add_avito_element(imagezone, 'image', "url=" + os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         #Раздел properties
-        add_avito_element(ad, 'count', int(self.qte) * int(self.inStock))
+        add_avito_element(ad, 'count', int(self.qte) * int(self.inSet))
         add_avito_element(ad, 'is_for_priority', self.is_for_priority)
         return ads
 
@@ -483,7 +542,7 @@ class Tire(db.Model):
         add_avito_element(ad, 'TireAspectRatio', self.vysota_profilya)
         add_avito_element(ad, 'Model', self.model)
         add_avito_element(ad, 'ResidualTread', self.protector_height)
-        add_avito_element(ad, 'Quantity', int(self.qte) * int(self.inStock))
+        add_avito_element(ad, 'Quantity', int(self.qte) * int(self.inSet))
         add_avito_element(ad, 'VideoURL', self.videourl)
         #Осталось собрать фотки
         if self.photos.first() is not None:
@@ -497,10 +556,12 @@ class Tire(db.Model):
         return ad
 
     def add_drom_tire(self, ad):
+        add_avito_element(ad, 'idOffer', self.baseid)
         add_avito_element(ad, 'name', self.title)
         add_avito_element(ad, 'manufacturer', self.brand)
         add_avito_element(ad, 'model', self.model)
-        add_avito_element(ad, 'mark', self.brand + self.model + self.shirina_profilya + '/' + self.vysota_profilya +
+        add_avito_element(ad, 'mark', self.brand + ' '+  self.model +  ' ' +
+                          self.shirina_profilya + '/' + self.vysota_profilya +
                           self.diametr)
         add_avito_element(ad, 'inSet', self.inSet)
         add_avito_element(ad, 'price', self.price)
@@ -513,9 +574,11 @@ class Tire(db.Model):
         add_avito_element(ad, 'spike', 'Шипованная' if 'ипован' in self.sezonnost else 'Без шипов')
         #Осталось собрать фотки
         if self.photos.first() is not None:
+            photos = ET.SubElement(ad, 'Photos',
+                                   PhotoDir=os.path.join(app.config['PHOTOS_FOLDER_FULL']).replace('\\', '/'))
             for photo in self.photos:
                 if photo is not None:
-                    add_avito_element(ad, 'picture', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
+                    add_avito_element(photos, 'Photo', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         return ad
 
 class Rim(db.Model):
@@ -527,7 +590,9 @@ class Rim(db.Model):
     # carYear=db.Column(db.Integer)
     rimbrand = db.Column(db.String(70))
     rimmodel = db.Column(db.String(70))
-    qte = db.Column(db.Float)  # Количество для продажи
+    qte = db.Column(db.Integer)  # Количество для продажи
+    inSet = db.Column(db.Integer)  #Количество в комплекте
+    inStock = db.Column(db.Boolean, default=True) #В наличии (или под заказ)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # Дата создания объявления
     date_begin = db.Column(db.DateTime, default=datetime.today())  # Дата и время публикации объявления
     date_end = db.Column(db.DateTime, default=datetime.today() + timedelta(
@@ -633,7 +698,7 @@ class Rim(db.Model):
                 if photo is not None:
                     add_avito_element(imagezone, 'image', "url=" + os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         #Раздел properties
-        add_avito_element(ad, 'count', self.qte)
+        add_avito_element(ad, 'count', int(self.qte) * int(self.inSet))
         add_avito_element(ad, 'is_for_priority', self.is_for_priority)
         return ads
 
@@ -681,7 +746,10 @@ class Rim(db.Model):
         add_avito_element(ad, 'RimBolts', self.rimbolts)
         add_avito_element(ad, 'RimBoltsDiameter', self.rimboltsdiametr)
         add_avito_element(ad, 'RimOffset', self.rimoffset)
-        add_avito_element(ad, 'Quantity', self.qte)
+        add_avito_element(ad, 'Quantity', int(self.qte) * int(self.inSet))
+        if self.rimoriginal:
+            add_avito_element(ad, 'Originality', 'Оригинал')
+
         if not self.videourl is None:
             add_avito_element(ad, 'VideoURL', self.videourl)
         #Осталось собрать фотки
@@ -692,6 +760,34 @@ class Rim(db.Model):
                     add_autoru_property(imagezone, 'Image', '', 'url', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         return ad
 
+    def add_drom_rim(self, ad):
+        add_avito_element(ad, 'idOffer', self.baseid)
+        add_avito_element(ad, 'name', self.title)
+        add_avito_element(ad, 'manufacturer', self.rimbrand)
+        add_avito_element(ad, 'model', self.rimmodel)
+        add_avito_element(ad, 'mark', self.description)
+        add_avito_element(ad, 'inSet', self.inSet)
+        add_avito_element(ad, 'price', self.price)
+        add_avito_element(ad, 'inStock', 'true' if self.inStock else 'false')
+        add_avito_element(ad, 'condition', 'used' if self.condition=='Б/у' else 'new')
+        add_avito_element(ad, 'quantity', self.qte)
+        add_avito_element(ad, 'rimtype', self.rimtype)
+        add_avito_element(ad, 'rimwidth', self.rimwidth)
+        add_avito_element(ad, 'rimdiametr', self.rimdiametr)
+        add_avito_element(ad, 'rimbolts', self.rimbolts)
+        add_avito_element(ad, 'rimboltsdiametr', self.rimboltsdiametr)
+        add_avito_element(ad, 'rimoffset', self.rimoffset)
+        add_avito_element(ad, 'rimyear', self.rimyear)
+        #Осталось собрать фотки
+        if self.photos.first() is not None:
+            photos = ET.SubElement(ad, 'Photos',
+                                   PhotoDir=os.path.join(app.config['PHOTOS_FOLDER_FULL']).replace('\\', '/'))
+            for photo in self.photos:
+                if photo is not None:
+                    add_avito_element(photos, 'Photo', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
+        return ad
+
+
 class Wheel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     baseid = db.Column(db.String(20)) #Уникальный идентификатор на все базы, шины диски и колеса, =r+id для дисков (rim) или t+id для tire или w+id для колес (wheel)
@@ -700,7 +796,9 @@ class Wheel(db.Model):
     carmodel=db.Column(db.String(30))
     rimbrand = db.Column(db.String(70)) #бренд диска
     rimmodel = db.Column(db.String(70)) #модель диска
-    qte = db.Column(db.Float)  # Количество для продажи
+    qte = db.Column(db.Integer)  # Количество для продажи
+    inSet = db.Column(db.Integer)  #Количество в комплекте
+    inStock = db.Column(db.Boolean, default=True) #В наличии (или под заказ)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # Дата создания объявления
     date_begin = db.Column(db.DateTime, default=datetime.today())  # Дата и время публикации объявления
     date_end = db.Column(db.DateTime, default=datetime.today() + timedelta(
@@ -839,7 +937,7 @@ class Wheel(db.Model):
             add_avito_element(ad, 'ContactPhone', self.contact_phone)
         if self.address is not None:
             add_avito_element(ad, 'Address', self.address)
-        if self.address is None and self.latitude is not None:
+        if self.longitude is not None and self.latitude is not None:
             add_avito_element(ad, 'Latitude', self.latitude)
             add_avito_element(ad, 'Longitude', self.longitude)
 
@@ -856,19 +954,25 @@ class Wheel(db.Model):
         add_avito_element(ad, 'Price', self.price)
         add_avito_element(ad, 'Condition', self.condition)
         # add_avito_element(ad, 'OEM', self.oem)
-        add_avito_element(ad, 'Brand', self.wrimbrand)
-
         # add_avito_element(ad, 'RimDiameter', self.wrimdiametr)
-        add_avito_element(ad, 'RimType', self.wrimtype)
-        add_avito_element(ad, 'RimWidth', self.wrimwidth)
-        add_avito_element(ad, 'RimBolts', self.wrimbolts)
-        add_avito_element(ad, 'RimBoltsDiameter', self.wrimboltsdiametr)
-        add_avito_element(ad, 'RimOffset', self.wrimoffset)
-        if self.wdifferentwidthtires:
-            add_avito_element(ad, 'BackRimDiameter', self.wbackrimdiameter)
-        add_avito_element(ad, 'Quantity', self.qte)
-#Вернуться и добавить все про шины
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        add_avito_element(ad, 'RimType', self.rimtype)
+        add_avito_element(ad, 'RimWidth', self.rimwidth)
+        add_avito_element(ad, 'RimBolts', self.rimbolts)
+        add_avito_element(ad, 'RimBoltsDiameter', self.rimboltsdiametr)
+        add_avito_element(ad, 'RimOffset', self.rimoffset)
+        if self.differentwidthtires:
+            add_avito_element(ad, 'BackRimDiameter', self.backrimdiameter)
+        add_avito_element(ad, 'Quantity', int(self.qte) * int(self.inSet))
+        #шины
+        add_avito_element(ad, 'TireType', self.sezonnost)
+        add_avito_element(ad, 'Brand', self.tirebrand)
+        add_avito_element(ad, 'Model', self.tiremodel)
+        add_avito_element(ad, 'Homologation', self.carbrand)
+        add_avito_element(ad, 'TireSectionWidth', self.shirina_profilya)
+        add_avito_element(ad, 'TireAspectRatio', self.vysota_profilya)
+        add_avito_element(ad, 'ResidualTread', self.protector_height)
+        if self.rimoriginal:
+            add_avito_element(ad, 'Originality', 'Оригинал')
 
         if not self.videourl is None:
             add_avito_element(ad, 'VideoURL', self.videourl)
@@ -878,6 +982,42 @@ class Wheel(db.Model):
             for photo in self.photos:
                 if photo is not None:
                     add_autoru_property(imagezone, 'Image', '', 'url', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
+        return ad
+
+    def add_drom_wheel(self, ad):
+        add_avito_element(ad, 'idOffer', self.baseid)
+        add_avito_element(ad, 'name', self.title)
+        add_avito_element(ad, 'manufacturer', self.rimbrand)
+        add_avito_element(ad, 'model', self.rimmodel)
+        add_avito_element(ad, 'mark', self.description)
+        add_avito_element(ad, 'inSet', self.inSet)
+        add_avito_element(ad, 'price', self.price)
+        add_avito_element(ad, 'inStock', 'true' if self.inStock else 'false')
+        add_avito_element(ad, 'condition', 'used' if self.condition=='Б/у' else 'new')
+        add_avito_element(ad, 'quantity', self.qte)
+        add_avito_element(ad, 'rimtype', self.rimtype)
+        add_avito_element(ad, 'rimwidth', self.rimwidth)
+        add_avito_element(ad, 'rimdiametr', self.rimdiametr)
+        add_avito_element(ad, 'rimbolts', self.rimbolts)
+        add_avito_element(ad, 'rimboltsdiametr', self.rimboltsdiametr)
+        add_avito_element(ad, 'rimoffset', self.rimoffset)
+        add_avito_element(ad, 'rimyear', self.rimyear)
+        add_avito_element(ad, 'tirebrand', self.tirebrand)
+        add_avito_element(ad, 'tiremodel', self.tirebrand)
+        add_avito_element(ad, 'tirewidth', self.shirina_profilya)
+        add_avito_element(ad, 'tirewidth', self.vysota_profilya)
+        add_avito_element(ad, 'season', 'Зимняя' if 'Зимн' in self.sezonnost else ('Летняя' if 'Летн' in self.sezonnost else 'Всесезонная'))
+        add_avito_element(ad, 'wear', self.protector_wear)
+        add_avito_element(ad, 'tireyear', self.tireproduct_year)
+        add_avito_element(ad, 'spike', 'Шипованная' if 'ипован' in self.sezonnost else 'Без шипов')
+
+        #Осталось собрать фотки
+        if self.photos.first() is not None:
+            photos = ET.SubElement(ad, 'Photos',
+                                   PhotoDir=os.path.join(app.config['PHOTOS_FOLDER_FULL']).replace('\\', '/'))
+            for photo in self.photos:
+                if photo is not None:
+                    add_avito_element(photos, 'Photo', os.path.join(app.config['PHOTOS_FOLDER_FULL'], photo.photo).replace('\\', '/'))
         return ad
 
 

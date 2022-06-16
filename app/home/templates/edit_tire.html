@@ -24,7 +24,7 @@
                         <div class = "row">
                             <div class = "col-md-10 mb-3">
                                 <label>Описание</label>
-                                {{ form.description(class='form-control', placeholder='Введите описание объявления') }}
+                                {{ form.description(class='form-control', placeholder='Введите описание объявления', rows="6") }}
                             </div>
                         </div>
                         <div class="row">
@@ -33,32 +33,32 @@
                                 {{ form.ad_type(class='form-select', placeholder='Вид объявления') }}
                             </div>
                             <div class ="col-md-2 mb-3">
-                                <label>Кол-во</label>
+                                <label>В комплекте</label>
+                                {{ form.inSet(class='form-control', placeholder='Шт.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Комплектов</label>
                                 {{ form.qte(class='form-control', placeholder='Шт.') }}
                             </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Цена</label>
                                 {{ form.price(class='form-control', placeholder='Руб.') }}
                             </div>
-                            <div class ="col-md-2 mb-3">
-                                <label>Реком. цена</label>
-                                {{ form.recommended_price(class='form-control', placeholder='Руб.', data_bs_toggle="tooltip", data_bs_placement="top", title="Формируется из цены новой шины бренда, модели, размера с учетом износа") }}
-                            </div>
 
                         </div>
                         <div class="row">
                             <div class ="col-md-4 mb-3 ">
                                 <div class ='form-check form-switch'>
-                                    <label>Выставить на Авито</label>
-                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                    <label>На Авито</label>
+                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Авито") }}
                                 </div>
                                 <div class ='form-check form-switch'>
-                                    <label>Выставить на Auto.ru</label>
-                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                    <label>На Auto.ru</label>
+                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Auto.ru") }}
                                 </div>
                                 <div class ='form-check form-switch'>
-                                    <label>Выставить на Drom</label>
-                                    {{ form.drom_show(class='form-check-input', disabled=True, data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                    <label>На Drom</label>
+                                    {{ form.drom_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
                                 </div>
                             </div>
                             <div class ="col-md-4 mb-3 ">
@@ -93,7 +93,7 @@
                         {% for key,value in df_photos.iterrows() %}
                         <div class="col-md-3 mb-3">
                             <div class="mx-auto mb-2" style="width: 200px;" >
-                                <img src="{{ value['photos']|safe }}"  class=" mx-auto d-block alt="">
+                                <img src="{{ value['photos']|safe }}"  class=" mx-auto d-block alt=">
                             </div>
                             <div class="col text-center pb-5">
                                 {{ value['photo_buttons']|safe }}
@@ -153,6 +153,7 @@
             <button type="submit" name="Delete" value="Delete" class="btn btn-primary">Удалить объявление</button>
         </div>
     </div>
+    </form>
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->

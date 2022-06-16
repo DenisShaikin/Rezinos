@@ -126,7 +126,7 @@
                                 <H2>  </H2>
                             </div>
                             <div class ="col-md-2 mb-3">
-                                <label>Год произв-ва</label>
+                                <label>Год произв.</label>
                                 {{ form.product_year(class='form-control', placeholder='Введите год с маркировки') }}
                             </div>
                         </div>
@@ -175,7 +175,7 @@
                                 {{ form.inSet(class='form-control', placeholder='Шт.') }}
                             </div>
                             <div class ="col-md-2 mb-3">
-                                <label>Кол-во</label>
+                                <label>Комплектов</label>
                                 {{ form.qte(class='form-control', placeholder='Шт.') }}
                             </div>
                             <div class ="col-md-2 mb-3">
@@ -185,6 +185,8 @@
                             <div class ="col-md-2 mb-3">
                                 <label>Реком. цена</label>
                                 {{ form.recommended_price(class='form-control', placeholder='Руб.') }}
+                                {{ form.recommended_Unitprice() }}
+
                             </div>
 
                         </div>
@@ -192,15 +194,15 @@
                             <div class ="col-md-4 mb-3 ">
                                 <div class ='form-check form-switch'>
                                     <label>Выставить на Авито</label>
-                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Avito") }}
                                 </div>
                                 <div class ='form-check form-switch'>
                                     <label>Выставить на Auto.ru</label>
-                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Auto.ru") }}
                                 </div>
                                 <div class ='form-check form-switch'>
                                     <label>Выставить на Drom</label>
-                                    {{ form.drom_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru в разработке") }}
+                                    {{ form.drom_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
                                 </div>
                             </div>
                             <div class ="col-md-4 mb-3 ">
@@ -302,7 +304,7 @@
                             <div class="progress-wrapper">
                                 <div class="progress-info">
                                     <div class="progress-label">
-                                        <span class="text-primary">Загрузка</span>
+                                        <span id="AVITO_STATUS" class="text-primary">Загрузка</span>
                                     </div>
                                     <div class="progress-percentage" >
                                         <span id="chart_progress_text">0%</span>
@@ -332,7 +334,6 @@
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script type="text/javascript">
       var graphs = {{graphJSON | safe}};
-      console.log("We're here");
       Plotly.plot('chart',graphs,{});
 </script>
 

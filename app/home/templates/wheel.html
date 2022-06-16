@@ -133,6 +133,10 @@
                                 <label>Диаметр</label>
                                 {{ form.rimdiametr(class='form-select', placeholder='Выберите диаметр') }}
                             </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Год произв-ва</label>
+                                {{ form.rimyear(class='form-control', placeholder='Год') }}
+                            </div>
                         </div>
                         <div class="row">
                             <div class ="col-md-2 mb-3">
@@ -143,17 +147,13 @@
                                 <label> </label>
                                 <H2>x</H2>
                             </div>
-                            <div class ="col-md-2 mb-3">
+                            <div class ="col-md-3 mb-3">
                                 <label>Диам. сверловки</label>
                                 {{ form.rimboltsdiametr(class='form-select', placeholder='Выберите диаметр отверстий') }}
                             </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Вылет (ET)</label>
                                 {{ form.rimoffset(class='form-select', placeholder='Выберите вылет') }}
-                            </div>
-                            <div class ="col-md-2 mb-3">
-                                <label>Год произв-ва</label>
-                                {{ form.rimyear(class='form-control', placeholder='Год') }}
                             </div>
                         </div>
                         <h2 class="h5 mb-4">Характеристики шин</h2>
@@ -183,14 +183,6 @@
                             <div class ="col-md-2 mb-3">
                                 <label>Высота</label>
                                 {{ form.vysota_profilya(class='form-select', placeholder='Введите высоту профиля шины') }}
-                            </div>
-                            <div class ="col-md-1 mb-3 align-middle text-center mt-2">
-                                <label> </label>
-                                <H2>R</H2>
-                            </div>
-                            <div class ="col-md-1 mb-3 align-middle text-center mt-2">
-                                <label> </label>
-                                <H2>  </H2>
                             </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Год произв-ва</label>
@@ -229,7 +221,11 @@
                                 {{ form.ad_type(class='form-select', placeholder='Вид объявления') }}
                             </div>
                             <div class ="col-md-2 mb-3">
-                                <label>Кол-во</label>
+                                <label>В комплекте</label>
+                                {{ form.inSet(class='form-control', placeholder='Шт.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Комплектов</label>
                                 {{ form.qte(class='form-control', placeholder='Шт.') }}
                             </div>
                             <div class ="col-md-2 mb-3">
@@ -243,6 +239,20 @@
 
                         </div>
                         <div class="row">
+                            <div class ="col-md-4 mb-3 ">
+                                <div class ='form-check form-switch'>
+                                    <label>На Авито</label>
+                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Авито") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>На Auto.ru</label>
+                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Auto.ru") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>На Drom</label>
+                                    {{ form.drom_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
+                                </div>
+                            </div>
                             <div class ="col-md-4 mb-3 ">
                                 <label>Продвижение Авито</label>
                                 <div class ='form-check'>

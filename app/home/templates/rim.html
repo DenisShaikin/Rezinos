@@ -133,8 +133,10 @@
                                 <label>Диаметр</label>
                                 {{ form.rimdiametr(class='form-select', placeholder='Выберите диаметр диска') }}
                             </div>
-                        </div>
-                        <div class="row">
+                            <div class ="col-md-1 mb-3 align-middle text-center mt-2">
+                                <label> </label>
+                                <H2>  </H2>
+                            </div>
                             <div class ="col-md-2 mb-3">
                                 <label>Отверстий</label>
                                 {{ form.rimbolts(class='form-select', placeholder='Введите количество отверстий') }}
@@ -144,9 +146,11 @@
                                 <H2>x</H2>
                             </div>
                             <div class ="col-md-2 mb-3">
-                                <label>Диам. сверловки</label>
+                                <label>&#216 сверловки</label>
                                 {{ form.rimboltsdiametr(class='form-select', placeholder='Выберите диаметр отверстий') }}
                             </div>
+                        </div>
+                        <div class="row">
                             <div class ="col-md-2 mb-3">
                                 <label>Вылет (ET)</label>
                                 {{ form.rimoffset(class='form-select', placeholder='Выберите вылет') }}
@@ -155,6 +159,11 @@
                                 <label>Год произв-ва</label>
                                 {{ form.rimyear(class='form-control', placeholder='Год') }}
                             </div>
+                            <div class ="col-md-3 mb-3">
+                                <label>Состояние</label>
+                                {{ form.condition(class='form-select', placeholder='Укажите состояние') }}
+                            </div>
+
                         </div>
                     </div>
                     <div class="card card-body shadow-sm mb-4 mb-lg-3">
@@ -177,7 +186,11 @@
                                 {{ form.ad_type(class='form-select', placeholder='Вид объявления') }}
                             </div>
                             <div class ="col-md-2 mb-3">
-                                <label>Кол-во</label>
+                                <label>В комплекте</label>
+                                {{ form.inSet(class='form-control', placeholder='Шт.') }}
+                            </div>
+                            <div class ="col-md-2 mb-3">
+                                <label>Комплектов</label>
                                 {{ form.qte(class='form-control', placeholder='Шт.') }}
                             </div>
                             <div class ="col-md-2 mb-3">
@@ -191,6 +204,20 @@
 
                         </div>
                         <div class="row">
+                            <div class ="col-md-4 mb-3 ">
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Авито</label>
+                                    {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Auto.ru</label>
+                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Drom</label>
+                                    {{ form.drom_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
+                                </div>
+                            </div>
                             <div class ="col-md-4 mb-3 ">
                                 <label>Продвижение Авито</label>
                                 <div class ='form-check'>

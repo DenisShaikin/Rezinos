@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Dealers><Dealer><Name>Шайкин Денис</Name><Contact>Адрес: Королев, Московская обл, Телефон: +79169300152</Contact></Dealer><offers><offer><idOffer>t1</idOffer><name>Шины  MICHELIN X-Ice 205/55R16</name><manufacturer>MICHELIN</manufacturer><model>X-Ice</model><mark>MICHELIN X-Ice 205/5516</mark><inSet>4</inSet><price>2500</price><inStock>true</inStock><condition>used</condition><wear>35</wear><season>Зимняя</season><quantity>1</quantity><year>2019</year><spike>Шипованная</spike><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_25_46_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_25_46_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_25_46_3.png</Photo></Photos></offer><offer><idOffer>t4</idOffer><name>Шины  NOKIAN Hakkapeliitta 205/55R16</name><manufacturer>NOKIAN</manufacturer><model>Hakkapeliitta</model><mark>NOKIAN Hakkapeliitta 205/5516</mark><inSet>4</inSet><price>2600</price><inStock>true</inStock><condition>used</condition><wear>35</wear><season>Зимняя</season><quantity>1</quantity><year>2019</year><spike>Шипованная</spike><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_00_19_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_00_19_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_00_19_3.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_00_19_4.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_00_19_5.png</Photo></Photos></offer></offers><offer><idOffer>r2</idOffer><name>Литые диски RENAULT Logan 1.4i 6R14 4х100 ET </name><manufacturer>RENAULT</manufacturer><model>Logan 1.4i</model><mark>Литые диски: 
+ Бренд RENAULT; 
+ Модель Logan 1.4i; 
+ Ширина: 6, Диаметр: 14 
+ Сверловка: 4х100
+ Вылет: 
+ Год производства: 2021 
+ Состояние: </mark><inSet>4</inSet><price>10000</price><inStock>false</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>6</rimwidth><rimdiametr>14</rimdiametr><rimbolts>4</rimbolts><rimboltsdiametr>100.0</rimboltsdiametr><rimyear>2021</rimyear><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_3.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_4.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_5.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_6.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_7.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_21_43_13_8.png</Photo></Photos></offer><offer><idOffer>r3</idOffer><name>Литые диски RENAULT DUSTER 1.5 dCi 7R16 5х100 ET </name><manufacturer>RENAULT</manufacturer><model>DUSTER 1.5 dCi</model><mark>Литые диски: 
+ Бренд RENAULT; 
+ Модель DUSTER 1.5 dCi; 
+ Ширина: 7, Диаметр: 16 
+ Сверловка: 5х100
+ Вылет: 
+ Год производства: 2021 
+ Состояние: </mark><inSet>4</inSet><price>15000</price><inStock>false</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>7</rimwidth><rimdiametr>16</rimdiametr><rimbolts>5</rimbolts><rimboltsdiametr>100.0</rimboltsdiametr><rimyear>2021</rimyear><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_3.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_4.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_5.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_6.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_7.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_14_22_21_37_8.png</Photo></Photos></offer><offer><idOffer>r4</idOffer><name>Литые диски NISSAN Juke (F15) 1.6 R16 5х ET 40</name><manufacturer>NISSAN</manufacturer><model>Juke (F15) 1.6</model><mark>Литые диски: 
+ Бренд NISSAN; 
+ Модель Juke (F15) 1.6; 
+ Ширина: , Диаметр: 16 
+ Сверловка: 5х
+ Вылет: 40
+ Год производства: 2021 
+ Состояние: </mark><inSet>4</inSet><price>5500</price><inStock>false</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimdiametr>16</rimdiametr><rimbolts>5</rimbolts><rimoffset>40.0</rimoffset><rimyear>2021</rimyear><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_14_53_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_14_53_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_14_53_3.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_14_53_5.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_14_53_6.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_11_14_53_7.png</Photo></Photos></offer><offer><idOffer>r5</idOffer><name>Литые диски NISSAN Almera 1,4L 5R13 х ET 40</name><manufacturer>NISSAN</manufacturer><model>Almera 1,4L</model><mark>Литые диски: 
+ Бренд NISSAN; 
+ Модель Almera 1,4L; 
+ Ширина: 5, Диаметр: 13 
+ Сверловка: х
+ Вылет: 40
+ Год производства: 2021 
+ Состояние: </mark><inSet>4</inSet><price>2500</price><inStock>true</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>5</rimwidth><rimdiametr>13</rimdiametr><rimoffset>40.0</rimoffset><rimyear>2021</rimyear><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_16_56_19_6.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_16_56_19_7.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_16_56_19_8.png</Photo></Photos></offer><offer><idOffer>w2</idOffer><name>Колеса: Литые диски RENAULT DUSTER 1.5 dCi 7R16 5х100 ET 43</name><manufacturer>RENAULT</manufacturer><mark>Литые диски: 
+ Бренд RENAULT; 
+ Модель DUSTER 1.5 dCi; 
+ Ширина: 7, Диаметр: 16 
+ Сверловка: 5х100
+ Вылет: 43
+ Год производства: 2021 
+ Состояние: 
+Зимние нешипованные шины: 6612 6699 205/55R16
+год выпуска: 2019
+износ:35</mark><inSet>4</inSet><price>20000</price><inStock>true</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>7</rimwidth><rimdiametr>16</rimdiametr><rimbolts>5</rimbolts><rimboltsdiametr>100.0</rimboltsdiametr><rimoffset>43.0</rimoffset><rimyear>2021</rimyear><tirebrand>NOKIAN</tirebrand><tiremodel>NOKIAN</tiremodel><tirewidth>205</tirewidth><tirewidth>55</tirewidth><season>Зимняя</season><wear>35</wear><tireyear>2019</tireyear><spike>Шипованная</spike><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_14_47_33_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_14_47_33_5.png</Photo></Photos></offer><offer><idOffer>w3</idOffer><name>Колеса: Литые диски RENAULT Logan 1.4i 6R14 4х100 ET </name><manufacturer>RENAULT</manufacturer><mark>Литые диски: 
+ Бренд RENAULT; 
+ Модель Logan 1.4i; 
+ Ширина: 6, Диаметр: 14 
+ Сверловка: 4х100
+ Вылет: 
+ Год производства: 2019 
+ Состояние: 
+Зимние нешипованные шины: 6612 6699 195/65R14
+год выпуска: 2019
+износ:35</mark><inSet>4</inSet><price>10000</price><inStock>true</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>6</rimwidth><rimdiametr>14</rimdiametr><rimbolts>4</rimbolts><rimboltsdiametr>100.0</rimboltsdiametr><rimyear>2019</rimyear><tirebrand>NOKIAN</tirebrand><tiremodel>NOKIAN</tiremodel><tirewidth>195</tirewidth><tirewidth>65</tirewidth><season>Зимняя</season><wear>35</wear><tireyear>2019</tireyear><spike>Шипованная</spike><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_02_29_1.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_02_29_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_02_29_3.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_02_29_4.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_02_29_5.png</Photo></Photos></offer><offer><idOffer>w4</idOffer><name>Колеса: Литые диски RENAULT Logan 1.4i 6R14 4х100 ET </name><manufacturer>RENAULT</manufacturer><mark>Литые диски: 
+ Бренд RENAULT; 
+ Модель Logan 1.4i; 
+ Ширина: 6, Диаметр: 14 
+ Сверловка: 4х100
+ Вылет: 
+ Год производства: 2021 
+ Состояние: 
+Зимние нешипованные шины: 1788 2145 195/65R14
+год выпуска: 2019
+износ:35</mark><inSet>4</inSet><price>15000</price><inStock>true</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>6</rimwidth><rimdiametr>14</rimdiametr><rimbolts>4</rimbolts><rimboltsdiametr>100.0</rimboltsdiametr><rimyear>2021</rimyear><tirebrand>CONTINENTAL</tirebrand><tiremodel>CONTINENTAL</tiremodel><tirewidth>195</tirewidth><tirewidth>65</tirewidth><season>Зимняя</season><wear>35</wear><tireyear>2019</tireyear><spike>Шипованная</spike><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_08_07_2.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_08_07_3.png</Photo></Photos></offer><offer><idOffer>w5</idOffer><name>Колеса: Литые диски MERCEDES BENZ C-Klasse C320 7R15 5х112 ET 38</name><manufacturer>MERCEDES BENZ</manufacturer><mark>Литые диски: 
+ Бренд MERCEDES BENZ; 
+ Модель C-Klasse C320; 
+ Ширина: 7, Диаметр: 15 
+ Сверловка: 5х112
+ Вылет: 38
+ Год производства: 2021 
+ Состояние: 
+Зимние нешипованные шины: NOKIAN Hakkapeliitta 205/55R15
+год выпуска: 2019
+износ:35</mark><inSet>4</inSet><price>10000</price><inStock>true</inStock><condition>used</condition><quantity>1</quantity><rimtype>Литые</rimtype><rimwidth>7</rimwidth><rimdiametr>15</rimdiametr><rimbolts>5</rimbolts><rimboltsdiametr>112.0</rimboltsdiametr><rimoffset>38.0</rimoffset><rimyear>2021</rimyear><tirebrand>NOKIAN</tirebrand><tiremodel>NOKIAN</tiremodel><tirewidth>205</tirewidth><tirewidth>55</tirewidth><season>Зимняя</season><wear>35</wear><tireyear>2019</tireyear><spike>Шипованная</spike><Photos PhotoDir="http://rezinos.ru/static/assets/img/tire_photos"><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_13_45_3.png</Photo><Photo>http://rezinos.ru/static/assets/img/tire_photos/test_2022_06_15_15_13_45_4.png</Photo></Photos></offer></Dealers>

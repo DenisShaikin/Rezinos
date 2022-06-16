@@ -16,38 +16,49 @@ function encode_params(object) {
 }
 
 //При любом изменении параметров шины - пересчитываем рекомендованную цену
+//Эта функция может использоваться как в шинах, так и в колесах, поэтому разная обработка
 function change_tire(){
 //            console.log(myResponse)
-    var strDescription = document.getElementById('sezonnost').value + ' ' + document.getElementById('condition').value + ' шины';
+    var strDescription = document.getElementById('sezonnost').value + ' шины';
     var currPage=window.location.href.split("/").pop().split(".")[0]; //Определяем на какой мы странице
     var strTitle = (currPage === 'tire') ? ('Шины ') : (document.getElementById('title').value + ' '); //Если мы на wheel то title предзаполнено
-
-    if (!document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label.includes('Выберите')) {
-        strTitle = strTitle + ' ' + document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
-        strDescription = strDescription + ' ' + document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label;
+    var strDescription = '';
+    if (window.location.pathname.toLowerCase().includes('tire')){
+        brandObject = document.getElementById('brand');
+        modelObject = document.getElementById('model');
+    } else
+    {
+        brandObject = document.getElementById('tirebrand');
+        modelObject = document.getElementById('tiremodel');
     }
-    if (document.getElementById('model').value){
-        if (!document.getElementById('model').options[document.getElementById('model').selectedIndex].label.includes('Выберите')) {
-            strTitle = strTitle + ' ' + document.getElementById('model').options[document.getElementById('model').selectedIndex].label;
-            strDescription = strDescription + ' ' + document.getElementById('model').options[document.getElementById('model').selectedIndex].label;
+
+    if (!brandObject.options[brandObject.selectedIndex].label.includes('Выберите')) {
+        strTitle = strTitle + ' ' + brandObject.options[brandObject.selectedIndex].label;
+//        strDescription = strDescription + ' ' + brandObject.options[brandObject.selectedIndex].label;
+    }
+    if (modelObject.value){
+        if (!modelObject.options[modelObject.selectedIndex].label.includes('Выберите')) {
+            strTitle = strTitle + ' ' + modelObject.options[modelObject.selectedIndex].label;
+//            strDescription = strDescription + ' ' + modelObject.options[modelObject.selectedIndex].label;
         }
     }
     if (document.getElementById('shirina_profilya').value) {
         strTitle = strTitle + ' ' + document.getElementById('shirina_profilya').value;
-        strDescription = strDescription + ' ' + document.getElementById('shirina_profilya').value;
+//        strDescription = strDescription + ' ' + document.getElementById('shirina_profilya').value;
     }
     if (document.getElementById('vysota_profilya').value) {
         strTitle = strTitle + '/' + document.getElementById('vysota_profilya').value;
-        strDescription = strDescription + '/' + document.getElementById('vysota_profilya').value;
+//        strDescription = strDescription + '/' + document.getElementById('vysota_profilya').value;
     }
     var elementName = (currPage === 'tire') ? ('diametr') : ('rimdiametr');
     if (document.getElementById(elementName).value) {
         strTitle = strTitle + 'R' + document.getElementById(elementName).value;
-        strDescription = strDescription + 'R' + document.getElementById(elementName).value;
+//        strDescription = strDescription + 'R' + document.getElementById(elementName).value;
     }
-    if (document.getElementById('tire_purpose').value) {
-        strDescription = strDescription + ' ' + document.getElementById('tire_purpose').value;
-    }
+//    if (document.getElementById('tire_purpose').value) {  // Это применимость
+//        strDescription = strDescription + ' ' + document.getElementById('tire_purpose').value;
+//    }
+    strDescription = strTitle;
     if (document.getElementById('protector_height').value) {
         strDescription = strDescription + ', высота протектора ' + document.getElementById('protector_height').value + ' мм';
     }
@@ -55,7 +66,10 @@ function change_tire(){
         strDescription = strDescription + ', износ примерно ' + document.getElementById('protector_wear').value + '%';
     }
     document.getElementById('title').value = strTitle;
-    document.getElementById('description').value = strDescription;
+    if (currPage === 'tire') {
+        document.getElementById('description').value = strDescription;
+    } else
+    {change_rim();}  //Обновляем параметры шин в колесе
 
 }
 
@@ -78,12 +92,27 @@ function change_rim(){
                 model = document.getElementById('rimmodel').options[document.getElementById('rimmodel').selectedIndex].label;
             }
 //            console.log(JSON.parse(xhr.responseText));
-            document.getElementById('title').value= document.getElementById('rimtype').value + ' диски ' + document.getElementById('rimbrand').options[document.getElementById('rimbrand').selectedIndex].label + ' ' +
-            model + ' ' +  rimwidth.value + 'R' + rimdiametr.value + ' ' + rimbolts.value + 'х' + rimboltsdiametr.value + ' ET ' + rimoffset.value ;
-            document.getElementById('description').value= document.getElementById('rimtype').value + ' диски: \n Бренд ' + document.getElementById('rimbrand').options[document.getElementById('rimbrand').selectedIndex].label +
-            '; \n Модель ' + model + '; \n ' +
-                'Ширина: ' + rimwidth.value + ', Диаметр: ' + rimdiametr.value + ' \n Сверловка: ' + rimbolts.value + 'х' + rimboltsdiametr.value + '\n Вылет: ' + rimoffset.value +
-                '\n Год производства: ' + rimyear.value + ' \n Состояние: ';
+            if (window.location.pathname.toLowerCase().includes('rim')){
+                document.getElementById('title').value= document.getElementById('rimtype').value + ' диски ' + document.getElementById('rimbrand').options[document.getElementById('rimbrand').selectedIndex].label + ' ' +
+                model + ' ' +  rimwidth.value + 'R' + rimdiametr.value + ' ' + rimbolts.value + 'х' + rimboltsdiametr.value + ' ET ' + rimoffset.value ;
+                document.getElementById('description').value= document.getElementById('rimtype').value + ' диски: \n Бренд ' + document.getElementById('rimbrand').options[document.getElementById('rimbrand').selectedIndex].label +
+                '; \n Модель ' + model + '; \n ' +
+                    'Ширина: ' + rimwidth.value + ', Диаметр: ' + rimdiametr.value + ' \n Сверловка: ' + rimbolts.value + 'х' + rimboltsdiametr.value + '\n Вылет: ' + rimoffset.value +
+                    '\n Год производства: ' + rimyear.value + ' \n Состояние: ';
+            } else  //wheel
+            {
+                document.getElementById('title').value='Колеса: \n' +  document.getElementById('rimtype').value + ' диски ' + document.getElementById('rimbrand').options[document.getElementById('rimbrand').selectedIndex].label + ' ' +
+                model + ' ' +  rimwidth.value + 'R' + rimdiametr.value + ' ' + rimbolts.value + 'х' + rimboltsdiametr.value + ' ET ' + rimoffset.value ;
+                document.getElementById('description').value= document.getElementById('rimtype').value + ' диски: \n Бренд ' + document.getElementById('rimbrand').options[document.getElementById('rimbrand').selectedIndex].label +
+                '; \n Модель ' + model + '; \n ' +
+                    'Ширина: ' + rimwidth.value + ', Диаметр: ' + rimdiametr.value + ' \n Сверловка: ' + rimbolts.value + 'х' + rimboltsdiametr.value + '\n Вылет: ' + rimoffset.value +
+                    '\n Год производства: ' + rimyear.value + ' \n Состояние: \n' +
+                    document.getElementById('sezonnost').value + ' шины: ' + document.getElementById('tirebrand').options[document.getElementById('tirebrand').selectedIndex].label + ' ' +
+                    document.getElementById('tiremodel').options[document.getElementById('tiremodel').selectedIndex].label + ' ' +
+                    document.getElementById('shirina_profilya').value + '/' + document.getElementById('vysota_profilya').value + 'R' + rimdiametr.value + '\n' +
+                    'год выпуска: ' + tireproduct_year.value + '\n' +
+                    'износ:' + protector_wear.value + '%';
+            }
             document.getElementById('description').rows=8;
 
         }
@@ -622,7 +651,17 @@ if (document.getElementById('rimboltsdiametr')) {
 
 if (document.getElementById('qte')) {
     document.getElementById('qte').addEventListener('change', function () {
-    change_rim();
+    updateRecommendedPrice();
+    if (window.location.pathname.toLowerCase().includes('rim') || window.location.pathname.toLowerCase().includes('wheel')) { change_rim();}
+    if (window.location.pathname.toLowerCase().includes('tire')){change_tire();}
+    });
+}
+
+if (document.getElementById('inSet')) {
+    document.getElementById('inSet').addEventListener('change', function () {
+    updateRecommendedPrice();
+    if (window.location.pathname.toLowerCase().includes('rim') || window.location.pathname.toLowerCase().includes('wheel')) { change_rim();}
+    if (window.location.pathname.toLowerCase().includes('tire')){change_tire();}
     });
 }
 
@@ -759,71 +798,11 @@ if (document.getElementById('protector_height')) {
     });
 }
 
-
-//Событие нажатия кнопки Обновить
-if (document.getElementById('GetAvitoTirePrices')) {
-    document.getElementById('GetAvitoTirePrices').addEventListener('click', function () {
-//    При смене региона надо перерисовать график
-    var pages = 15;
-    var xhr = new XMLHttpRequest();
-    xhr.open('post', 'updateTirePrices');
-    xhr.onload = function() {
-        if (this.readyState === 4 && this.status === 200) {
-            var graphs = JSON.parse(xhr.response);
-            Plotly.newPlot('chart',graphs,{});
-            for (var t=1; t<= pages; t++) {
-                window.setTimeout(updateChart, t * 15 * 1000, t, pages);
-            }
+function updateRecommendedPrice(){
+    if (document.getElementById('recommended_Unitprice').value) {
+        document.getElementById('recommended_price').value = parseInt(document.getElementById('recommended_Unitprice').value) * document.getElementById('qte').value * document.getElementById('inSet').value;
         }
-        else if (xhr.status !== 200) {
-        }
-    };
-    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
-    xhr.setRequestHeader("X-CSRFToken", csrf_token);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
-    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
-        'protector_wear':document.getElementById('protector_wear').value,
-        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
-        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
-        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
-        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':pages}));
-    });
 }
-
-//Функция забирает параметры расчета и по ним строит график
-function updateChart(nPage, nTotalPages){
-    var pages=nTotalPages;
-    var xhr = new XMLHttpRequest();
-    xhr.open('post', 'updateChartNow');
-    xhr.onload = function() {
-        if (this.readyState === 4 && this.status === 200) {
-//            console.log(graphs)
-            var graphs = JSON.parse(JSON.parse(xhr.response)['chartData']);
-            Plotly.newPlot('chart',graphs,{});
-//            console.log(Math.round(100/nTotalPages*nPage));
-            var progress = Math.round(100/nTotalPages*nPage);
-            document.getElementById('chart_progress_text').textContent = progress + "%"
-            document.getElementById('chart_progress').setAttribute('aria-valuenow', progress);
-            document.getElementById('chart_progress').style.width = progress + "%";
-            document.getElementById('recommended_price').value = JSON.parse(JSON.parse(xhr.response)['predictResult']) * document.getElementById('qte').value
-        }
-        else if (xhr.status !== 200) {
-        }
-    };
-    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
-    xhr.setRequestHeader("X-CSRFToken", csrf_token);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
-    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
-        'protector_wear':document.getElementById('protector_wear').value,
-        'brand':document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label,
-        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
-        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
-        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
-        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':pages}));
-}
-
 
 //Событие нажатия кнопки Обновить
 if (document.getElementById('Refresh')) {
@@ -928,4 +907,121 @@ function update_avitodata(status_url) {
     xhr.setRequestHeader("X-CSRFToken", csrf_token);
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.send();
+}
+
+//Событие нажатия кнопки Найти предложения шин на Авито
+if (document.getElementById('GetAvitoTirePrices')) {
+    document.getElementById('GetAvitoTirePrices').addEventListener('click', function () {
+//    При смене региона надо перерисовать график
+    var pages = 3;
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'start_TirePricesScan');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 202) {
+            update_tirePrices(xhr.getResponseHeader('Location'));
+//            var graphs = JSON.parse(xhr.response);
+//            Plotly.newPlot('chart',graphs,{});
+        }
+        else if (xhr.status !== 202) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'protector_wear':document.getElementById('protector_wear').value,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
+        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':pages}));
+    });
+}
+
+function update_tirePrices(status_url) {
+    var xhr = new XMLHttpRequest();
+//    console.log(status_url);
+//    console.log(status_url);
+    const task_id = status_url.split('?').join(',').split('=').join(',').split(',')[2];
+    const hreflink = status_url.split('?')[0];
+    xhr.open('POST', status_url);
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+            data = JSON.parse(xhr.response);
+            if (data['state'] === 'FINISHED' || data['state'] === 'SUCCESS'){
+                updateChart(data['currPage']['page'], data['currPage']['totalPages']);
+                document.getElementById('AVITO_STATUS').innerHTML = 'Готово';
+                document.getElementById('chart_progress_text').textContent = "100%"
+                document.getElementById('chart_progress').setAttribute('aria-valuenow', 100);
+                document.getElementById('chart_progress').style.width = "100%";
+            }
+
+             if (data['state'] === 'PENDING' || data['state'] === 'PROGRESS') { //&& data['state'] != 'PROGRESS'
+                    // rerun in 4 seconds
+                    setTimeout(function() {
+                        update_tirePrices(status_url);
+                    }, 3000);
+                    update_spinner();
+                    if (data['currPage']!== null) {
+//                        console.log(data['currPage']);
+                        updateChart(data['currPage']['page'], data['currPage']['totalPages']);
+                    }
+             }
+//             if (data['state'] != 'PENDING' && data['state'] != 'SUCCESS'){
+//                    update_spinner();
+//                    if (data['currPage']!== null) {
+//                        updateChart(data['currPage']['page'], data['currPage']['totalPages']);
+//                    }
+//             }
+        }
+        else if (xhr.status !== 200 ){
+        }
+
+    };
+
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'task_id':task_id, 'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'protector_wear':document.getElementById('protector_wear').value,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
+        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label}));
+}
+
+
+//Функция забирает параметры расчета и по ним строит график
+function updateChart(nPage, nTotalPages){
+    var pages=nTotalPages;
+    var xhr = new XMLHttpRequest();
+    xhr.open('post', 'updateChartNow');
+    xhr.onload = function() {
+        if (this.readyState === 4 && this.status === 200) {
+//            console.log(graphs)
+            var graphs = JSON.parse(JSON.parse(xhr.response)['chartData']);
+            Plotly.newPlot('chart',graphs,{});
+//            console.log(Math.round(100/nTotalPages*nPage));
+            var progress = Math.round(100/nTotalPages*nPage);
+            document.getElementById('chart_progress_text').textContent = progress + "%"
+            document.getElementById('chart_progress').setAttribute('aria-valuenow', progress);
+            document.getElementById('chart_progress').style.width = progress + "%";
+            document.getElementById('recommended_price').value = JSON.parse(JSON.parse(xhr.response)['predictResult']) * document.getElementById('qte').value * document.getElementById('inSet').value;
+            document.getElementById('recommended_Unitprice').value = JSON.parse(JSON.parse(xhr.response)['predictResult']);
+        }
+        else if (xhr.status !== 200) {
+        }
+    };
+    var csrf_token = document.querySelector('meta[name=csrf-token]').content;
+    xhr.setRequestHeader("X-CSRFToken", csrf_token);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+//    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
+    xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'protector_wear':document.getElementById('protector_wear').value,
+        'brand':document.getElementById('brand').options[document.getElementById('brand').selectedIndex].label,
+        'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
+        'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,
+        'height':document.getElementById('vysota_profilya').options[document.getElementById('vysota_profilya').selectedIndex].label,
+        'diametr':document.getElementById('diametr').options[document.getElementById('diametr').selectedIndex].label, 'pages':pages}));
 }

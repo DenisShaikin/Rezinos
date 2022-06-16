@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from flask_restful import abort
 
 def treatAvitoTiresData(df):
+    print(df.head())
     df.rename(columns={0:'0'}, inplace=True)
     df['qte2'] = df['brand'].str.extract('(\d{1}\sшт)', expand=False)
     df['qte2']=df['qte2'].apply(lambda x: str(x).replace('шт',''))
@@ -152,7 +153,7 @@ def getAvitoCoordinates(app):
     driver.close()
     return 'Success'
 
-@celery.task(bind=True)
+@celery.task(name='getAvitoTirePrices', bind=True)
 def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='zimnie_neshipovannye', nPages=10):
     # app.app_context().push()
     options = se.webdriver.ChromeOptions()
@@ -304,10 +305,14 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
                     dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
+            # print('id= ', self.state)
+
+            self.update_state(state='PROGRESS', meta={'page': p, 'totalPages': pagesNum})
+        self.update_state(state='FINISHED', meta={'page': p, 'totalPages': pagesNum})
     driver.quit()
     # currTire=Tire()
     # myapp=app._get_current_object()
-    return dfResult
+    return len(dfResult)
 
 @celery.task(name='getAvitoTirePricesByLocale', bind=True)
 def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, season='zimnie_neshipovannye', nPages=10, distance=50):

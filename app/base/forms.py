@@ -6,7 +6,8 @@ Copyright (c) 2019 - present AppSeed.us
 from flask_wtf import FlaskForm
 from wtforms import TextField, PasswordField, StringField
 from wtforms.validators import InputRequired, Email, DataRequired
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, SelectField, MultipleFileField, RadioField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, IntegerField, \
+    SelectField, MultipleFileField, RadioField, HiddenField
 from wtforms import FloatField, DecimalField, DateField, DateTimeField
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import ValidationError, DataRequired,  Email, EqualTo, Required
@@ -112,6 +113,7 @@ class TirePrepareForm(FlaskForm):
     condition = SelectField(u'Состояние', choices=['Б/у', 'Новое'])
     oem = StringField(u'Номенклатурный номер')
     recommended_price = IntegerField (u'Рекомендуемая Стоимость')
+    recommended_Unitprice = HiddenField()
     product_year = IntegerField(u'Год производства')
     shirina_profilya = SelectField(u'Ширина профиля', choices=['', '115', '125', '130', '135', '145', '155', '165', '175', '185', '195', '205', '215',
                                                                '225', '230', '235', '245', '255', '265', '275', '285', '295', '305', '315', '325', '335', '345',
@@ -146,7 +148,8 @@ class EditTireForm(FlaskForm):
     # type_id = SelectField(u'Выберите категорию', choices=['Шины', 'Колёса', 'Диски', 'Колпаки'])
     ad_type = SelectField(u'Вид объявления', choices=['Товар приобретен на продажу', 'Товар от производителя'])
     is_for_priority =BooleanField(u'Продвижение на Auto.ru', default=False) #auto.ru кнопка продвижения
-    qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
+    qte=IntegerField(u'Количество', validators=[DataRequired()], default=1)
+    inSet = IntegerField (u'В комплекте', default=4)
     title = StringField(u'Название объявления', validators=[DataRequired(), Length(min=1, max=256)])
     description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
     price = IntegerField(u'Цена', validators=[DataRequired()])
@@ -193,9 +196,9 @@ class RimPrepareForm(FlaskForm):
     avtoru_show=BooleanField('Выставить на Auto.ru', default=False)
     drom_show=BooleanField('Выставить на Drom', default=False)
     allow_email=BooleanField('Возможность написать сообщение по объявлению через сайт', default="checked")
-    manager_name=StringField('Контактное лицо', validators=[Length(min=0, max=40)])
-    contact_phone=StringField('Телефон менеджера')
-    address=TextAreaField('Полный адрес объекта', validators=[Length(min=0, max=256)])
+    manager_name=StringField('Контактное лицо', validators=[Required(), Length(min=0, max=40)])
+    contact_phone=StringField('Телефон менеджера', validators=[Required()])
+    address=TextAreaField('Полный адрес объекта', validators=[Required(), Length(min=0, max=256)])
     latitude = FloatField('Широта', default=0)
     longitude = FloatField('Долгота', default=0)
     display_area1 = SelectField('Первая зона показа', validate_choice=False, coerce=int)
@@ -205,7 +208,8 @@ class RimPrepareForm(FlaskForm):
     display_area5 = StringField('Пятая зона показа')
     ad_type = SelectField(u'Вид объявления', choices=['Товар приобретен на продажу', 'Товар от производителя'])
     is_for_priority =BooleanField(u'Продвижение на Auto.ru', default='unchecked') #auto.ru кнопка продвижения
-    qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
+    qte = IntegerField(u'Количество', validators=[DataRequired()], default=1)
+    inSet = IntegerField(u'В комплекте', default=4)
     title = StringField(u'Название объявления')
     description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
     price = IntegerField(u'Цена', validators=[DataRequired()])
@@ -244,7 +248,8 @@ class WheelPrepareForm(FlaskForm):
     carmodel = SelectField('Модель АМ', validate_choice=False, coerce=int)
     rimbrand=SelectField('Производитель', validate_choice=False, coerce=int)
     rimmodel=SelectField('Модель', validate_choice=False, coerce=int)
-    qte=IntegerField(u'Количество', validators=[DataRequired()], default=4)
+    qte = IntegerField(u'Количество', validators=[DataRequired()], default=1)
+    inSet = IntegerField(u'В комплекте', default=4)
     title = StringField(u'Название объявления')
     description = TextAreaField(u'Текстовое описание объявления', validators=[DataRequired()])
     price = IntegerField(u'Цена', validators=[DataRequired()])
@@ -287,6 +292,7 @@ class WheelPrepareForm(FlaskForm):
                                                                '355', '360','365','375', '380','385','395','400','405','415', '420','425','435','445','455','530','600','605', 'Другое'])
     vysota_profilya=SelectField('Высота профиля', choices=['', '25', '30', '35', '40', '45', '50', '55', '60', '65', '70', '75', '80', '85', '90', '95',
                                                            '100', '105', '110', 'Другое'])
+
     sezonnost=SelectField('Сезонность', choices=['Зимние нешипованные', 'Зимние шипованные', 'Летние', 'Всесезонные']) #сезонность
     # wtirediametr=SelectField('Внутренний Диаметр', choices=['', '4', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16',
     #                                                    '16.5', '17', '17.5', '18', '19', '19.5', '20', '21', '22', '22.5',

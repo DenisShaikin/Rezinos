@@ -11,7 +11,6 @@ from logging import basicConfig, DEBUG, getLogger, StreamHandler
 from os import path
 from flask_wtf.csrf import CSRFProtect
 from flask_restful import Api
-from turbo_flask import Turbo
 import threading
 # from concurrent import futures
 from celery import Celery
@@ -19,7 +18,6 @@ from config import config, Config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-turbo = Turbo()
 celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
 
 def register_extensions(app):
@@ -63,8 +61,6 @@ def create_app(config):
 
     register_blueprints(app)
     configure_database(app)
-    turbo.init_app(app)
-
     #celery
 
     celery.conf.broker_url = app.config['CELERY_BROKER_URL']

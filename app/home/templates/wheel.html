@@ -245,12 +245,12 @@
                                     {{ form.avito_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Авито") }}
                                 </div>
                                 <div class ='form-check form-switch'>
-                                    <label>На Auto.ru</label>
-                                    {{ form.avtoru_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Auto.ru") }}
-                                </div>
-                                <div class ='form-check form-switch'>
                                     <label>На Drom</label>
                                     {{ form.drom_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Drom.ru") }}
+                                </div>
+                                <div class ='form-check form-switch'>
+                                    <label>Выставить на Юла</label>
+                                    {{ form.youla_show(class='form-check-input', data_bs_toggle="tooltip", data_bs_placement="top", title="Выставление на Youla.ru") }}
                                 </div>
                             </div>
                             <div class ="col-md-4 mb-3 ">
@@ -269,9 +269,13 @@
                                 </div>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label>Продвижение Auto.ru</label>
+                                <label >Продвижение Юла</label>
                                 <div class =" form-check form-switch">
-                                    {{ form.is_for_priority(class='form-check-input') }}
+                                    {% for subfield in form.youla_status %}
+                                        {{ subfield }}
+                                        {{ subfield.label(data_bs_toggle="tooltip", data_bs_placement="top", title="Turbo - вверху ленты, Premium - в премиальных блоках, Boost - вверху категории") }}
+                                        <br>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>

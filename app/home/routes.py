@@ -260,7 +260,7 @@ def load_rim_prix():
 def change_tire_state():
     sites_dict={'idSold':'sold',
                 'idAvito':'avito_show',
-                'idAvtoru':'avtoru_show',
+                'idYoula':'youla_show',
                 'idDrom':'drom_show'
     }
     s = request.get_json(force=True)
@@ -293,7 +293,7 @@ def change_tire_state():
 
         if field_toChange=='sold' and new_value == True: #Значит снимаем с продажи на всех площадках!
             blSold = True
-            for ploschadka in ['avito_show', 'avtoru_show', 'drom_show']:
+            for ploschadka in ['avito_show', 'youla_show', 'drom_show']:
                 db.session.query(currObject).filter(currObject.baseid == id_field). \
                     update({ploschadka: False}, synchronize_session="evaluate")
                 # И дату снятия с публикации меняем
@@ -306,6 +306,7 @@ def change_tire_state():
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
     current_user.to_drom_xml()
+    current_user.to_youla_xml()
 
     return jsonify({'id': id_field, 'sold':blSold})
 
@@ -337,6 +338,7 @@ def change_promo_state():
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
     current_user.to_drom_xml()
+    current_user.to_youla_xml()
 
     return jsonify({'id': id_field, 'status':promo_status})
 
@@ -454,6 +456,7 @@ def change_avtorupromo_state():
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
     current_user.to_drom_xml()
+    current_user.to_youla_xml()
 
     return jsonify({'id': id_field, 'value':new_value})
 
@@ -764,9 +767,10 @@ def tire():
             diametr=form.diametr.data, owner=current_user, sezonnost=form.sezonnost.data,
             protector_height=form.protector_height.data,  protector_wear=form.protector_wear.data,
             store=curr_store,
-            avito_show = form.avito_show.data, avtoru_show = form.avtoru_show.data, drom_show=form.drom_show.data,
+            avito_show = form.avito_show.data, youla_show = form.youla_show.data, drom_show=form.drom_show.data,
             videourl=form.videourl.data,
-            product_year=form.product_year.data)
+            product_year=form.product_year.data,
+            youla_status = form.youla_status.data)
         newtire.baseid='t' + str(newtire.id)
     #Займемся фотками
         for file in form.photo1.data:
@@ -784,6 +788,8 @@ def tire():
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
         current_user.to_drom_xml()
+        current_user.to_youla_xml()
+
         # flash('Ваше предложение зарегистрировано!')
         return redirect(url_for('home_blueprint.tire'))
     elif request.method == 'GET':
@@ -849,7 +855,8 @@ def rim():
             store=curr_store,
             rimyear = form.rimyear.data,
             recommended_price=form.recommended_price.data,
-            avito_show=form.avito_show.data, avtoru_show=form.avtoru_show.data, drom_show=form.drom_show.data
+            youla_status=form.youla_status.data,
+        avito_show=form.avito_show.data, youla_show=form.youla_show.data, drom_show=form.drom_show.data
         )
     #Займемся фотками
         for file in form.photo1.data:
@@ -867,8 +874,8 @@ def rim():
 
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
-        print()
         current_user.to_drom_xml()
+        current_user.to_youla_xml()
 
         # flash('Ваше предложение зарегистрировано!')
         return redirect(url_for('home_blueprint.rim'))
@@ -940,9 +947,10 @@ def wheel():
             owner = current_user, sezonnost = form.sezonnost.data,
             protector_height  = form.protector_height.data,  protector_wear = form.protector_wear.data,
             store = curr_store,
-            avito_show = form.avito_show.data, avtoru_show = form.avtoru_show.data, drom_show=form.drom_show.data,
+            avito_show = form.avito_show.data, youla_show = form.youla_show.data, drom_show=form.drom_show.data,
             videourl=form.videourl.data,
-            tireproduct_year=form.tireproduct_year.data)
+            tireproduct_year=form.tireproduct_year.data,
+            youla_status=form.youla_status.data)
         newwheel.baseid='w' + str(newwheel.id)
     #Займемся фотками
         for file in form.photo1.data:
@@ -961,6 +969,7 @@ def wheel():
         # current_user.to_avito_xml()
         # current_user.to_avtoru_xml()
         # current_user.to_drom_xml()
+        # current_user.to_youla_xml()
 
         return redirect(url_for('home_blueprint.wheel'))
     elif request.method == 'GET':
@@ -1005,15 +1014,17 @@ def edit_tire(tire_id):
         current_tire.qte = form.qte.data
         current_tire.inSet = form.inSet.data
         current_tire.avito_show = form.avito_show.data
-        current_tire.avtoru_show = form.avtoru_show.data
+        # current_tire.avtoru_show = form.avtoru_show.data
         current_tire.drom_show = form.drom_show.data
+        current_tire.youla_show = form.youla_show.data
         # print('Form qte ', form.qte.data)
         # print('Tire qte ', current_tire.qte)
         current_tire.title=form.title.data
         current_tire.description=form.description.data
         current_tire.price=form.price.data
         current_tire.recommended_price = form.recommended_price.data
-        current_tire.is_for_priority = form.is_for_priority.data
+        # current_tire.is_for_priority = form.is_for_priority.data
+        current_tire.youla_status = form.youla_status.data
         # current_tire.condition=form.condition.data
 
     #Займемся фотками
@@ -1030,6 +1041,7 @@ def edit_tire(tire_id):
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
         current_user.to_drom_xml()
+        current_user.to_youla_xml()
 
         return redirect(url_for('home_blueprint.edit_tire', tire_id=tire_id))
     elif request.method == 'GET':
@@ -1062,16 +1074,15 @@ def edit_tire(tire_id):
         form.address.data= current_tire.address
         form.ad_type.data = current_tire.ad_type
         form.avito_show.data = current_tire.avito_show
-        form.avtoru_show.data = current_tire.avtoru_show
         form.drom_show.data = current_tire.drom_show
-        form.is_for_priority.data =current_tire.is_for_priority
-
-        # print('Qte=', current_tire.qte)
+        form.youla_show.data = current_tire.youla_show
+        # form.is_for_priority.data =current_tire.is_for_priority
         form.qte.data = current_tire.qte
         form.inSet.data = current_tire.inSet
         form.title.data = current_tire.title
         form.description.data = current_tire.description
         form.price.data = current_tire.price
+        form.youla_status.data = current_tire.youla_status
         # form.recommended_price.data = current_tire.recommended_price
 
         return render_template('edit_tire.html', title='Предложение по шинам', tire_id=tire_id, form=form, segment='edit_tire',
@@ -1234,7 +1245,7 @@ def edit_rim(rim_id):
         current_rim.display_area1=form.display_area1.data
         current_rim.ad_type=form.ad_type.data
         current_rim.avito_show = form.avito_show.data
-        current_rim.avtoru_show = form.avtoru_show.data
+        current_rim.youla_show = form.youla_show.data
         current_rim.drom_show = form.drom_show.data
         current_rim.is_for_priority = form.is_for_priority.data
         # print('Form qte ', form.qte.data)
@@ -1259,6 +1270,7 @@ def edit_rim(rim_id):
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
         current_user.to_drom_xml()
+        current_user.to_youla_xml()
 
         return redirect(url_for('home_blueprint.edit_rim', rim_id=rim_id))
     elif request.method == 'GET':
@@ -1293,7 +1305,7 @@ def edit_rim(rim_id):
         form.address.data= current_rim.address
         form.ad_type.data = current_rim.ad_type
         form.avito_show.data = current_rim.avito_show
-        form.avtoru_show.data = current_rim.avtoru_show
+        form.youla_show.data = current_rim.youla_show
         form.drom_show.data = current_rim.drom_show
         form.is_for_priority.data = current_rim.is_for_priority
 
@@ -1335,7 +1347,7 @@ def edit_wheel(wheel_id):
         current_wheel.display_area1=form.display_area1.data
         current_wheel.ad_type=form.ad_type.data
         current_wheel.avito_show = form.avito_show.data
-        current_wheel.avtoru_show = form.avtoru_show.data
+        current_wheel.youla_show = form.youla_show.data
         current_wheel.drom_show = form.drom_show.data
         current_wheel.is_for_priority = form.is_for_priority.data
         current_wheel.title=form.title.data
@@ -1358,6 +1370,7 @@ def edit_wheel(wheel_id):
         current_user.to_avito_xml()
         current_user.to_avtoru_xml()
         current_user.to_drom_xml()
+        current_user.to_youla_xml()
 
         return redirect(url_for('home_blueprint.edit_wheel', wheel_id=wheel_id))
     elif request.method == 'GET':
@@ -1384,7 +1397,7 @@ def edit_wheel(wheel_id):
         form.address.data= current_wheel.address
         form.ad_type.data = current_wheel.ad_type
         form.avito_show.data = current_wheel.avito_show
-        form.avtoru_show.data = current_wheel.avtoru_show
+        form.youla_show.data = current_wheel.youla_show
         form.drom_show.data = current_wheel.drom_show
         form.is_for_priority.data = current_wheel.is_for_priority
         form.qte.data = current_wheel.qte
@@ -1469,16 +1482,16 @@ def create_tools_field(x):
     result = result + '\n' + '''<div class="form-switch" > <input class="form-check-input" type="checkbox" 
             name="idAvito_''' + str(x['baseid']) + '''" id="idAvito_''' + str(x['baseid']) + '"' + ch +  ''' onclick=change_publishedstatus("idAvito_''' + str(x['baseid']) + '''")>
                 <label class ="form-check-label" for ="idAvito_''' + str(x['baseid']) + '''">На Авито</label></div>'''
-    # Добавляем выключатель на Авто.ру
-    ch='checked' if x['avtoru_show'] else ''
-    result = result + '\n' + '''<div class="form-switch" > <input class="form-check-input" type="checkbox" 
-            name="idAvtoru_''' + str(x['baseid']) + '''" id="idAvtoru_''' + str(x['baseid']) + '"' + ch +  ''' onclick=change_publishedstatus("idAvtoru_''' + str(x['baseid']) + '''")>
-                <label class ="form-check-label" for ="idAvtoru_''' + str(x['baseid']) + '''">На Auto.ru</label></div>'''
     # Добавляем выключатель на Drom
     ch='checked' if x['drom_show'] else ''
     result = result + '\n' + '''<div class="form-switch" > <input class="form-check-input" type="checkbox" 
             name="idDrom_''' + str(x['baseid']) + '''" id="idDrom_''' + str(x['baseid']) + '"' + ch +  ''' onclick=change_publishedstatus("idDrom_''' + str(x['baseid']) + '''")>
                 <label class ="form-check-label" for ="idDrom_''' + str(x['baseid']) + '''">На Дром</label></div>'''
+    # Добавляем выключатель на Youla
+    ch='checked' if x['youla_show'] else ''
+    result = result + '\n' + '''<div class="form-switch" > <input class="form-check-input" type="checkbox" 
+            name="idYoula_''' + str(x['baseid']) + '''" id="idYoula_''' + str(x['baseid']) + '"' + ch +  ''' onclick=change_publishedstatus("idAYoula_''' + str(x['baseid']) + '''")>
+                <label class ="form-check-label" for ="idYoula_''' + str(x['baseid']) + '''">На Youla</label></div>'''
     return result
 
 def create_avtorupromo_field(x):
@@ -1487,6 +1500,29 @@ def create_avtorupromo_field(x):
     result = '''<div class="form-switch" > <input class="form-check-input" type="checkbox" 
             name="id_is_for_priority_''' + str(x['baseid']) + '''" id="idis-for-priority_''' + str(x['baseid']) + '" ' + ch + ''' onclick=change_avtoru_promo("idis-for-priority_''' + str(x['baseid']) + '''")> 
                 <label class ="form-check-label" for ="idis-for-priority_''' + str(x['baseid']) + '''"> Auto.ru Промо</label></div>'''
+    return result
+
+def create_youlapromo_field(x):
+    # Добавляем выключатель В Продаже
+    ch='checked' if x['youla_status']=='Нет' else ''
+    result ='''<fieldset> <table> <tr> <td> <div class="form-check" > <input class="form-check-input" type="radio"
+            name="youla_status_id_''' + str(x['baseid']) + '''" id="idYoulaNone_''' + str(x['baseid']) + '"' + ch + ''' onclick=change_promostatus("idYoulaNone_''' + str(x['baseid']) + '''")>
+                <label class ="form-check-label" for ="idYoulaNone_''' + str(x['baseid']) + '''">Нет</label></div>'''
+    # Turbo
+    ch='checked' if x['youla_status']=='Turbo' else ''
+    result = result + '\n' + ''' <div class="form-check"> <input class="form-check-input" type="radio"
+            name="youla_status_id_''' + str(x['baseid']) + '''" id="idYoulaTurbo_''' + str(x['baseid']) + '"' + ch + ''' onclick=change_promostatus("idYoulaTurbo_''' + str(x['baseid']) + '''")>
+                <label class ="form-check-label" for ="idYoulaTurbo_''' + str(x['baseid']) + '''">Turbo</label> </div>'''
+    # Premum
+    ch='checked' if x['youla_status']=='Premium' else ''
+    result = result + '\n' + ''' <div class="form-check"> <input class="form-check-input" type="radio"
+            name="youla_status_id_''' + str(x['baseid']) + '''" id="idYoulaPremium_''' + str(x['baseid']) + '"' + ch + ''' onclick=change_promostatus("idYoulaPremium_''' + str(x['baseid']) + '''")>
+                <label class ="form-check-label" for ="idYoulaPremium_''' + str(x['baseid']) + '''">Premium</label> </div>'''
+    # Boost
+    ch='checked' if x['youla_status']=='Boost' else ''
+    result = result + '\n' + '''<div class="form-check"> <input class="form-check-input" type="radio"
+            name="youla_status_id_''' + str(x['baseid']) + '''" id="idYoulaBoost_''' + str(x['baseid']) + '"' + ch + ''' onclick=change_promostatus("idYoulaBoost_''' + str(x['baseid']) + '''")>
+                <label class ="form-check-label" for ="idYoulaBoost_''' + str(x['baseid']) + '''">Boost</label> </div> </td> </tr> </table> </fieldset>'''
     return result
 
 def create_promo_field(x):
@@ -1548,6 +1584,7 @@ def delete_photo(photo, tire_id):
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
     current_user.to_drom_xml()
+    current_user.to_youla_xml()
 
     # print('Здесь удаляем фото {} с id {}'.format(Tire_photo.photo, Tire_photo.id))
     return redirect(url_for('home_blueprint.edit_tire', tire_id=tire_id))
@@ -1561,6 +1598,7 @@ def delete_rimphoto(photo, rim_id):
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
     current_user.to_drom_xml()
+    current_user.to_youla_xml()
 
     # print('Здесь удаляем фото {} с id {}'.format(Tire_photo.photo, Tire_photo.id))
     return redirect(url_for('home_blueprint.edit_rim', rim_id=rim_id))
@@ -1574,6 +1612,7 @@ def delete_wheelphoto(photo, wheel_id):
     current_user.to_avito_xml()
     current_user.to_avtoru_xml()
     current_user.to_drom_xml()
+    current_user.to_youla_xml()
 
     # print('Здесь удаляем фото {} с id {}'.format(Tire_photo.photo, Tire_photo.id))
     return redirect(url_for('home_blueprint.edit_wheel', rim_id=wheel_id))
@@ -1586,17 +1625,17 @@ def stock_tables(page):
 
     #Таблица данных для отображения
     # db_base_data = pd.read_sql('SELECT * FROM tire WHERE (Not sold) AND (user_id = ' + str(current_user.id) + ');', db.session.bind)
-    db_base_data = pd.read_sql('''SELECT  t.id, t.brand, t.baseid, t.price, t.timestamp, t.sold, t.avito_show, t.avtoru_show, t.drom_show, t.ad_status, t.is_for_priority,
+    db_base_data = pd.read_sql('''SELECT  t.id, t.brand, t.baseid, t.price, t.timestamp, t.sold, t.avito_show, t.youla_show, t.drom_show, t.ad_status, t.youla_status,
         t.title, t.sezonnost, t.shirina_profilya AS width, t.diametr, t.vysota_profilya AS height, t.protector_height, t.protector_wear, t.product_year AS year,
         (SELECT tf.Photo FROM tire_photo tf WHERE tf.tire_id = t.id ORDER BY Photo ASC LIMIT 1) AS Photo
         FROM tire t WHERE t.user_id = ''' + str(current_user.id) + ' ' \
        'UNION ' \
-       '''SELECT r.id, r.rimbrand, r.baseid, r.price, r.timestamp, r.sold, r.avito_show, r.avtoru_show, r.drom_show, r.ad_status, r.is_for_priority,
+       '''SELECT r.id, r.rimbrand, r.baseid, r.price, r.timestamp, r.sold, r.avito_show, r.youla_show, r.drom_show, r.ad_status, r.youla_status,
        r.title, r.rimtype, r.rimwidth AS width, r.rimdiametr AS diametr, r.rimbolts, r.rimboltsdiametr, r.rimoffset, r.rimyear AS year,
        (SELECT rf.Photo FROM rim_photo rf WHERE rf.rim_id = r.id ORDER BY Photo ASC LIMIT 1) AS Photo
        FROM rim r WHERE r.user_id = ''' + str(current_user.id) + ' ' \
         'UNION ' \
-        '''SELECT w.id, w.rimbrand, w.baseid, w.price, w.timestamp, w.sold, w.avito_show, w.avtoru_show, w.drom_show, w.ad_status, w.is_for_priority,
+        '''SELECT w.id, w.rimbrand, w.baseid, w.price, w.timestamp, w.sold, w.avito_show, w.youla_show, w.drom_show, w.ad_status, w.youla_status,
        w.title, w.rimtype, w.rimwidth AS width, w.rimdiametr AS diametr, w.rimbolts, w.rimboltsdiametr, w.rimoffset, w.rimyear AS year,
        (SELECT wf.Photo FROM wheel_photo wf WHERE wf.wheel_id = w.id ORDER BY Photo ASC LIMIT 1) AS Photo
        FROM wheel w WHERE w.user_id = ''' + str(current_user.id) + ';', db.session.bind)
@@ -1620,14 +1659,14 @@ def stock_tables(page):
     if len(db_base_data) > 0 and page != 'all' and request.method != 'POST':   #Если POST - то показываем все записи по данному фильтру
         db_base_data = db_base_data.loc[(db_base_data['days'] >= cut_bins[int(page)]) & (db_base_data['days'] < cut_bins[int(page)+1])]
     # print(db_base_data.head())
-    db_table_toshow = pd.DataFrame(columns=['Photo', 'Description', 'Price', 'Tools', 'Promotion', 'Avtoru_promo', 'HREF'])
+    db_table_toshow = pd.DataFrame(columns=['Photo', 'Description', 'Price', 'Tools', 'Promotion', 'Youla_promo', 'HREF'])
     db_table_toshow['Price'] = 'Цена продажи: ' + db_base_data['price'].astype(str) + ' Руб.'
-    db_table_toshow['Tools'] = db_base_data[['baseid', 'sold', 'avito_show', 'avtoru_show', 'drom_show']].to_dict('records')
+    db_table_toshow['Tools'] = db_base_data[['baseid', 'sold', 'avito_show', 'youla_show', 'drom_show']].to_dict('records')
     db_table_toshow['Tools']= db_table_toshow['Tools'].apply(lambda x: create_tools_field(x))
     db_table_toshow['Promotion'] = db_base_data[['baseid', 'ad_status']].to_dict('records')
     db_table_toshow['Promotion'] = db_table_toshow['Promotion'].apply(lambda x: create_promo_field(x))
-    db_table_toshow['Avtoru_promo'] = db_base_data[['baseid', 'is_for_priority']].to_dict('records')
-    db_table_toshow['Avtoru_promo']= db_table_toshow['Avtoru_promo'].apply(lambda x: create_avtorupromo_field(x))
+    db_table_toshow['Youla_promo'] = db_base_data[['baseid', 'youla_status']].to_dict('records')
+    db_table_toshow['Youla_promo']= db_table_toshow['Youla_promo'].apply(lambda x: create_youlapromo_field(x))
     db_table_toshow['Photo']=db_base_data.Photo
     db_table_toshow['Photo'] = db_table_toshow['Photo'].apply( lambda x: url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], x).replace('\\','/')) if x else None)
     db_table_toshow['HREF']=db_base_data.baseid.astype(str)
@@ -1640,6 +1679,7 @@ def stock_tables(page):
                                                                     (url_for('home_blueprint.edit_tire', tire_id=x[1:]) if x[0]=='t' else (url_for('home_blueprint.edit_rim', rim_id=x[1:]) if x[0]=='r' else url_for('home_blueprint.edit_wheel', wheel_id=x[1:]))) +
                                                                     '"> Изменить #' + x + '</a><br>')
     default_photo = os.path.join(app.config['PHOTOS_FOLDER'], 'NoPhoto.png')
+    print(db_table_toshow.columns)
     pages_list = {'0':'До 10', '1':'11..20', '2':'21..30', '3':'31..40', '4':'41..50', '5':'>50', 'all':'>0'}
     #Подготовим список брендов для фильтра
     brandsList = db.session.query(Tire.id, Tire.brand).filter(Tire.user_id==current_user.id).group_by(Tire.brand).all()

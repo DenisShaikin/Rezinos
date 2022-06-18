@@ -65,13 +65,13 @@
                     <div class="row">
                         {% for cell_ in row %}
                             {% if loop.index == 1 %}
-                                <div class="col-md-auto mx-3 my-3">
+                                <div class="col-sm-auto mx-3 my-3">
                                     <figure class="figure">
                                         <img  src="{{ cell_ or default_photo }}"  width="150px" height="150px" class="img-fluid rounded-0 alt="">
                                     </figure>
                                 </div>
                             {% else %}
-                                <div class="col mx-3 my-3 lh-1">
+                                <div class="col-sm-auto mx-1 my-3 lh-1">
                                     <small class="lh-1">
                                     {{ cell_|safe }}
                                     </small>

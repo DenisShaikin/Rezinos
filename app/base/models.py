@@ -56,6 +56,7 @@ class User(db.Model, UserMixin):
     avito_path = db.Column(db.String(256))
     autoru_path = db.Column(db.String(256))
     drom_path = db.Column(db.String(256))
+    youla_path = db.Column(db.String(256))
     avatar_photo = db.Column(db.String(100))
 
     def __init__(self, **kwargs):
@@ -95,23 +96,76 @@ class User(db.Model, UserMixin):
             return
         return User.query.get(id)
 
-
     def to_avito_xml(self):
         root = ET.Element("Ads")
         root.set('formatVersion', "3")
         root.set('target', "Avito.ru")
         tires=self.tires.filter(Tire.avito_show == True).all()
         rims=self.rims.filter(Rim.avito_show == True).all()
+        wheels=self.wheels.filter(Wheel.avito_show == True).all()
         for tire in tires:
             ad = ET.SubElement(root, 'Ad')
             tire.add_avito_tire(ad)
         for rim in rims:
             ad = ET.SubElement(root, 'Ad')
             rim.add_avito_rim(ad)
+        for wheel in wheels:
+            ad = ET.SubElement(root, 'offer')
+            wheel.add_avito_wheel(ad)
+
         message = ET.tostring(root, "utf-8")
 
         # print(message)url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg'
         myfile = open(os.path.join(app.config['XML_FOLDER_FULL'], self.avito_path), "w")
+        myfile.write(ET.tostring(root).decode('UTF-8'))
+        myfile.close()
+        # file.save(os.path.join(app.config['XML_FOLDER'], new_filename))
+        return message
+
+    def to_youla_xml(self):
+        root = ET.Element("Ads")
+        root.set('formatVersion', "3")
+        root.set('target', "Youla.ru")
+        tires=self.tires.filter(Tire.avito_show == True).all()
+        rims=self.rims.filter(Rim.avito_show == True).all()
+        wheels=self.wheels.filter(Wheel.avito_show == True).all()
+        for tire in tires:
+            ad = ET.SubElement(root, 'Ad')
+            tire.add_avito_tire(ad)
+            if tire.youla_status != 'Нет':
+                vas = ET.SubElement(ad, 'Vas')
+                if tire.youla_status == 'Turbo':
+                    add_avito_element(vas, 'Turbo', 1)
+                elif tire.youla_status == 'Premium':
+                    add_avito_element(vas, 'Premium', 1)
+                elif tire.youla_status == 'Boost':
+                    add_avito_element(vas, 'Boost', 1)
+        for rim in rims:
+            ad = ET.SubElement(root, 'Ad')
+            rim.add_avito_rim(ad)
+            if tire.youla_status != 'Нет':
+                vas = ET.SubElement(ad, 'Vas')
+                if tire.youla_status == 'Turbo':
+                    add_avito_element(vas, 'Turbo', 1)
+                elif tire.youla_status == 'Premium':
+                    add_avito_element(vas, 'Premium', 1)
+                elif tire.youla_status == 'Boost':
+                    add_avito_element(vas, 'Boost', 1)
+        for wheel in wheels:
+            ad = ET.SubElement(root, 'Ad')
+            wheel.add_avito_wheel(ad)
+            if tire.youla_status != 'Нет':
+                vas = ET.SubElement(ad, 'Vas')
+                if tire.youla_status == 'Turbo':
+                    add_avito_element(vas, 'Turbo', 1)
+                elif tire.youla_status == 'Premium':
+                    add_avito_element(vas, 'Premium', 1)
+                elif tire.youla_status == 'Boost':
+                    add_avito_element(vas, 'Boost', 1)
+        message = ET.tostring(root, "utf-8")
+
+        # print(message)url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg'
+        myfile = open(os.path.join(app.config['XML_FOLDER_FULL'], self.youla_path), "w")
         myfile.write(ET.tostring(root).decode('UTF-8'))
         myfile.close()
         # file.save(os.path.join(app.config['XML_FOLDER'], new_filename))
@@ -162,11 +216,7 @@ class User(db.Model, UserMixin):
             wheel.add_drom_wheel(ad)
         message = ET.tostring(offers, "utf-8")
 
-        # print(message)url_for('static', filename=os.path.join(app.config['PHOTOS_FOLDER'], 'example1.jpg'
-        # myfile = open(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), "w")
         ET.ElementTree(root).write(os.path.join(app.config['XML_FOLDER_FULL'], self.drom_path), encoding = "UTF-8", xml_declaration = True)
-        # myfile.close()
-        # file.save(os.path.join(app.config['XML_FOLDER'], new_filename))
         return message
 
 
@@ -414,6 +464,7 @@ class Tire(db.Model):
     avito_show = db.Column(db.Boolean, default=False)
     avtoru_show = db.Column(db. Boolean, default=False)
     drom_show = db.Column(db.Boolean, default=False)
+    youla_show = db.Column(db. Boolean, default=False)
     #Забрать настройки объявления из настроек пользователя
     allow_email = db.Column(db.Boolean) #Разрешено написать сообщение через сайт
     manager_name = db.Column(db.String(100))     #Имя контактного лица по данному объявлению
@@ -450,6 +501,7 @@ class Tire(db.Model):
     withDelivery=db.Column(db.Boolean)  #с доставкой
     isShop=db.Column(db.Boolean)       #Магазин
     locationId=db.Column(db.Boolean)    #расположение
+    youla_status=db.Column(db.String(15), default='Нет') #«Нет», «Turbo», «Premium», «Boost»
 
     def __repr__(self):
         return '<Шины {} {} {} {} R{}>'.format(self.brand, self.model, self.shirina_profilya, self.vysota_profilya, self.diametr)
@@ -606,6 +658,7 @@ class Rim(db.Model):
     avito_show = db.Column(db.Boolean, default=False)
     avtoru_show = db.Column(db. Boolean, default=False)
     drom_show = db.Column(db.Boolean, default=False)
+    youla_show = db.Column(db. Boolean, default=False)
     sold=db.Column(db.Boolean, default=False)
     sold_date=db.Column(db.DateTime())
 
@@ -651,6 +704,8 @@ class Rim(db.Model):
     withDelivery = db.Column(db.Boolean)  # с доставкой
     isShop = db.Column(db.Boolean)  # Магазин
     locationId = db.Column(db.Boolean)  # расположение
+    youla_status=db.Column(db.String(15), default='Нет') #«Нет», «Turbo», «Premium», «Boost»
+
     def __repr__(self):
         return '<Диски тип: {} ширина: {} диаметр: {} вылет: {}>'.format(self.rimtype, self.rimwidth, self.rimdiametr, self.rimoffset)
 
@@ -812,6 +867,7 @@ class Wheel(db.Model):
     avito_show = db.Column(db.Boolean, default=False)
     avtoru_show = db.Column(db. Boolean, default=False)
     drom_show = db.Column(db.Boolean, default=False)
+    youla_show = db.Column(db. Boolean, default=False)
     sold=db.Column(db.Boolean, default=False)
     sold_date=db.Column(db.DateTime())
 
@@ -869,6 +925,8 @@ class Wheel(db.Model):
     withDelivery = db.Column(db.Boolean)  # с доставкой
     isShop = db.Column(db.Boolean)  # Магазин
     locationId = db.Column(db.Boolean)  # расположение
+    youla_status=db.Column(db.String(15), default='Нет') #«Нет», «Turbo», «Premium», «Boost»
+
     def __repr__(self):
         return '<Колеса: диски тип {}, ширина: {} диаметр: {} вылет: {} шины диаметр: {} ширина {} высота профиля {}>'.format(self.rimtype, self.rimwidth, self.rimdiametr, self.rimoffset,
                                                                                                                               self.rimdiametr, self.shirina_profilya, self.vysota_profilya)

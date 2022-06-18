@@ -678,7 +678,7 @@ function change_publishedstatus(id) {
                 var curr_id = JSON.parse(xhr.responseText)['id'];
             //Все площадки этой записи ставим в False
                 document.getElementById('idAvito_' + curr_id).checked = false;
-                document.getElementById('idAvtoru_' + curr_id).checked = false;
+                document.getElementById('idYoula_' + curr_id).checked = false;
                 document.getElementById('idDrom_' + curr_id).checked = false;
             }
         }

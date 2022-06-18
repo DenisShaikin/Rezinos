@@ -87,10 +87,11 @@ class TirePrepareForm(FlaskForm):
     ad_status=RadioField('Платная услуга', choices=[('Free', 'Free'), ('Highlight', 'Highlight'), ('XL', 'XL'),
                                                      ('x2_1', 'x2_1'), ('x5_1', 'x5_1'), ('x10_1', 'x10_1'), ('x2_7', 'x2_7'), ('x5_7', 'x5_7'), ('x10_7', 'x10_7')],
                          validators=[Required()], default='Free')
-    avito_id=StringField('Номер объявления на Авито, если разместили его вручную')
-    avito_show=BooleanField('Выставить на Авито',default=True)
-    avtoru_show=BooleanField('Выставить на Auto.ru', default=False)
-    drom_show=BooleanField('Выставить на Drom', default=False)
+    avito_id = StringField('Номер объявления на Авито, если разместили его вручную')
+    avito_show = BooleanField('Выставить на Авито',default=True)
+    avtoru_show = BooleanField('Выставить на Auto.ru', default=False)
+    drom_show = BooleanField('Выставить на Drom', default=False)
+    youla_show = BooleanField('Выставить на Youla', default=False)
     allow_email=BooleanField('Возможность написать сообщение по объявлению через сайт', default="checked")
     manager_name=StringField('Контактное лицо', validators=[Required(), Length(min=1, max=140)])
     contact_phone=StringField('Телефон менеджера', validators=[Required()])
@@ -130,6 +131,8 @@ class TirePrepareForm(FlaskForm):
     photo1=MultipleFileField('Выберите файлы с фото', validators=[FileRequired(), FileAllowed(['png', 'jpg', 'bmp'], "Некорректный формат!")
     ]) #'image', validators=[FileAllowed(images, 'Images only!')]
     videourl=StringField(u'Ссылка на видео Youtube')
+    youla_status=RadioField('Платная услуга', choices=[('Нет', 'Нет'), ('Turbo', 'Turbo'), ('Premium', 'Premium'), ('Boost', 'Boost')],
+                         validators=[Required()], default='Нет')
     submit = SubmitField('Отправить')
 
 class EditTireForm(FlaskForm):
@@ -141,6 +144,7 @@ class EditTireForm(FlaskForm):
     avito_show=BooleanField('Выставить на Авито',default=True)
     avtoru_show=BooleanField('Выставить на Auto.ru', default=False)
     drom_show=BooleanField('Выставить на Drom', default=False)
+    youla_show = BooleanField('Выставить на Youla', default=False)
     manager_name=StringField('Контактное лицо', validators=[Length(min=0, max=40)])
     contact_phone=StringField('Телефон менеджера')
     address=TextAreaField('Полный адрес объекта', validators=[DataRequired(), Length(min=1, max=256)])
@@ -158,6 +162,8 @@ class EditTireForm(FlaskForm):
     recommended_price = IntegerField (u'Рекомендуемая Стоимость')
     photo1=MultipleFileField('Выберите файлы с фото') #'image', validators=[FileAllowed(images, 'Images only!')]
     videourl=StringField(u'Ссылка на видео Youtube')
+    youla_status=RadioField('Платная услуга', choices=[('Нет', 'Нет'), ('Turbo', 'Turbo'), ('Premium', 'Premium'), ('Boost', 'Boost')],
+                         validators=[Required()], default='Нет')
     submit = SubmitField('Отправить')
 
 class AvitoScanForm(FlaskForm):
@@ -195,6 +201,7 @@ class RimPrepareForm(FlaskForm):
     avito_show=BooleanField('Выставить на Авито',default=True)
     avtoru_show=BooleanField('Выставить на Auto.ru', default=False)
     drom_show=BooleanField('Выставить на Drom', default=False)
+    youla_show = BooleanField('Выставить на Youla', default=False)
     allow_email=BooleanField('Возможность написать сообщение по объявлению через сайт', default="checked")
     manager_name=StringField('Контактное лицо', validators=[Required(), Length(min=0, max=40)])
     contact_phone=StringField('Телефон менеджера', validators=[Required()])
@@ -241,6 +248,9 @@ class RimPrepareForm(FlaskForm):
     rimyear = IntegerField(default=2021, validators=[DataRequired()], id='rimyear')
     photo1=MultipleFileField('Выберите файлы с фото') #'image', validators=[FileAllowed(images, 'Images only!')]
     videourl=StringField(u'Ссылка на видео Youtube')
+    youla_status=RadioField('Платная услуга', choices=[('Нет', 'Нет'), ('Turbo', 'Turbo'), ('Premium', 'Premium'), ('Boost', 'Boost')],
+                         validators=[Required()], default='Нет')
+
     submit = SubmitField('Отправить')
 
 class WheelPrepareForm(FlaskForm):
@@ -310,6 +320,7 @@ class WheelPrepareForm(FlaskForm):
     avito_show=BooleanField('Выставить на Авито',default=True)
     avtoru_show=BooleanField('Выставить на Auto.ru', default=False)
     drom_show=BooleanField('Выставить на Drom', default=False)
+    youla_show = BooleanField('Выставить на Youla', default=False)
     allow_email=BooleanField('Возможность написать сообщение по объявлению через сайт', default="checked")
     manager_name=StringField('Контактное лицо', validators=[Length(min=0, max=40)])
     contact_phone=StringField('Телефон менеджера')
@@ -326,4 +337,7 @@ class WheelPrepareForm(FlaskForm):
 
     photo1=MultipleFileField('Выберите файлы с фото') #'image', validators=[FileAllowed(images, 'Images only!')]
     videourl=StringField(u'Ссылка на видео Youtube')
+    youla_status=RadioField('Платная услуга', choices=[('Нет', 'Нет'), ('Turbo', 'Turbo'), ('Premium', 'Premium'), ('Boost', 'Boost')],
+                         validators=[Required()], default='Нет')
+
     submit = SubmitField('Отправить')

@@ -129,6 +129,7 @@ def register():
         user.avito_path=os.path.join(randomstring + '_' + 'avito.xml')
         user.autoru_path=os.path.join(randomstring + '_' + 'auto.xml')
         user.drom_path=os.path.join(randomstring + '_' + 'drom.xml')
+        user.youla_path=os.path.join(randomstring + '_' + 'youla.xml')
         user.avatar_photo='assets/img/team/test_profile-picture-4.jpg'
 
         # print(request.form)

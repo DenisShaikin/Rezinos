@@ -10,10 +10,15 @@ from sqlalchemy import func
 from app import db, celery
 from app.api.apimodels import ApiTire
 from datetime import datetime, timedelta
+from app.api.apimodels  import ApiSource
+import re
+import json
+import requests
+from bs4 import BeautifulSoup as bs
 from flask_restful import abort
 
 def treatAvitoTiresData(df):
-    print(df.head())
+    # print(df.head())
     df.rename(columns={0:'0'}, inplace=True)
     df['qte2'] = df['brand'].str.extract('(\d{1}\sшт)', expand=False)
     df['qte2']=df['qte2'].apply(lambda x: str(x).replace('шт',''))
@@ -302,6 +307,9 @@ def getAvitoTirePrices(self, diametr, width, height, region='rossiya', season='z
                     dfTempResult.set_index('index', inplace=True)
                     dfTempResult.index.name = 'id'
                     dfTempResult['update_date'] = datetime.utcnow()
+                    source = ApiSource.query.with_entities(ApiSource.id).filter(ApiSource.source == 'Avito').first()[0]
+                    dfTempResult['source'] = source
+
                     dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
@@ -458,6 +466,8 @@ def getAvitoTirePricesByLocale(self, diametr, width, height, lon, lat, region, s
                     dfTempResult.set_index('index', inplace=True)
                     dfTempResult.index.name = 'id'
                     dfTempResult['update_date'] = datetime.utcnow()
+                    source = ApiSource.query.with_entities(ApiSource.id).filter(ApiSource.source == 'Avito').first()[0]
+                    dfTempResult['source'] = source
                     dfTempResult.to_sql('tire_api', con=db.engine, if_exists='append', index=False)  # dtype={'id': db.Integer}
             else:
                 time.sleep(3)
@@ -526,3 +536,134 @@ def getAvitoAccountData(id):
         break
 
     driver.close()
+
+def multiple_replace(string, rep_dict):
+    '''Функция заменяет символы в string согласно словаря rep_dict'''
+    pattern = re.compile("|".join([re.escape(k) for k in sorted(rep_dict,key=len,reverse=True)]), flags=re.DOTALL)
+    return pattern.sub(lambda x: rep_dict[x.group(0)], string)
+
+def dromTireParser(params):
+    ''' Парсим Drom согласно параметров в parameters  и сохраняем результат в базу.
+    params=json с необходимыми параметрами запроса: diametr, width, height,  region, season, nPages'''
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
+               'Connection': 'keep-alive',
+               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+               'Accept-Language': 'ru-ru,ru;q=0.8,en-us;q=0.6,en;q=0.4'}
+    keysToTake=['width', 'height', 'diametr', 'season']
+    strToReplace={ '{':'',
+        '}':'',
+        '"':'',
+        ':':'=',
+        ' ':'',
+        ',':'&',
+        'width':'sectionWidth', 'height':'sectionHeight', 'diametr':'wheelDiameter',
+        'season':'wheelSeason[]'
+    }
+    paramsString =  {key: params[key] for key in keysToTake}
+    paramsString = json.dumps(paramsString) #Переводим в строку
+    paramsString = multiple_replace(paramsString, strToReplace)  #преобразуем в нужный формат запроса
+    base_url = 'https://baza.drom.ru/' + params['region'] + '/wheel/tire/?' + paramsString #+ '&page=' + str(p)'
+    dfResult = pd.DataFrame()
+
+    for p in range(1,3):
+        print('страница', p)
+        url = base_url + '&page=' + str(p)
+        # base_url = 'https://baza.drom.ru/moskovskaya-obl/wheel/tire/?query=205%2F55R16&wheelSeason%5B%5D=winter&page=2'
+        print('Страница = ', p)
+        print('Ссылка = ', url)
+        request = requests.post(url,  timeout=10) #json =myobj,
+        if request.status_code == 200:
+            soup = bs(request.content, 'html.parser')
+            myTable=soup.find("table", attrs = {"class" :  re.compile("viewdirBulletinTable")})
+
+        metaList = myTable.find_all("div", {"class" : "bull-item-content__subject-container"})
+        # print(list_object)
+        dromLinksList = []
+        titlesList = []
+        codesList = []
+        pricesList = []
+        descriptionList = []
+        qteList=[]
+        pubDateList = []
+
+        #Номер объявления, ссылка, Title
+        metaList = myTable.find_all("a", {"class" : "bulletinLink bull-item__self-link auto-shy"})
+        for element in metaList:
+        #     dromLink = element.find('a', attrs = {'class': re.compile('bulletinLink bull-item__self-link auto-shy')})
+            dromLinksList.append(element.attrs["href"])
+            titlesList.append(element.text)
+            codesList.append(element.attrs['name'])
+
+        #Цены
+        metaPricesList = myTable.find_all("div", attrs = {"class" : re.compile("price-block__final-price finalPrice")})     #price-block__final-price finalPrice
+        # metaPricesList = myTable.find_all("span", {"class" : "price-block__price"})     #price-block__final-price finalPrice
+    #     print(metaPricesList==None)
+        for element in metaPricesList:
+            pricesList.append(element.attrs['data-price'].split('<')[0])
+
+        #Qte
+        metaPricesList = myTable.find_all("div", {"class" : "price-block__quantity"})     #price-block__final-price finalPrice
+        for element in metaPricesList:
+            qteList.append(element.text)
+
+        #сезонность, шипы, износ
+        metaDescList = myTable.find_all("div", {"class" : "bull-item__annotation-row"})
+        for element in metaDescList:
+            descriptionList.append(element.text)
+        #Дата публикации
+        metaPublication = myTable.find_all("div", attrs = {"class" : re.compile("bull-item-info__value")})
+        for element in metaPublication:
+            pubDateList.append(element.text)
+
+        dfTempResult=pd.DataFrame(data = titlesList)
+        dfTempResult=dfTempResult.assign(dromLinks = dromLinksList)
+        dfTempResult=dfTempResult.assign(codes = codesList)
+        dfTempResult=dfTempResult.assign(description = descriptionList)
+        dfTempResult=dfTempResult.assign(qte = qteList)
+        dfTempResult=dfTempResult.assign(price = pricesList)
+        dfTempResult = treatDromTiresData(dfTempResult)
+        dfResult=pd.concat([dfResult, dfTempResult])
+        time.sleep(2)
+        return len(dfTempResult)
+
+def delbrandstring(source, strtodel):
+    return source.replace(strtodel, '')
+
+def treatDromTiresData(dfTempResult):
+    df = dfTempResult
+    df.rename(columns={0:'0'}, inplace=True)
+    #Количество
+    df['qte2'] = df['qte'].str.extract('(\d{1}\sшт)', expand=False)
+    df['qte2']=df['qte2'].apply(lambda x: str(x).replace('шт',''))
+    df['qte2']=df['qte2'].str.strip()
+    df['qte2']=pd.to_numeric(df['qte2'], errors='coerce')
+    df['qte']=df['qte2']
+
+    df['price'] = df['price'].apply(lambda x: str(x).split('₽')[0] if '₽' in x else x)
+    df['price']=df['price'].str.replace('₽', '').str.replace(' ', '')
+    df['price']=df['price'].str.replace(' ', '')
+    #     print(dtypes(df['price']))
+    df['price']=df['price'].apply(pd.to_numeric, errors='coerce')
+
+    df=df.loc[~(df['qte'].isnull() & df['price'].isnull())]
+    currMode=pd.options.mode.chained_assignment
+    pd.options.mode.chained_assignment=None
+    df=df.loc[df['qte']>0] #Чтобы не получить бесконечность
+    df['unitPrice']=df['price']/df['qte']
+    df['unitPrice']=df['unitPrice'].round(2)
+
+    #Займемся износом
+    df['wear'] = df['description'].str.extract('((?i)изно\w*(\s\w*){0,5}\d{1,2}\s%|изно\w*(\s\w*){0,5}\d{1,2}\s-\d{1,2}\s%|новы\w*|(?i)изно\w*(\s\—\s\w*\s){0,5}\d{1,2}\%|\d{1,2}\s\%\sизно\w*)', expand=False)[0]
+    df['wear'] = df['description'].str.extract('((?i)изно\w*(\s\w*){0,5}\d{1,2}\s%|изно\w*(\s\w*){0,5}\d{1,2}-\d{1,2}\s%|новы\w*|(?i)изно\w*(\s\—\s\w*\s){0,5}\d{1,2}\s\%|\d{1,2}\s\%\sизно\w*)', expand=False)[0]
+    # df['wear'] = df['wear'].str.replace('((?i)новы\w*)', '00%', regex=True)
+    df['wear'] = df['wear'].str.extract('(\d{1,2}\s%)', expand=False) #Оставляем только цифру износа
+    df['wear'] = df['wear'].str.replace('\s', '', regex=True)
+
+    df['wear_num'] = pd.to_numeric(df['wear'].str.rstrip('%'), errors='coerce') / 100
+
+    df['brand']=df['0'].apply(lambda x: str(x).split(" ")[0].upper())
+    df['model']=df['0'].apply(lambda x: str(x).split(",")[0])
+    df['model'] = df.apply(lambda x: delbrandstring(x['model'], x['brand']), axis=1)
+    pd.options.mode.chained_assignment=currMode
+    return df

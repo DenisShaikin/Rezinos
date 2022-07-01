@@ -12,11 +12,12 @@ from app import db
 from app.base.forms import EditProfileForm, TirePrepareForm, RimPrepareForm, EditTireForm, WheelPrepareForm, AvitoScanForm
 from app.base.models import Tire, TirePhoto, TirePrices, ThornPrices, WearDiscounts, TireGuide, AvitoZones, \
     CarsGuide, Wheel, WheelPhoto, DromGuide
-
+from app.api.apimodels import ApiSource
 from app.base.models import Rim, RimPhoto, RimPrices
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.datastructures import MultiDict
 from sqlalchemy.sql import func
+from sqlalchemy import insert
 from datetime import datetime
 import pandas as pd
 from werkzeug.utils import secure_filename
@@ -200,6 +201,10 @@ def get_avito_data(avito_client_id, avito_client_secret):
 @blueprint.route('/init_tire_prix', methods=['GET'])
 @login_required
 def init_tire_prix():
+
+    if ApiSource.query.get(1) is None:
+        db.session.add_all([ApiSource(source='Avito'), ApiSource(source='Drom')])
+
     if TirePrices.query.get(1) is None: #Загружаем только если пустые таблицы
         prices = TirePrices()
         prices.load_prices_base()

@@ -11,7 +11,7 @@ import requests
 from app import db
 from app.base.forms import EditProfileForm, TirePrepareForm, RimPrepareForm, EditTireForm, WheelPrepareForm, AvitoScanForm
 from app.base.models import Tire, TirePhoto, TirePrices, ThornPrices, WearDiscounts, TireGuide, AvitoZones, \
-    CarsGuide, Wheel, WheelPhoto, DromGuide
+    CarsGuide, Wheel, WheelPhoto, DromGuide, DromZones
 from app.api.apimodels import ApiSource
 from app.base.models import Rim, RimPhoto, RimPrices
 from werkzeug.datastructures import CombinedMultiDict
@@ -35,7 +35,7 @@ from app.api.apimodels import ApiTire
 import plotly.express as px
 import threading
 # from threading import Timer
-from app.api.avitoutils import  getAvitoTirePricesByLocale, getAvitoTirePrices, calculateTheDistance
+from app.api.avitoutils import  getAvitoTirePricesByLocale, getAvitoTirePrices, calculateTheDistance, dromTireParser
 from time import sleep
 
 # def allowed_file(filename):
@@ -204,7 +204,7 @@ def init_tire_prix():
 
     if ApiSource.query.get(1) is None:
         db.session.add_all([ApiSource(source='Avito'), ApiSource(source='Drom')])
-
+        db.session.commit()
     if TirePrices.query.get(1) is None: #Загружаем только если пустые таблицы
         prices = TirePrices()
         prices.load_prices_base()
@@ -226,10 +226,12 @@ def init_tire_prix():
     if AvitoZones.query.get(1) is None:
         avitozones=AvitoZones()
         avitozones.load_avitozones()
+    if DromZones.query.get(1) is None:
+        dromzones = DromZones()
+        dromzones.load_dromzones()
     if DromGuide.query.get(1) is None:
         dromGuide=DromGuide()
         dromGuide.load_dromguide()
-
 
     return render_template('index.html', segment='index')
 
@@ -558,8 +560,10 @@ def updateChartNow():
         brand = argsDict['brand']
         del argsDict['brand']
     # print('argsDict=', argsDict)
-    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiTire.avito_link).filter_by(
-        **argsDict).filter(ApiTire.wear_num != None).limit(recCount)
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice,
+                             ApiTire.avito_link, ApiSource.source).filter_by(
+        **argsDict).join(ApiSource).filter(ApiTire.wear_num != None).limit(recCount)
+    # print(query.statement)
     df = pd.read_sql(query.statement, query.session.bind)
     df=df.loc[df.wear_num>0]
     df.drop_duplicates(inplace=True)
@@ -570,9 +574,9 @@ def updateChartNow():
         df2['brandName'] = brand
         df=pd.concat([df, df2])
 
-    # print(df.head())
+    # print(df.head(10))
     fig = px.scatter(
-        df, x='wear_num', y='unitPrice',  trendline='ols', color='brandName',  hover_data=['brand'],
+        df, x='wear_num', y='unitPrice',  trendline='ols', symbol='brandName', color='source', hover_data=['brand'],
         labels={
             "wear_num": "Износ, %",
             "unitPrice": "Цена за 1 штуку, руб."
@@ -597,7 +601,8 @@ def updateChartNow():
                     name="рекомендованная цена")
 
     fig.update_layout(xaxis=dict(tickformat=',.0%', hoverformat=",.0%"), legend=dict(orientation="h",
-        yanchor="bottom", y=1.02,  xanchor="left", x=-0.1, title_text=''))
+        yanchor="bottom", y=1.,  xanchor="left", x=-0.1, title_text=''),
+        title=dict(yanchor="bottom", y=0., xanchor="left", x=0.1))
 
     return jsonify({'chartData':json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), 'predictResult':predictPrice})
 
@@ -611,6 +616,13 @@ def start_TirePricesScan():
     argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
     args, region, season, pages, recCount = checkChartArgs(argsDict)
     tirePricesTask = getAvitoTirePrices.delay(args.get('diametr'), args.get('width'), args.get('height'), region, season, pages)
+    dromArgs = dict([(k, v) for k, v in args.items() if (k in ['width', 'height', 'diametr', 'season', 'drom_region', 'pages'])])
+    dromArgs['region'] = DromZones.query.with_entities(DromZones.id, DromZones.engzone).filter(DromZones.zone == dromArgs['drom_region']).first()[1]
+    dromArgs['pages'] = pages
+    dromArgs['avitoRegion'] = region
+    del dromArgs['drom_region']
+    # print(dromArgs)
+    tireDromPricesTask = dromTireParser.delay(dromArgs)
 
     return jsonify({}), 202, {'Location': url_for('home_blueprint.updateTirePrices', task_id=tirePricesTask.id)}
 
@@ -625,15 +637,16 @@ def updateTirePrices():
     # Выполняем все проверки и готовим объект для графика
     argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
     args, region, season, pages, recCount = checkChartArgs(argsDict)
-    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice).filter_by(
+    query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiSource.source).filter_by(
         **args).limit(recCount)
     df = pd.read_sql(query.statement, query.session.bind)
     if not df.empty:
         df=df.loc[df.wear_num>0]
+        # print(df.head())
         df.drop_duplicates(inplace=True)
         # print(df.head())
         fig = px.scatter(
-            df, x='wear_num', y='unitPrice',  trendline='ols', trendline_color_override='orange', hover_data=['brand'],
+            df, x='wear_num', y='unitPrice',  trendline='ols', trendline_color_override='orange', color='source', hover_data=['brand'],
             labels={
                 "wear_num": "Износ, %",
                 "unitPrice": "Цена за 1 штуку, руб."
@@ -654,8 +667,12 @@ def settings():
         if is_not_blank(form.avito_client_id.data) and is_not_blank(form.avito_client_secret.data):
             avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(
                 AvitoZones.zone).order_by(AvitoZones.id).all()
+            drom_zones = DromZones.query.with_entities(DromZones.id, DromZones.zone).group_by(
+                DromZones.zone).order_by(DromZones.id).all()
             form.def_display_area1.choices = avito_zones
             form.def_display_area1.default = current_user.def_display_area1
+            form.def_drom_area.choices = drom_zones
+            form.def_drom_area.default = current_user.def_drom_area
             form.process()
             form.avito_client_id.data = current_user.avito_client_id
             form.avito_client_secret.data = current_user.avito_client_secret
@@ -707,6 +724,7 @@ def settings():
         # current_user.def_latitude = form.def_latitude.data
         # current_user.def_longitude = form.def_longitude.data
         current_user.def_display_area1 = form.def_display_area1.data
+        current_user.def_drom_area = form.def_drom_area.data
         current_user.store = form.store.data
         current_user.def_latitude = form.def_latitude.data if form.def_latitude.data != '' else None
         current_user.def_longitude = form.def_longitude.data if form.def_latitude.data != '' else None
@@ -717,8 +735,12 @@ def settings():
 
     elif request.method == 'GET':
         avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(AvitoZones.zone).order_by(AvitoZones.id).all()
+        drom_zones = DromZones.query.with_entities(DromZones.id, DromZones.zone).group_by(
+            DromZones.zone).order_by(DromZones.id).all()
         form.def_display_area1.choices = avito_zones
         form.def_display_area1.default=current_user.def_display_area1
+        form.def_drom_area.choices = drom_zones
+        form.def_drom_area.default = current_user.def_drom_area
         form.process()
         form.avito_client_id.data = current_user.avito_client_id
         form.avito_client_secret.data = current_user.avito_client_secret
@@ -802,6 +824,9 @@ def tire():
         avito_zones = AvitoZones.query.with_entities(AvitoZones.id, AvitoZones.zone).group_by(AvitoZones.zone).order_by(AvitoZones.id).all()
         form.display_area1.choices = avito_zones
         form.display_area1.default=current_user.def_display_area1
+        drom_zones = DromZones.query.with_entities(DromZones.id, DromZones.zone).group_by(DromZones.zone).order_by(DromZones.id).all()
+        form.drom_display_area.choices = drom_zones
+        form.drom_display_area.default=current_user.def_drom_area
         form.process()
         form.listing_fee.data='Package',
         # form.ad_status.data='Free',

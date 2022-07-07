@@ -930,6 +930,7 @@ if (document.getElementById('GetAvitoTirePrices')) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
 //    console.log(document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label)
     xhr.send(JSON.stringify({'region': document.getElementById('display_area1').options[document.getElementById('display_area1').selectedIndex].label,
+        'drom_region': document.getElementById('drom_display_area').options[document.getElementById('drom_display_area').selectedIndex].label,
         'protector_wear':document.getElementById('protector_wear').value,
         'season':document.getElementById('sezonnost').options[document.getElementById('sezonnost').selectedIndex].label,
         'width':document.getElementById('shirina_profilya').options[document.getElementById('shirina_profilya').selectedIndex].label,

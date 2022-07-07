@@ -44,6 +44,7 @@ class Config(object):
     THORNPRICE_FILE = os.path.join(basedir, 'thorns.csv')
     WEARDISCOUNTS_FILE = os.path.join(basedir, 'wear_discounts.csv')
     AVITOZONES_FILE = os.path.join(basedir, 'Areas.csv')
+    DROMZONES_FILE = os.path.join(basedir, 'DromCityes.xlsx')
     TIREPRICES_FILE = os.path.join(basedir, 'RossiyaAllTires_Result.csv')
     DROMGUIDE_FILE = os.path.join(basedir, 'DromRef.xlsx')
     CELERY_BROKER_URL = 'redis://localhost:6379/0'

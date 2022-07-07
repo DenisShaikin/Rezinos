@@ -23,7 +23,9 @@ class ApiTire(db.Model):
     qte= db.Column(db.Integer)
     unitPrice = db.Column(db.Float)
     wear_num = db.Column(db.Float)
-    source = db.Column(db.Integer, db.ForeignKey('api_source.id'))
+    source_id = db.Column(db.Integer, db.ForeignKey('api_source.id'))
+    # source = db.relationship('ApiSource', foreign_keys=[source_id])
+
     avito_link = db.Column(db.String(200)) #Ссылка на объявление
     avito_id = db.Column(db.String(15)) #id объявления на Авито
     avito_lon = db.Column(db.Float) #Координаты владельца объявления
@@ -50,7 +52,7 @@ class ApiSource(db.Model):
     __tablename__ = 'api_source'
     id = db.Column(db.Integer, primary_key=True)
     source = db.Column(db.String(15))  #avito, youla, ..
-    tires = db.relationship('ApiTire', backref='sources', lazy='dynamic')
+    tires = db.relationship('ApiTire', backref='source', lazy='dynamic')
     def __repr__(self):
         return self.source
 

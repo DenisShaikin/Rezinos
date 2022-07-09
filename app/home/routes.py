@@ -638,7 +638,7 @@ def updateTirePrices():
     argsDict = dict([(k, v) for k, v in args.items() if (v != '')])
     args, region, season, pages, recCount = checkChartArgs(argsDict)
     query = db.session.query(ApiTire.brand, ApiTire.season, ApiTire.wear_num, ApiTire.unitPrice, ApiSource.source).filter_by(
-        **args).limit(recCount)
+        **args).join(ApiSource).limit(recCount)
     df = pd.read_sql(query.statement, query.session.bind)
     if not df.empty:
         df=df.loc[df.wear_num>0]

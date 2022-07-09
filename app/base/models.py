@@ -262,8 +262,8 @@ class DromZones(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data_id = db.Column(db.Integer) #id Drom
     data_up = db.Column(db.Integer) #id региона Дром
-    zone = db.Column(db.String) #Название на русском
-    engzone = db.Column(db.String) #Название на английском
+    zone = db.Column(db.String(100)) #Название на русском
+    engzone = db.Column(db.String(100)) #Название на английском
 
     def __repr__(self):
         return '<{},{},{}>'.format(self.id, self.zone, self.engzone)
